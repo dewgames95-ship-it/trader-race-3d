@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="backend-url" content="" />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>TRADER RACE 3D - Mustang GT Championship</title>
 <style>
   :root {
@@ -2382,46 +2383,27 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .header-sfx-btn{flex-shrink:0}
 
 /* ===== LIGHT THEME (non-race surfaces) ===== */
-html[data-theme=light]{--tr-bg:#eef2f8;--tr-surface:#ffffff;--tr-surface-2:#f1f5fb;--tr-text:#0f172a;--tr-muted:#5b6b82;--tr-line:rgba(15,23,42,.12)}
-html[data-theme=light] .cr-screen{background:linear-gradient(180deg,#f6f8fc,#e9eef6)!important;color:var(--tr-text)!important;scrollbar-color:#1d7dfa #e2e8f0}
-html[data-theme=light] .cr-screen .panel,html[data-theme=light] .cr-screen .invest-card,html[data-theme=light] .cr-screen .earn-card,
-html[data-theme=light] .cr-screen .stat-box,html[data-theme=light] .cr-screen .menu-item,html[data-theme=light] .cr-screen .profile-section,
-html[data-theme=light] .cr-screen .profile-stat,html[data-theme=light] .cr-screen .commission-tier,html[data-theme=light] .cr-screen .share-box,
-html[data-theme=light] .cr-screen .ref-stat,html[data-theme=light] .cr-screen .progress-card,html[data-theme=light] .cr-screen .field-wrap,
-html[data-theme=light] .cr-screen .tabs-dark,html[data-theme=light] .cr-screen .refer-box,html[data-theme=light] .cr-screen .trust-strip{
   background:#ffffff!important;color:var(--tr-text)!important;border-color:rgba(15,23,42,.1)!important;box-shadow:0 4px 14px rgba(15,23,42,.06)!important}
-html[data-theme=light] .cr-screen .commission-tier.active{background:#e6f1ff!important;border-color:#1d7dfa!important}
-html[data-theme=light] .cr-screen .muted,html[data-theme=light] .cr-screen .tiny{color:var(--tr-muted)!important}
-html[data-theme=light] .cr-screen h1,html[data-theme=light] .cr-screen h2,html[data-theme=light] .cr-screen h3,html[data-theme=light] .cr-screen .tier-name,
-html[data-theme=light] .cr-screen .menu-item *,html[data-theme=light] .cr-screen .profile-title{color:var(--tr-text)!important}
-html[data-theme=light] .cr-screen [style*="color:#f8fafc"],html[data-theme=light] .cr-screen [style*="color:#fff"],html[data-theme=light] .cr-screen [style*="color:#ffffff"]{color:var(--tr-text)!important}
-html[data-theme=light] .cr-screen [style*="color:#94a3b8"],html[data-theme=light] .cr-screen [style*="color:#cbd5e1"]{color:var(--tr-muted)!important}
-html[data-theme=light] .cr-screen .wallet-card,html[data-theme=light] .cr-screen .wallet-card *{color:#fff!important}
-html[data-theme=light] .cr-screen .green-btn,html[data-theme=light] .cr-screen .blue-btn,html[data-theme=light] .cr-screen .primary-btn,html[data-theme=light] .cr-screen .red-btn{color:#fff!important}
-html[data-theme=light] .mode-modal-card,html[data-theme=light] .result-modal-card,html[data-theme=light] .modal-backdrop > div{background:#ffffff!important;color:var(--tr-text)!important;border-color:rgba(29,125,250,.35)!important}
-html[data-theme=light] .modal-title{color:var(--tr-text)!important}
-html[data-theme=light] .modal-backdrop{background:rgba(15,23,42,.45)!important}
-html[data-theme=light] .modal-close{background:#f1f5fb!important;color:#0f172a!important;border-color:rgba(15,23,42,.2)!important}
-html[data-theme=light] .modal-backdrop [style*="color:#f8fafc"],html[data-theme=light] .modal-backdrop [style*="color:#fff"]{color:var(--tr-text)!important}
-html[data-theme=light] .modal-backdrop [style*="background:#0"],html[data-theme=light] .modal-backdrop [style*="background:rgba(15"],html[data-theme=light] .modal-backdrop [style*="background:rgba(2"]{background:#f1f5fb!important}
-html[data-theme=light] .bottom-nav{background:#ffffff!important;border-top:1px solid rgba(15,23,42,.1)!important}
-html[data-theme=light] .nav-tab{color:#475569!important;border-color:rgba(15,23,42,.08)!important}
-html[data-theme=light] .nav-tab.active{color:#fff!important}
-html[data-theme=light] .tr-toast{background:rgba(255,255,255,.98);color:#0f172a;border-color:rgba(15,23,42,.1)}
 
 /* Mode pill in header */
 .tr-mode-pill{flex-shrink:0;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:5px 9px;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.3px;cursor:pointer;background:rgba(15,23,42,.9);color:#e2e8f0}
 .tr-mode-pill.demo{border-color:rgba(245,158,11,.55);color:#fde68a;background:rgba(120,53,15,.55)}
 .tr-mode-pill.live{border-color:rgba(239,68,68,.6);color:#fecaca;background:rgba(127,29,29,.55)}
 .tr-mode-pill b{font-weight:900}
-html[data-theme=light] .tr-mode-pill{background:#fff;color:#0f172a}
-html[data-theme=light] .top-header{background:linear-gradient(180deg,#fff,#eef2f8)!important;border-bottom-color:rgba(15,23,42,.1)!important}
-html[data-theme=light] .top-header .profile-name,html[data-theme=light] .top-header .balance-label,html[data-theme=light] .top-header .balance-val,html[data-theme=light] .top-header .profile-id{color:#0f172a!important}
 /* Floating 3D name labels drawn on canvas — CSS unused, labels are canvas text */
 
 
 .tr-switch{background:#475569!important;border:1px solid rgba(255,255,255,.2)!important}.tr-switch.on{background:#28e066!important}
-html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-header .balance-box{background:#fff!important;border-color:rgba(15,23,42,.15)!important}
+
+#quickTopupBtn,#soundToggleBtn{display:none!important}
+.header-sfx-btn{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;font-size:14px!important;border-radius:9px!important}
+.tr-mode-wrap{position:relative;flex-shrink:0}
+.tr-chev{width:26px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(18,27,46,.94);color:#e2e8f0;font:900 14px/1 Inter,system-ui,sans-serif;cursor:pointer;padding:0}
+.tr-chev.live{border-color:#ef4444;color:#fecaca}.tr-chev.demo{border-color:#f59e0b;color:#fde68a}
+.tr-mode-menu{display:none;position:absolute;top:36px;right:0;z-index:80;background:#0a1324;border:1px solid rgba(148,163,184,.35);border-radius:10px;padding:4px;min-width:104px;box-shadow:0 10px 28px rgba(0,0,0,.5)}
+.tr-mode-menu.open{display:block}
+.tr-mode-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:7px;background:transparent;color:#e2e8f0;font:800 12px Inter,system-ui,sans-serif;cursor:pointer}
+.tr-mode-menu button.on{background:rgba(29,125,250,.25);color:#fff}
 </style>
 </head>
 <body>
@@ -4115,7 +4097,6 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
     const p = cars.find(c => c.isPlayer);
     updateEngineSound(p ? p.speed : 0, gameState === 'RACING');
     if (soundEnabled) playTone(580, 760, 0.08, 'sine', 0.1);
-    showCrToast(soundEnabled ? '🔊 Game Sound Effects ON' : '🔇 Game Sound Muted');
   }
   soundToggleBtn.addEventListener('click', toggleSoundState);
   if (headerSoundBtn) headerSoundBtn.addEventListener('click', toggleSoundState);
@@ -4226,7 +4207,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
   ];
 
   let walletTransactions = [
-    { id: 'TX-9041', type: 'Deposit (USDT TRC20)', amount: '+100.00 USDT', status: 'Completed', positive: true },
+    { id: 'TX-9041', type: 'Deposit (USDT BEP20)', amount: '+100.00 USDT', status: 'Completed', positive: true },
     { id: 'TX-9042', type: 'VIP 3 Daily Profit', amount: '+39.00 USDT', status: 'Credited', positive: true },
     { id: 'TX-9043', type: 'Race #587 Win Prize', amount: '+2.40 USDT', status: 'Completed', positive: true }
   ];
@@ -4800,7 +4781,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
     modalSubtitle.style.color = '#38bdf8';
     modalBodyContent.innerHTML = `
       <div style="text-align:left;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-        <input id="withdrawAddrInput" placeholder="Enter USDT (TRC20 / BEP20) Wallet Address" value="TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(56,189,248,0.45);background:#091324;color:#fff;font-size:11px;font-weight:700;"/>
+        <input id="withdrawAddrInput" placeholder="USDT (BEP20) address (0x…)" value="" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(56,189,248,0.45);background:#091324;color:#fff;font-size:11px;font-weight:700;"/>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" id="withdrawProfitBtn" style="padding:10px 6px;border-radius:9px;border:1px solid #34d399;background:#065f46;color:#fff;font-weight:900;font-size:11px;cursor:pointer;">Withdraw Profit (${profitBalanceUsdt.toFixed(2)})</button>
           <button type="button" id="withdraw25Btn" style="padding:10px 6px;border-radius:9px;border:1px solid #60a5fa;background:#1e3a8a;color:#fff;font-weight:900;font-size:11px;cursor:pointer;">Withdraw 25 USDT</button>
@@ -4813,7 +4794,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
       profitBalanceUsdt = 0;
       walletTransactions.unshift({
         id: 'TX-' + Math.floor(1000 + Math.random() * 9000),
-        type: 'Profit Withdrawal (TRC20)',
+        type: 'Profit Withdrawal (BEP20)',
         amount: `-${w.toFixed(2)} USDT`,
         status: 'Sent',
         positive: false
@@ -4821,7 +4802,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
       playTone(580, 880, 0.14, 'triangle', 0.14);
       updateUIValues();
       modalSubtitle.textContent = `Available: ${balanceUsdt.toFixed(2)} USDT (Main) • 0.00 USDT (Profit)`;
-      showCrToast(`Withdrawal of ${w.toFixed(2)} USDT sent to TRC20 wallet!`);
+      showCrToast(`Withdrawal of ${w.toFixed(2)} USDT sent to BEP20 wallet!`);
     });
     modalBodyContent.querySelector('#withdraw25Btn')?.addEventListener('click', () => {
       if (balanceUsdt < 25) { showCrToast('Minimum 25 USDT required in Main Balance'); return; }
@@ -5028,15 +5009,16 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
       <!-- All-Time Top Championship Racers -->
       <div style="text-align:left;font-size:9.5px;font-weight:900;color:#fbbf24;margin-bottom:4px;letter-spacing:0.4px;">🏆 TOP CHAMPIONSHIP EARNERS</div>
       <div style="display:flex;flex-direction:column;gap:4px;max-height:135px;overflow-y:auto;margin-bottom:10px;">
+        ${topChampionshipRacers.length ? '' : '<div style="padding:14px 8px;text-align:center;color:#94a3b8;font-size:12px;"><div style="font-size:22px">🏆</div><b style="color:#fff">Be the first on the leaderboard!</b><br/>Win a Live race to claim the top spot.</div>'}
         ${topChampionshipRacers.map(r => `
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(8,14,26,0.92);border:1px solid ${r.rank === 4 ? '#28e066' : 'rgba(255,255,255,0.09)'};border-radius:7px;padding:5px 8px;font-size:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(8,14,26,0.92);border:1px solid ${r.isMe ? '#28e066' : 'rgba(255,255,255,0.09)'};border-radius:7px;padding:5px 8px;font-size:10px;">
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="color:${r.rank <= 3 ? '#fbbf24' : '#94a3b8'};font-weight:900;width:18px;">#${r.rank}</span>
               <span style="width:8px;height:8px;border-radius:50%;background:${r.color};display:inline-block;"></span>
-              <b style="color:${r.rank === 4 ? '#28e066' : '#fff'};">${r.name}</b>
+              <b style="color:${r.isMe ? '#28e066' : '#fff'};">${r.name}</b>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="color:#94a3b8;font-size:9px;">${r.wins}W • ${r.best}</span>
+              <span style="color:#94a3b8;font-size:9px;">${r.wins}W${r.best ? ' • ' + r.best : ''}</span>
               <b style="color:#28e066;">${r.profit}</b>
             </div>
           </div>
@@ -6725,6 +6707,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
   }
 
   // ---- Live / Demo mode ----
+  let booting = true;
   let playMode = 'demo';
   try { playMode = localStorage.getItem('tr_mode') || 'demo'; } catch (e) {}
   let demoBal = 1000;
@@ -6737,25 +6720,31 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
   function setMode(m) {
     playMode = m === 'live' ? 'live' : 'demo';
     try { localStorage.setItem('tr_mode', playMode); } catch (e) {}
-    const pill = $('#trModePill');
-    if (pill) {
-      pill.className = 'tr-mode-pill ' + playMode;
-      pill.innerHTML = playMode === 'live'
-        ? '🔴 <b>LIVE</b> · Real USDT'
-        : '🟡 <b>DEMO</b> · Practice';
-    }
+    paintMode();
     const refill = $('#trRefillBtn');
     if (refill) refill.style.display = playMode === 'demo' ? '' : 'none';
     applyBalanceUI();
     if (playMode === 'live') refresh(true);
     else setOffline(false);
-    toast(playMode === 'live' ? 'Switched to Live mode' : 'Demo mode — practice with virtual USDT', 'info');
+    if (!booting) toast(playMode === 'live' ? 'Live mode · real USDT' : 'Demo mode · practice USDT', 'info');
   }
 
+  function getInitData() {
+    let d = (TG && TG.initData) || '';
+    if (!d) {
+      try {
+        const h = new URLSearchParams((location.hash || '').slice(1));
+        d = h.get('tgWebAppData') || '';
+        if (!d) d = sessionStorage.getItem('tr_initdata') || '';
+      } catch (e) {}
+    }
+    if (d) try { sessionStorage.setItem('tr_initdata', d); } catch (e) {}
+    return d;
+  }
   // ---- API ----
   async function api(path, body) {
     if (!API) throw Object.assign(new Error('No game server configured. Open via the bot or set ?api='), { offline: true });
-    const initData = (TG && TG.initData) || '';
+    const initData = getInitData();
     let r;
     try {
       r = await fetch(API + path, {
@@ -6790,6 +6779,23 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
       $$('.refer-box .profile-name-tag').forEach(el => el.textContent = String(state.user.id));
       $$('.refer-box [data-copy]').forEach(el => el.dataset.copy = String(state.user.id));
     }
+    const tu = (state && state.user) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user);
+    if (tu) {
+      const nm = String(tu.first_name || tu.username || 'TRADER').toUpperCase().slice(0, 14);
+      $$('.profile-name, #profileTitleText').forEach(el => el.textContent = nm);
+      const idEl = $('.profile-id'); if (idEl) idEl.textContent = 'ID: ' + tu.id;
+      $$('.profile-identity .muted').forEach(el => { if (/User ID/i.test(el.textContent)) el.textContent = 'User ID: ' + tu.id; });
+      const un = $('#profileUsernameText'); if (un) un.textContent = tu.username ? '@' + tu.username : 'Player';
+    }
+    if (!tu) {
+      $$('.profile-name, #profileTitleText').forEach(el => el.textContent = 'GUEST');
+      const idEl = $('.profile-id'); if (idEl) idEl.textContent = 'ID: —';
+      $$('.profile-identity .muted').forEach(el => { if (/User ID/i.test(el.textContent)) el.textContent = 'User ID: —'; });
+      const un = $('#profileUsernameText'); if (un) un.textContent = 'Open from Telegram';
+    }
+    const bl0 = $('#bonusLockedVal'); if (bl0) bl0.textContent = '0.00';
+    $$('.refer-box .profile-name-tag').forEach(el => el.textContent = tu ? String(tu.id) : '—');
+    $$('.vip-badge, .vip-pill-lg').forEach(el => el.style.display = 'none');
     if (state && playMode === 'live') {
       const pb = $('#profileMainBalance'); if (pb) pb.innerHTML = fmt(state.balance) + ' <small>USDT</small>';
       const pp = $('#profileProfitBalance'); if (pp) pp.innerHTML = fmt(state.profit_balance) + ' <small>USDT</small>';
@@ -6967,10 +6973,10 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
     const minD = (state && state.settings && state.settings.min_deposit) || 1;
     modalSvgHolder.innerHTML = '💵';
     modalTitle.textContent = 'DEPOSIT USDT';
-    modalSubtitle.textContent = addr ? 'TRON (TRC20) · Min ' + minD + ' USDT' : 'Deposits not configured yet';
+    modalSubtitle.textContent = addr ? 'USDT (BEP20) · Min ' + minD + ' USDT' : 'Deposits not configured yet';
     modalSubtitle.style.color = '#28e066';
     modalBodyContent.innerHTML = addr
-      ? `<p class="tr-note">Send only <b>USDT on TRON (TRC20)</b> to your personal address. Other networks will be lost.</p>
+      ? `<p class="tr-note">Send only <b>USDT (BEP20) on BNB Smart Chain</b> to your personal address. Other networks will be lost.</p>
          <div class="tr-addr" id="trDepAddr">${esc(addr)}</div>
          <button class="tr-btn ghost" style="margin-top:10px" id="trCopyAddr">📋 Copy address</button>
          <p class="tr-note" style="margin-top:10px">Balance updates automatically after confirmation.</p>`
@@ -6991,7 +6997,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
     modalSubtitle.textContent = 'Available: ' + fmt(avail) + ' USDT';
     modalSubtitle.style.color = '#38bdf8';
     modalBodyContent.innerHTML = `
-      <input class="tr-field" id="trWdAddr" placeholder="TRC20 address (starts with T)" />
+      <input class="tr-field" id="trWdAddr" placeholder="USDT (BEP20) address (0x…)" />
       <input class="tr-field" id="trWdAmt" type="number" step="0.01" min="${minW}" max="${Math.min(maxW, avail)}" placeholder="Amount (min ${minW})" style="margin-top:8px" />
       <p class="tr-note" style="margin-top:8px">Requests are reviewed by admin (Pay Auto / Manual / Reject).</p>
       <button class="tr-btn" id="trWdSend" style="margin-top:10px">Submit withdrawal</button>`;
@@ -7089,9 +7095,9 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
 
   // ---- Theme ----
   let theme = 'dark';
-  try { theme = localStorage.getItem('tr_theme') || (TG && TG.colorScheme) || 'dark'; } catch (e) {}
+
   function applyTheme(t) {
-    theme = t === 'light' ? 'light' : 'dark';
+    theme = 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     try { localStorage.setItem('tr_theme', theme); } catch (e) {}
     try {
@@ -7100,7 +7106,6 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
         TG.setBackgroundColor && TG.setBackgroundColor(theme === 'light' ? '#eef2f8' : '#050811');
       }
     } catch (e) {}
-    const sw = $('#trThemeSw'); if (sw) sw.classList.toggle('on', theme === 'light');
   }
 
   // ---- Music (synth loop — CC0 / original, no external file needed) ----
@@ -7244,7 +7249,6 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
           <button type="button" class="tr-btn ghost" id="trModeDemo" style="width:auto;padding:6px 10px;font-size:11px;">DEMO</button>
           <button type="button" class="tr-btn" id="trModeLive" style="width:auto;padding:6px 10px;font-size:11px;">LIVE</button>
         </span></div>
-      <div class="tr-set-row"><span>Dark / Light theme</span><button type="button" class="tr-switch" id="trThemeSw" aria-label="Toggle theme"></button></div>
       <div class="tr-set-row"><span>🎵 Music</span><button type="button" class="tr-switch" id="trMusicSw" aria-label="Toggle music"></button></div>
       <div class="tr-set-row"><span>🔊 Sound effects</span><button type="button" class="tr-switch" id="trSfxSw" aria-label="Toggle SFX"></button></div>
       <div class="tr-set-row" id="trRefillRow"><span>Demo balance</span>
@@ -7255,21 +7259,17 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
 
     $('#trModeDemo').onclick = () => setMode('demo');
     $('#trModeLive').onclick = () => setMode('live');
-    $('#trThemeSw').onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
     $('#trMusicSw').classList.toggle('on', musicOn);
     $('#trSfxSw').classList.toggle('on', sfxOn);
-    $('#trThemeSw').classList.toggle('on', theme === 'light');
     $('#trMusicSw').onclick = () => {
       musicOn = !musicOn; try { localStorage.setItem('tr_music', musicOn ? '1' : '0'); } catch (e) {}
       $('#trMusicSw').classList.toggle('on', musicOn);
       if (musicOn) startMusic(); else stopMusic();
-      toast(musicOn ? 'Music ON' : 'Music OFF');
     };
     $('#trSfxSw').onclick = () => {
       sfxOn = !sfxOn; soundEnabled = sfxOn;
       try { localStorage.setItem('tr_sfx', sfxOn ? '1' : '0'); } catch (e) {}
       $('#trSfxSw').classList.toggle('on', sfxOn);
-      toast(sfxOn ? 'SFX ON' : 'SFX OFF');
     };
     $('#trRefillBtn').onclick = () => {
       demoBal = 1000; saveDemo(); applyBalanceUI(); toast('Demo balance refilled to 1000.00 USDT', 'success');
@@ -7279,69 +7279,58 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
   // Mode pill in header
   function injectModePill() {
     const hdr = $('.top-header');
-    if (!hdr || $('#trModePill')) return;
-    const pill = document.createElement('button');
-    pill.id = 'trModePill'; pill.type = 'button'; pill.className = 'tr-mode-pill ' + playMode;
-    pill.title = 'Tap to switch Demo / Live';
-    pill.onclick = () => setMode(playMode === 'demo' ? 'live' : 'demo');
-    hdr.insertBefore(pill, hdr.querySelector('.deposit-btn') || null);
+    if (!hdr || $('#trModeChev')) return;
+    const wrap = document.createElement('div'); wrap.className = 'tr-mode-wrap';
+    wrap.innerHTML = `<button type="button" id="trModeChev" class="tr-chev" aria-label="Play mode">^</button>
+      <div class="tr-mode-menu" id="trModeMenu">
+        <button type="button" data-m="demo">🟡 Demo</button>
+        <button type="button" data-m="live">🔴 Live</button>
+      </div>`;
+    hdr.insertBefore(wrap, hdr.querySelector('.deposit-btn') || null);
+    $('#trModeChev').onclick = (e) => { e.stopPropagation(); $('#trModeMenu').classList.toggle('open'); };
+    $$('#trModeMenu [data-m]').forEach(b => b.onclick = (e) => { e.stopPropagation(); $('#trModeMenu').classList.remove('open'); if (b.dataset.m !== playMode) setMode(b.dataset.m); });
+    document.addEventListener('click', () => { const m = $('#trModeMenu'); if (m) m.classList.remove('open'); });
   }
 
   // Silence double toast on first setMode: paint only
   function paintMode() {
-    const pill = $('#trModePill');
-    if (pill) {
-      pill.className = 'tr-mode-pill ' + playMode;
-      pill.innerHTML = playMode === 'live' ? '🔴 <b>LIVE</b>' : '🟡 <b>DEMO</b>';
-    }
+    const ch = $('#trModeChev');
+    if (ch) { ch.className = 'tr-chev ' + playMode; ch.title = playMode === 'live' ? 'LIVE mode' : 'DEMO mode'; }
+    $$('#trModeMenu [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === playMode));
     const refill = $('#trRefillBtn');
     if (refill) refill.style.display = playMode === 'demo' ? '' : 'none';
   }
 
   // ---- Replace fake leaderboard handler ----
+  async function loadBoard() {
+    if (!API) { topChampionshipRacers.length = 0; return; }
+    let data;
+    try { const r = await fetch(API + '/api/leaderboard'); data = await r.json(); } catch (e) { return; }
+    const me = (state && state.user && state.user.id) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id);
+    const cols = ['#e61e25', '#f5b000', '#1264f2', '#28e066', '#a855f7'];
+    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, name: r.name + (r.user_id === me ? ' (YOU)' : ''), car: '', color: cols[i % cols.length], wins: r.wins, best: '', profit: '+' + fmt(r.profit) + ' USDT', isMe: r.user_id === me }));
+    if (me && rows.length && !rows.some(r => r.isMe)) rows.push({ rank: '—', name: 'YOU', car: '', color: '#28e066', wins: 0, best: '', profit: '+0.00 USDT', isMe: true });
+    topChampionshipRacers.length = 0; rows.forEach(r => topChampionshipRacers.push(r));
+  }
   function wireLeaderboard() {
     const btn = $('#leaderboardBtn');
-    if (!btn) return;
-    btn.addEventListener('click', (e) => {
-      e.stopImmediatePropagation();
-      // Live grid (current race) kept as extra section when racing
-      let liveHtml = '';
-      if (typeof cars !== 'undefined' && cars.length && gameState === 'RACING') {
-        const sorted = [...cars].sort((a, b) => b.z - a.z);
-        liveHtml = `<div style="text-align:left;font-size:9.5px;font-weight:900;color:#38bdf8;margin-bottom:4px;">🏁 LIVE RACE GRID</div>
-          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">
-          ${sorted.map((c, i) => {
-            const pct = Math.min(100, Math.round((c.z / FINISH_LINE_Z) * 100));
-            const badgeCol = i === 0 ? '#28e066' : (i === 1 ? '#ffc412' : '#ff4d4d');
-            const tag = c.isPlayer ? '' : (c.isAI !== false ? ' <span style="font-size:8px;background:#334155;color:#e2e8f0;padding:1px 4px;border-radius:3px;">AI</span>' : '');
-            return `<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(12,20,36,0.95);border:1.2px solid ${badgeCol};border-radius:9px;padding:5px 7px;">
-              <div style="display:flex;align-items:center;gap:7px;min-width:0;">
-                <span style="background:${badgeCol};color:#050811;font-weight:900;font-size:10px;padding:1.5px 5px;border-radius:4px;">#${i + 1}</span>
-                <div style="text-align:left;line-height:1.15;min-width:0;">
-                  <div style="font-weight:900;font-size:11px;color:#fff;font-style:italic;">${esc(c.displayName || c.name)}${tag}</div>
-                  <div style="font-size:8.5px;color:#94a3b8;">${esc(c.nameLabel || '')} · Lane ${(c.lane || 0) + 1}</div>
-                </div>
-              </div>
-              <div style="text-align:right;"><div style="font-size:11px;font-weight:900;color:${badgeCol};">${pct}%</div>
-              <div style="font-size:9px;color:#cbd5e1;font-weight:800;">${Math.round(c.speed || 0)} KM/H</div></div>
-            </div>`;
-          }).join('')}
-          </div>`;
-      }
-      paintLeaderboard(liveHtml);
-    }, true);
-    $('#raceTabLeaderboardBtn') && $('#raceTabLeaderboardBtn').addEventListener('click', (e) => {
-      e.stopImmediatePropagation(); btn.click();
-    }, true);
+    if (btn) btn.addEventListener('click', () => loadBoard(), false);
   }
 
   // Auto-refresh leaderboard cache hourly when Live
-  setInterval(() => { if (playMode === 'live') fetchLeaderboard(true); }, 3600e3);
+  setInterval(loadBoard, 60e3);
   setInterval(() => { if (playMode === 'live' && online) refresh(false); }, 30000);
 
   // demo mirror: original UI handlers (invest etc.) change balanceUsdt locally in demo
   setInterval(() => { if (playMode === 'demo' && gameState === 'IDLE' && Math.abs(balanceUsdt - demoBal) > 0.001) { demoBal = +fmt(balanceUsdt); saveDemo(); } }, 1000);
   centerStartCircle.addEventListener('click', (e) => { e.stopImmediatePropagation(); beginMatchmaking(); }, true);
+
+  const hsb = $('#headerSoundBtn');
+  if (hsb) hsb.addEventListener('click', () => {
+    setTimeout(() => { sfxOn = soundEnabled; musicOn = soundEnabled; try { localStorage.setItem('tr_music', musicOn ? '1' : '0'); localStorage.setItem('tr_sfx', sfxOn ? '1' : '0'); } catch (e) {}
+      if (musicOn) startMusic(); else stopMusic();
+      const ms = $('#trMusicSw'), ss = $('#trSfxSw'); if (ms) ms.classList.toggle('on', musicOn); if (ss) ss.classList.toggle('on', sfxOn); }, 0);
+  });
 
   // ---- Boot ----
   function boot() {
@@ -7357,9 +7346,9 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
     injectSettings();
     applyTheme(theme);
     soundEnabled = sfxOn;
-    wireBetControls();
     rewireWalletButtons();
     wireLeaderboard();
+    loadBoard();
     applyBalanceUI();
     // Replace casino user-visible strings if any remain in DOM
     $$('body *').forEach(el => {
@@ -7369,7 +7358,7 @@ html[data-theme=light] .top-header .profile-box,html[data-theme=light] .top-head
       }
     });
     if (playMode === 'live') refresh(true);
-    else toast('Demo mode — practice free. Switch to Live in Profile when ready.', 'info', 3500);
+    booting = false;
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 50));
