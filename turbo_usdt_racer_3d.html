@@ -722,7 +722,7 @@
   /* 5. BOTTOM NAVIGATION BAR (MEDIUM-SIZED ICONS & CRISP ALIGNMENT) */
   .bottom-nav {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     background: linear-gradient(180deg, #090e1a 0%, #050811 100%);
     border-top: 1px solid rgba(255,255,255,0.12);
     z-index: 20;
@@ -2404,6 +2404,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .tr-mode-menu.open{display:block}
 .tr-mode-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:7px;background:transparent;color:#e2e8f0;font:800 12px Inter,system-ui,sans-serif;cursor:pointer}
 .tr-mode-menu button.on{background:rgba(29,125,250,.25);color:#fff}
+
+.bottom-nav{grid-template-columns:repeat(4,1fr)!important;width:100%}.nav-tab{display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 </style>
 </head>
 <body>
@@ -3204,13 +3206,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   <!-- 5. BOTTOM NAVIGATION (MEDIUM SIZE ICONS & ALIGNED LABELS) -->
   <nav class="bottom-nav">
-    <div class="nav-tab" id="navRaceBtn">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M4 21V4M4 4H19L16.5 8.5L19 13H4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span>RACE</span>
-    </div>
-    <div class="nav-tab" id="navInvestBtn">
+<div class="nav-tab" id="navInvestBtn">
       <svg viewBox="0 0 24 24" fill="none">
         <path d="M4 19H20M7 16V10M12 16V6M17 16V12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
       </svg>
@@ -4293,7 +4289,6 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   };
 
   const navBtnMap = {
-    race: document.getElementById('navRaceBtn'),
     invest: document.getElementById('navInvestBtn'),
     bet: document.getElementById('navBetBtn'),
     invite: document.getElementById('navInviteBtn'),
@@ -4364,7 +4359,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     syncSharedWalletUI();
   }
 
-  document.getElementById('navRaceBtn').addEventListener('click', () => switchAppTab('race'));
+  document.getElementById('navRaceBtn')?.addEventListener('click', () => switchAppTab('race'));
   document.getElementById('navInvestBtn').addEventListener('click', () => switchAppTab('invest'));
   document.getElementById('navBetBtn').addEventListener('click', () => switchAppTab('bet'));
   document.getElementById('navInviteBtn').addEventListener('click', () => switchAppTab('invite'));
@@ -6767,7 +6762,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (typeof syncSharedWalletUI === 'function') syncSharedWalletUI();
     else if (typeof updateUIValues === 'function') updateUIValues();
     const balEl = $('#balanceText');
-    if (balEl) balEl.textContent = fmt(bal) + ' USDT' + (playMode === 'demo' ? ' · DEMO' : '');
+    if (balEl) balEl.textContent = fmt(bal) + ' USDT';
     if (state) {
       const rc = state.referrals || 0;
       const pc = $('#refProgressCount'); if (pc) pc.textContent = Math.min(5, rc) + ' / 5';
