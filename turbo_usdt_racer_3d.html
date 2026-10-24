@@ -2411,10 +2411,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .tr-toast .i{font-size:13px!important}.tr-toast .x{display:none}
 .tr-toast .m{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ===== Surgical Mobile 360px & Header/Car-Card Fixes (Original Theme Preserved) ===== */
+/* ===== Surgical Mobile 360px & Rich UI Polish (Original Theme & 3D Assets Preserved) ===== */
+
+/* 1. TOP HEADER & COMPACT BALANCE CARD WITH BUILT-IN LIVE/DEMO SWITCH */
 .top-header {
-  padding: calc(5px + var(--sa-top)) 7px 5px !important;
-  gap: 5px !important;
+  padding: calc(4px + var(--sa-top)) 8px 4px !important;
+  gap: 6px !important;
+  justify-content: space-between !important;
 }
 .top-header .profile-box {
   padding: 2px !important;
@@ -2431,21 +2434,136 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   height: 30px !important;
 }
 .top-header .balance-box {
-  flex: 1 1 auto !important;
+  position: relative !important;
+  flex: 0 1 auto !important;
   min-width: 0 !important;
-  padding: 4px 8px !important;
+  padding: 3px 6px 3px 7px !important;
+  border-radius: 10px !important;
+  gap: 6px !important;
+  background: linear-gradient(135deg, rgba(15, 26, 48, 0.96), rgba(8, 16, 32, 0.98)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.38) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 3px 10px rgba(0, 0, 0, 0.35) !important;
+  overflow: visible !important;
+}
+.top-header .balance-left {
+  gap: 5px !important;
+}
+.top-header .usdt-icon {
+  width: 21px !important;
+  height: 21px !important;
+  flex-shrink: 0 !important;
+}
+.top-header .balance-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 7.5px !important;
+  letter-spacing: 0.3px !important;
+  color: #94a3b8 !important;
+}
+.tr-bal-mode-tag {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 6.5px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+}
+.tr-bal-mode-tag.demo {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fde047;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+.tr-bal-mode-tag.live {
+  background: rgba(34, 197, 94, 0.22);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.55);
 }
 .top-header .balance-val {
   font-size: 11.5px !important;
+  font-weight: 900 !important;
   white-space: nowrap !important;
   overflow: visible !important;
   text-overflow: clip !important;
 }
+.top-header .tr-chev {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  height: 22px !important;
+  width: auto !important;
+  padding: 0 6px !important;
+  border-radius: 6px !important;
+  font: 900 8.5px/1 'Inter', system-ui, sans-serif !important;
+  letter-spacing: 0.3px !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.12s ease !important;
+}
+.top-header .tr-chev.demo {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.28), rgba(180, 83, 9, 0.38)) !important;
+  border: 1px solid rgba(251, 191, 36, 0.65) !important;
+  color: #fef08a !important;
+}
+.top-header .tr-chev.live {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.28), rgba(21, 128, 61, 0.38)) !important;
+  border: 1px solid rgba(74, 222, 128, 0.65) !important;
+  color: #bbf7d0 !important;
+}
+.top-header .tr-mode-menu {
+  top: calc(100% + 5px) !important;
+  left: 0 !important;
+  right: auto !important;
+  min-width: 156px !important;
+  padding: 5px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(160deg, #0d182e 0%, #070e1c 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75) !important;
+  z-index: 120 !important;
+}
+.top-header .tr-mode-menu button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 7px 9px !important;
+  font-size: 11px !important;
+  border-radius: 7px !important;
+}
+.top-header .tr-mode-menu button small {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+.top-header .tr-mode-menu button.tr-menu-refill {
+  margin-top: 3px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 0 0 7px 7px !important;
+  color: #4ade80 !important;
+  justify-content: center !important;
+  font-size: 10.5px !important;
+}
 #quickTopupBtn, #soundToggleBtn, #musicToggleBtn {
   display: none !important;
 }
+.header-sfx-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 8px !important;
+  background: linear-gradient(145deg, #162847, #0c172b) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+.deposit-btn {
+  height: 30px !important;
+  padding: 0 9px !important;
+  font-size: 10.5px !important;
+  border-radius: 8px !important;
+}
 
-/* Left HUD Stack: keep original style, prevent LEADERBOARD text from overflowing */
+/* 2. BET (PLAY) SCREEN: INLINE TAP-TO-EDIT BET AMOUNT & HUD BUTTONS */
 .hud-square-btn {
   width: 56px !important;
   padding: 4px 2px !important;
@@ -2457,55 +2575,64 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Wager Grid & Custom Bet Input inside Bet Amount Card */
 .wager-grid {
-  grid-template-columns: 1.18fr 0.82fr !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
   gap: 6px !important;
 }
 .console-card {
   min-width: 0 !important;
   overflow: hidden !important;
+  border-radius: 11px !important;
 }
-.tr-custom-bet-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  margin-top: 4px;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-#trCustomBet {
-  flex: 1 1 0% !important;
-  min-width: 0 !important;
-  width: 0 !important;
-  height: 23px !important;
-  padding: 2px 6px !important;
-  border-radius: 6px !important;
-  border: 1px solid rgba(71, 104, 158, 0.45) !important;
-  background: #0a1222 !important;
-  color: #f8fafc !important;
-  font-weight: 800 !important;
-  font-size: 10.5px !important;
-  outline: none !important;
-  box-sizing: border-box !important;
-}
-#trCustomBet:focus {
-  border-color: #28e066 !important;
-}
-#trCustomBetGo {
-  flex-shrink: 0 !important;
-  height: 23px !important;
-  padding: 0 9px !important;
-  border-radius: 6px !important;
-  border: 1px solid #60a5fa !important;
-  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
-  color: #ffffff !important;
-  font-weight: 900 !important;
-  font-size: 9.5px !important;
-  letter-spacing: 0.3px !important;
+.bet-amount-display {
   cursor: pointer !important;
+  padding: 1px 6px !important;
+  border-radius: 5px !important;
+  border: 1px dashed rgba(40, 224, 102, 0.38) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  transition: all 0.14s ease !important;
+}
+.bet-amount-display:active {
+  transform: scale(0.96);
+  background: rgba(16, 185, 129, 0.18) !important;
+}
+.tr-inline-bet-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: #071020;
+  border: 1.5px solid #28e066;
+  border-radius: 6px;
+  padding: 1px 5px;
+  height: 22px;
+}
+#trInlineBetInput {
+  width: 48px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #28e066 !important;
+  font-family: "Barlow Condensed", 'Segoe UI', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  text-align: right !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  -moz-appearance: textfield;
+}
+#trInlineBetInput::-webkit-outer-spin-button,
+#trInlineBetInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.tr-inline-usdt {
+  font-family: "Barlow Condensed", 'Segoe UI', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  font-style: italic;
+  color: #86efac;
 }
 
 /* 3-Car Bet Selector Grid: fit all 3 cards cleanly on 360px and respect inline display:none */
@@ -2524,6 +2651,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   min-width: 0;
   padding: 4px 5px;
   overflow: hidden;
+  border-radius: 9px;
 }
 .console-car-top {
   gap: 3px;
@@ -2554,6 +2682,456 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 3. VIP INVESTMENT PLANS SCREEN (#screenInvest) — REFINED TYPOGRAPHY, ICONS & CARD LAYOUT */
+.cr-screen .investment-head {
+  padding: 8px 10px 6px !important;
+  background: linear-gradient(180deg, rgba(16, 30, 56, 0.85), rgba(8, 15, 28, 0.35)) !important;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18) !important;
+}
+.cr-screen .investment-head h1 {
+  font-size: 16.5px !important;
+  letter-spacing: 0.4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  text-shadow: 0 2px 10px rgba(56, 189, 248, 0.35) !important;
+}
+.cr-screen .investment-head h1 .icon-md {
+  width: 20px !important;
+  height: 20px !important;
+}
+.cr-screen .investment-head p {
+  font-size: 10.5px !important;
+  margin-top: 2px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.cr-screen .tabs-dark {
+  margin-top: 6px !important;
+  padding: 2px !important;
+  border-radius: 9px !important;
+  background: #070f1e !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+}
+.cr-screen .tabs-dark button {
+  height: 29px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border-radius: 7px !important;
+}
+.cr-screen .invest-list {
+  padding: 6px 8px 16px !important;
+}
+.cr-screen .invest-card {
+  min-height: 98px !important;
+  margin: 5px 0 !important;
+  padding: 7px 8px !important;
+  grid-template-columns: 30% 23% 24% 23% !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(15, 30, 52, 0.96), rgba(7, 15, 28, 0.98)) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+.cr-screen .tier-visual {
+  padding-right: 5px !important;
+}
+.cr-screen .tier-name {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+.cr-screen .tier-name img {
+  width: 15px !important;
+  height: 15px !important;
+  margin-right: 0 !important;
+}
+.cr-screen .tier-desc {
+  font-size: 9.5px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.cr-screen .tier-visual > img {
+  height: 46px !important;
+  margin-top: 2px !important;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55));
+}
+.cr-screen .tier-stats {
+  padding: 2px 5px !important;
+}
+.cr-screen .invest-label {
+  font-size: 8.5px !important;
+  letter-spacing: 0.2px !important;
+  color: #94a3b8 !important;
+}
+.cr-screen .invest-number {
+  font-size: 14.5px !important;
+  line-height: 1.1 !important;
+}
+.cr-screen .invest-number small {
+  font-size: 8.5px !important;
+}
+.cr-screen .profit-number {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+.cr-screen .mini-divider {
+  margin: 3px 0 !important;
+}
+.cr-screen .tier-meta {
+  padding: 2px 5px !important;
+  gap: 2px !important;
+}
+.cr-screen .tier-meta p {
+  margin: 0 0 3px !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+}
+.cr-screen .tier-meta .icon-sm {
+  width: 11px !important;
+  height: 11px !important;
+}
+.cr-screen .share-box {
+  padding: 3px 2px !important;
+  border-radius: 6px !important;
+  background: rgba(8, 15, 28, 0.65) !important;
+}
+.cr-screen .share-box strong {
+  font-size: 14px !important;
+  line-height: 1.1 !important;
+}
+.cr-screen .invest-now {
+  min-height: 34px !important;
+  padding: 2px 4px !important;
+  font-size: 11.5px !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.3px !important;
+}
+.cr-screen .invest-note {
+  min-height: 74px !important;
+  padding: 8px 10px !important;
+  grid-template-columns: 40px minmax(0, 1fr) 82px !important;
+  gap: 8px !important;
+  border-radius: 12px !important;
+}
+.cr-screen .invest-note-icon {
+  width: 38px !important;
+  height: 38px !important;
+}
+.cr-screen .invest-note-copy b {
+  font-size: 13px !important;
+}
+.cr-screen .invest-note-copy p {
+  font-size: 9.5px !important;
+  line-height: 1.25 !important;
+}
+.cr-screen .invest-note-car {
+  width: 82px !important;
+  height: 54px !important;
+  margin-left: 0 !important;
+}
+
+/* 4. INVITE SCREEN (#screenInvite) — COMPACT HERO, FLOW CARDS, REF BOXES & TIERS */
+.cr-screen .invite-hero {
+  min-height: 78px !important;
+  padding: 12px 115px 10px 12px !important;
+  background-size: 108px auto, auto, auto !important;
+}
+.cr-screen .invite-hero h1 {
+  font-size: 18px !important;
+  letter-spacing: -0.2px !important;
+}
+.cr-screen .invite-hero p {
+  font-size: 10.5px !important;
+  margin-top: 3px !important;
+  color: #94a3b8 !important;
+}
+.cr-screen .section-kicker {
+  font-size: 12.5px !important;
+  margin: 4px 0 6px !important;
+  letter-spacing: 0.2px !important;
+}
+.cr-screen .earn-card {
+  padding: 8px 6px !important;
+  border-radius: 11px !important;
+}
+.cr-screen .earn-card h3 {
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+.cr-screen .earn-card h3 .icon-md {
+  width: 18px !important;
+  height: 18px !important;
+}
+.cr-screen .earn-card h3 span {
+  font-size: 13px !important;
+}
+.cr-screen .flow {
+  margin-top: 6px !important;
+  padding: 6px 3px !important;
+  font-size: 8px !important;
+}
+.cr-screen .flow .orb {
+  width: 22px !important;
+  height: 22px !important;
+}
+.cr-screen .ref-box {
+  padding: 7px 9px !important;
+  border-radius: 10px !important;
+}
+.cr-screen .ref-value {
+  font-size: 14px !important;
+}
+.cr-screen .ref-link {
+  font-size: 9.5px !important;
+}
+.cr-screen .copy-btn {
+  width: 28px !important;
+  height: 28px !important;
+  flex: 0 0 28px !important;
+  border-radius: 7px !important;
+  background: linear-gradient(145deg, #1d4ed8, #0f296b) !important;
+}
+.cr-screen .progress-card {
+  padding: 8px 10px !important;
+  border-radius: 11px !important;
+}
+.cr-screen .big-orb {
+  width: 38px !important;
+  height: 38px !important;
+}
+.cr-screen .progress-card strong {
+  font-size: 14.5px !important;
+}
+.cr-screen .commission-tier, .cr-screen .ref-stat {
+  min-height: 64px !important;
+  padding: 6px 4px !important;
+  border-radius: 10px !important;
+}
+.cr-screen .commission-tier strong {
+  font-size: 14.5px !important;
+}
+.cr-screen .ref-stat strong {
+  font-size: 13.5px !important;
+}
+.cr-screen .withdraw-ref {
+  min-height: 36px !important;
+  font-size: 12px !important;
+  border-radius: 9px !important;
+}
+
+/* 5. PROFILE SCREEN (#screenProfile) — COMPACT WALLET CARD WITH LIVE/DEMO BAR & CLEAN SETTINGS */
+.cr-screen .profile-body {
+  padding: 6px 9px 14px !important;
+}
+.cr-screen .profile-head {
+  padding: 7px 10px !important;
+  grid-template-columns: 40px 1fr auto !important;
+  gap: 8px !important;
+  border-radius: 11px !important;
+}
+.cr-screen .profile-head .avatar {
+  width: 38px !important;
+  height: 38px !important;
+}
+.cr-screen .profile-title {
+  font-size: 14px !important;
+}
+.cr-screen .profile-name-tag {
+  font-size: 11.5px !important;
+}
+.cr-screen .profile-identity .muted {
+  display: none !important;
+}
+.cr-screen .refer-box {
+  padding: 5px 7px !important;
+  border-radius: 8px !important;
+}
+.cr-screen .wallet-card {
+  position: relative !important;
+  min-height: auto !important;
+  margin-top: 6px !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  background-size: 76px auto, cover !important;
+  background-position: right 8px center, center !important;
+}
+.tr-wallet-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+.tr-wmode-pills {
+  display: inline-flex;
+  background: rgba(6, 14, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+.tr-wmode-btn {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font: 800 9.5px/1 'Inter', system-ui, sans-serif;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tr-wmode-btn.active[data-wm="demo"] {
+  background: #f59e0b;
+  color: #090d16;
+}
+.tr-wmode-btn.active[data-wm="live"] {
+  background: #22c55e;
+  color: #052e16;
+}
+.tr-wrefill-btn {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(16, 185, 129, 0.28);
+  color: #ecfdf5;
+  font: 800 9.5px/1 'Inter', system-ui, sans-serif;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cr-screen .balance-big {
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+.cr-screen .balance-big#profileProfitBalance {
+  font-size: 17px !important;
+}
+.cr-screen .balance-big small {
+  font-size: 10.5px !important;
+}
+.cr-screen .wallet-line {
+  margin: 4px 0 !important;
+  width: 58% !important;
+}
+.cr-screen .wallet-buttons {
+  margin-top: 7px !important;
+  gap: 6px !important;
+}
+.cr-screen .wallet-buttons button {
+  min-height: 30px !important;
+  font-size: 11px !important;
+  border-radius: 8px !important;
+}
+.tr-settings {
+  margin: 6px 0 !important;
+  padding: 9px 11px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(145deg, rgba(14, 24, 44, 0.96), rgba(8, 14, 26, 0.98)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+}
+.tr-settings h4 {
+  font-size: 11px !important;
+  letter-spacing: 0.4px !important;
+  margin: 0 0 5px !important;
+  color: #38bdf8 !important;
+}
+.tr-set-row {
+  padding: 6px 0 !important;
+  font-size: 11.5px !important;
+}
+.tr-set-pills {
+  display: inline-flex;
+  gap: 5px;
+}
+.tr-set-row .tr-btn {
+  width: auto !important;
+  padding: 5px 10px !important;
+  font-size: 10px !important;
+  border-radius: 7px !important;
+}
+.tr-switch {
+  width: 38px !important;
+  height: 21px !important;
+}
+.tr-switch::after {
+  width: 15px !important;
+  height: 15px !important;
+  top: 2px !important;
+  left: 2px !important;
+}
+.tr-switch.on::after {
+  left: 19px !important;
+}
+.cr-screen .bonus {
+  margin-top: 6px !important;
+  padding: 7px 10px !important;
+  border-radius: 11px !important;
+}
+.cr-screen .bonus-icon {
+  width: 32px !important;
+  height: 32px !important;
+}
+#bonusLockedVal {
+  font-size: 16px !important;
+}
+.cr-screen .profile-section {
+  margin-top: 6px !important;
+  padding: 7px 9px !important;
+  border-radius: 11px !important;
+}
+.cr-screen .profile-section h2 {
+  font-size: 12.5px !important;
+  margin-bottom: 5px !important;
+}
+.cr-screen .profile-stat {
+  min-height: 58px !important;
+  padding: 5px 4px !important;
+  border-radius: 9px !important;
+}
+.cr-screen .profile-stat strong {
+  font-size: 13.5px !important;
+  margin-top: 3px !important;
+}
+.cr-screen .menu-item {
+  min-height: 40px !important;
+  padding: 4px 9px !important;
+}
+.cr-screen .menu-icon {
+  width: 28px !important;
+  height: 28px !important;
+}
+.cr-screen .menu-icon img {
+  width: 16px !important;
+  height: 16px !important;
+}
+.cr-screen .menu-item b {
+  font-size: 11.5px !important;
+}
+.cr-screen .menu-item small {
+  font-size: 9px !important;
+}
+
+/* 6. BOTTOM NAVIGATION BAR GLOWING ICONS */
+.bottom-nav {
+  height: calc(50px + var(--sa-bottom)) !important;
+}
+.bottom-nav .nav-tab svg {
+  width: 22px !important;
+  height: 22px !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  transition: transform 0.15s ease;
+}
+.bottom-nav .nav-tab.active svg {
+  transform: translateY(-1px) scale(1.06);
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.55));
+}
+.bottom-nav .nav-tab span {
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px !important;
 }
 </style>
 </head>
@@ -3355,33 +3933,63 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   <!-- 5. BOTTOM NAVIGATION (MEDIUM SIZE ICONS & ALIGNED LABELS) -->
   <nav class="bottom-nav">
-<div class="nav-tab" id="navInvestBtn">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M4 19H20M7 16V10M12 16V6M17 16V12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <div class="nav-tab" id="navInvestBtn">
+      <svg viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="navGradInvest" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#34d399"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(16,185,129,0.14)" stroke="rgba(52,211,153,0.45)" stroke-width="1.2"/>
+        <rect x="7" y="14" width="3.2" height="6.5" rx="1" fill="url(#navGradInvest)"/>
+        <rect x="12.4" y="10.5" width="3.2" height="10" rx="1" fill="url(#navGradInvest)"/>
+        <rect x="17.8" y="7" width="3.2" height="13.5" rx="1" fill="url(#navGradInvest)"/>
+        <path d="M7.5 11.5L13 8L19.5 5.5" stroke="#fde047" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
       <span>INVEST</span>
     </div>
     <div class="nav-tab active" id="navBetBtn">
-      <svg viewBox="0 0 24 24" fill="none">
-        <rect x="2" y="6.5" width="20" height="11" rx="5" stroke="currentColor" stroke-width="2.2"/>
-        <path d="M7.5 10V14M5.5 12H9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="15.5" cy="11" r="1.3" fill="currentColor"/>
-        <circle cx="17.8" cy="13" r="1.3" fill="currentColor"/>
+      <svg viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="navGradBet" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+          </linearGradient>
+        </defs>
+        <rect x="2.5" y="6.5" width="23" height="15" rx="6.5" fill="url(#navGradBet)" stroke="#93c5fd" stroke-width="1.3"/>
+        <path d="M9 11.5V16.5M6.5 14H11.5" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round"/>
+        <circle cx="17.5" cy="12.5" r="1.6" fill="#fde047"/>
+        <circle cx="20.5" cy="15.2" r="1.6" fill="#4ade80"/>
       </svg>
       <span>BET (PLAY)</span>
     </div>
     <div class="nav-tab" id="navInviteBtn">
-      <svg viewBox="0 0 24 24" fill="none">
-        <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="2.2"/>
-        <path d="M3 19C3 15.7 5.7 13 9 13C12.3 13 15 15.7 15 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        <path d="M19 8V14M16 11H22" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <svg viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="navGradInvite" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f472b6"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(168,85,247,0.14)" stroke="rgba(216,180,254,0.45)" stroke-width="1.2"/>
+        <circle cx="11.5" cy="10.5" r="3.3" fill="url(#navGradInvite)"/>
+        <path d="M6 20.5C6 17.5 8.4 15.5 11.5 15.5C14.6 15.5 17 17.5 17 20.5" stroke="url(#navGradInvite)" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M20 9.5V14.5M17.5 12H22.5" stroke="#fde047" stroke-width="2" stroke-linecap="round"/>
       </svg>
       <span>INVITE</span>
     </div>
     <div class="nav-tab" id="navProfileBtn">
-      <svg viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2.2"/>
-        <path d="M12 3V5.2M12 18.8V21M3 12H5.2M18.8 12H21M5.6 5.6L7.2 7.2M16.8 16.8L18.4 18.4M18.4 5.6L16.8 7.2M7.2 16.8L5.6 18.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <svg viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="navGradProf" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(245,158,11,0.14)" stroke="rgba(251,191,36,0.45)" stroke-width="1.2"/>
+        <circle cx="14" cy="11" r="3.4" fill="url(#navGradProf)"/>
+        <path d="M8 20.5C8 17.6 10.6 15.6 14 15.6C17.4 15.6 20 17.6 20 20.5" stroke="url(#navGradProf)" stroke-width="2.2" stroke-linecap="round"/>
       </svg>
       <span>PROFILE</span>
     </div>
@@ -4027,7 +4635,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function updateUIValues() {
     balanceText.textContent = `${balanceUsdt.toFixed(2)} USDT`;
-    const fmtBet = Number.isInteger(currentBet) ? currentBet.toString() : currentBet.toFixed(1);
+    const fmtBet = Number.isInteger(currentBet) ? currentBet.toString() : (+currentBet.toFixed(2)).toString();
     betAmountText.textContent = `${fmtBet} USDT`;
     poolText.textContent = `${+(currentBet * raceModeCars).toFixed(2)} USDT`;
     const mult = getMultiplier();
@@ -7346,82 +7954,164 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   $('#closeModeModalBtn') && $('#closeModeModalBtn').addEventListener('click', hideBack);
 
   // ---- Bet custom input + min/max ----
-  function wireBetControls() {
-    const wrap = document.createElement('div');
-    wrap.className = 'tr-bet-custom';
-    wrap.innerHTML = `<label style="font-size:10px;color:#94a3b8;font-weight:800;">CUSTOM</label>
-      <input id="trCustomBet" class="tr-field" type="number" step="0.1" inputmode="decimal" placeholder="Amount" style="padding:8px 10px;font-size:13px;" />`;
-    const host = $('.amount-panel') || $('#raceTabAmountVal')?.parentElement;
-    // Insert near console bet presets
-    const presets = $('.preset-row') || $$('.preset-pill')[0]?.parentElement;
-    if (presets && !$('#trCustomBet')) {
-      const box = document.createElement('div');
-      box.className = 'tr-custom-bet-row';
-      box.innerHTML = `<input id="trCustomBet" type="number" step="0.1" min="0.1" inputmode="decimal" placeholder="Custom USDT..." />
-        <button type="button" id="trCustomBetGo">SET</button>`;
-      presets.parentElement && presets.parentElement.appendChild(box);
+  function calcNextBetPlus(cur) {
+    let next;
+    if (cur < 1) {
+      next = +(cur + 0.1).toFixed(1);
+    } else if (cur < 10) {
+      let raw = cur * 1.10;
+      next = Math.round(raw * 2) / 2;
+      if (next <= cur) next = +(cur + 0.5).toFixed(1);
+    } else {
+      let step = Math.max(1, Math.round(cur * 0.10));
+      next = Math.round(cur + step);
     }
-    const betAmtDisp = $('#betAmountText');
-    if (betAmtDisp) {
-      betAmtDisp.style.cursor = 'pointer';
-      betAmtDisp.title = 'Tap to enter custom bet';
-      betAmtDisp.addEventListener('click', () => {
-        const inp = $('#trCustomBet');
-        if (inp) { inp.value = currentBet; inp.focus(); inp.select && inp.select(); }
-      });
-    }
-    const applyCustom = () => {
-      const v = parseFloat(($('#trCustomBet') || {}).value);
-      if (!isFinite(v)) return;
-      if (v < minBet || v > maxBet) { toast(`Bet must be between ${minBet} and ${maxBet} USDT`, 'warn'); return; }
-      setBet(v); 
-    };
-    $('#trCustomBetGo') && ($('#trCustomBetGo').onclick = applyCustom);
-    $('#trCustomBet') && $('#trCustomBet').addEventListener('keydown', e => { if (e.key === 'Enter') applyCustom(); });
+    return Math.min(maxBet, next);
+  }
 
-    // Ensure +/- use min/max and step list
-    const minus = $('#betMinusBtn'), plus = $('#betPlusBtn');
-    if (minus) {
-      minus.onclick = null;
-      minus.addEventListener('click', () => {
-        const steps = (typeof betSteps !== 'undefined') ? betSteps : [0.1, 0.5, 1, 2, 5, 10];
-        let next = currentBet;
-        for (let i = steps.length - 1; i >= 0; i--) if (steps[i] < currentBet - 1e-9) { next = steps[i]; break; }
-        next = Math.max(minBet, next);
-        setBet(next);
+  function calcNextBetMinus(cur) {
+    let next;
+    if (cur <= 1) {
+      next = +(cur - 0.1).toFixed(1);
+    } else if (cur <= 10) {
+      let raw = cur * 0.90;
+      next = Math.round(raw * 2) / 2;
+      if (next >= cur) next = +(cur - 0.5).toFixed(1);
+    } else {
+      let step = Math.max(1, Math.round(cur * 0.10));
+      next = Math.round(cur - step);
+    }
+    return Math.max(minBet, next);
+  }
+
+  function wireBetControls() {
+    // Remove any old custom bet row if present
+    $$('.tr-custom-bet-row').forEach(el => el.remove());
+
+    // Tap on Bet Amount (#betAmountText) opens inline numeric input directly
+    const betAmtDisp = $('#betAmountText');
+    if (betAmtDisp && !$('#trInlineBetInput')) {
+      const stack = betAmtDisp.parentElement;
+      const editWrap = document.createElement('div');
+      editWrap.id = 'trInlineBetWrap';
+      editWrap.className = 'tr-inline-bet-wrap';
+      editWrap.style.display = 'none';
+      editWrap.innerHTML = `<input id="trInlineBetInput" type="number" step="any" min="0.1" max="100" inputmode="decimal" aria-label="Custom bet amount" /><span class="tr-inline-usdt">USDT</span>`;
+      if (stack) stack.appendChild(editWrap);
+
+      const inp = $('#trInlineBetInput');
+      const openInlineInput = (e) => {
+        if (e) e.stopPropagation();
+        if (gameState !== 'IDLE') {
+          showCrToast('Bet amount is locked once matchmaking starts!');
+          return;
+        }
+        betAmtDisp.style.display = 'none';
+        editWrap.style.display = 'inline-flex';
+        inp.value = Number.isInteger(currentBet) ? String(currentBet) : String(+currentBet.toFixed(2));
+        inp.focus();
+        try { inp.select(); } catch (err) {}
+      };
+
+      const commitInlineInput = () => {
+        const raw = parseFloat(inp.value);
+        editWrap.style.display = 'none';
+        betAmtDisp.style.display = '';
+        if (isFinite(raw) && raw > 0) {
+          const clamped = Math.max(minBet, Math.min(maxBet, +raw.toFixed(2)));
+          setBet(clamped);
+        } else {
+          updateUIValues();
+        }
+      };
+
+      betAmtDisp.style.cursor = 'pointer';
+      betAmtDisp.title = 'Tap to enter custom amount';
+      betAmtDisp.addEventListener('click', openInlineInput);
+
+      inp.addEventListener('input', () => {
+        const raw = parseFloat(inp.value);
+        if (isFinite(raw) && raw >= minBet && raw <= maxBet) {
+          currentBet = +raw.toFixed(2);
+          poolText.textContent = `${+(currentBet * raceModeCars).toFixed(2)} USDT`;
+          const mult = getMultiplier();
+          payoutText.textContent = `${+(currentBet * mult).toFixed(2)} USDT`;
+          presetButtons.forEach(btn => {
+            btn.classList.toggle('active', Math.abs(parseFloat(btn.dataset.bet) - currentBet) < 0.001);
+          });
+        }
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { inp.value = String(currentBet); inp.blur(); }
+      });
+      inp.addEventListener('blur', commitInlineInput);
+    }
+
+    // Clone and replace +/- buttons so only the 10% round-figure handler runs
+    const oldMinus = $('#betMinusBtn'), oldPlus = $('#betPlusBtn');
+    if (oldMinus && oldMinus.parentNode) {
+      const minus = oldMinus.cloneNode(true);
+      oldMinus.parentNode.replaceChild(minus, oldMinus);
+      minus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setBet(calcNextBetMinus(currentBet));
       });
     }
-    if (plus) {
-      plus.addEventListener('click', () => {
-        const steps = (typeof betSteps !== 'undefined') ? betSteps : [0.1, 0.5, 1, 2, 5, 10];
-        let next = currentBet;
-        for (let i = 0; i < steps.length; i++) if (steps[i] > currentBet + 1e-9) { next = steps[i]; break; }
-        if (next === currentBet) next = Math.min(maxBet, +(currentBet + 1).toFixed(2));
-        next = Math.min(maxBet, next);
-        setBet(next);
+    if (oldPlus && oldPlus.parentNode) {
+      const plus = oldPlus.cloneNode(true);
+      oldPlus.parentNode.replaceChild(plus, oldPlus);
+      plus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setBet(calcNextBetPlus(currentBet));
       });
     }
   }
 
-  // ---- Settings panel in Profile ----
+  // ---- Settings panel & Wallet Card Mode Switch in Profile ----
   function injectSettings() {
     const body = $('.profile-body') || $('#screenProfile');
     if (!body || $('#trSettings')) return;
+
+    // Also inject compact Live/Demo + Refill bar into Profile .wallet-card top-right
+    const wallet = body.querySelector('.wallet-card');
+    if (wallet && !$('#trWalletModeBar')) {
+      const wBar = document.createElement('div');
+      wBar.id = 'trWalletModeBar';
+      wBar.className = 'tr-wallet-mode-bar';
+      wBar.innerHTML = `
+        <div class="tr-wmode-pills">
+          <button type="button" class="tr-wmode-btn" data-wm="demo">DEMO</button>
+          <button type="button" class="tr-wmode-btn" data-wm="live">LIVE</button>
+        </div>
+        <button type="button" class="tr-wrefill-btn" id="trWalletRefillBtn" title="Refill Demo $1000">↻ $1000</button>
+      `;
+      wallet.prepend(wBar);
+      wBar.querySelectorAll('[data-wm]').forEach(btn => {
+        btn.onclick = (e) => { e.stopPropagation(); if (btn.dataset.wm !== playMode) setMode(btn.dataset.wm); };
+      });
+      const wRefill = $('#trWalletRefillBtn');
+      if (wRefill) wRefill.onclick = (e) => {
+        e.stopPropagation();
+        demoBal = 1000; saveDemo(); applyBalanceUI();
+        toast('Demo balance refilled to 1000 USDT', 'ok');
+      };
+    }
+
     const card = document.createElement('section');
     card.id = 'trSettings'; card.className = 'tr-settings';
     card.innerHTML = `
-      <h4>⚙️ SETTINGS</h4>
-      <div class="tr-set-row"><span>Play mode</span>
-        <span style="display:flex;gap:6px;">
-          <button type="button" class="tr-btn ghost" id="trModeDemo" style="width:auto;padding:6px 10px;font-size:11px;">DEMO</button>
-          <button type="button" class="tr-btn" id="trModeLive" style="width:auto;padding:6px 10px;font-size:11px;">LIVE</button>
+      <h4>⚙️ SETTINGS &amp; AUDIO</h4>
+      <div class="tr-set-row"><span>🎮 Play Mode</span>
+        <span class="tr-set-pills">
+          <button type="button" class="tr-btn ghost" id="trModeDemo">DEMO</button>
+          <button type="button" class="tr-btn" id="trModeLive">LIVE</button>
         </span></div>
-      <div class="tr-set-row"><span>🎵 Music</span><button type="button" class="tr-switch" id="trMusicSw" aria-label="Toggle music"></button></div>
-      <div class="tr-set-row"><span>🔊 Sound effects</span><button type="button" class="tr-switch" id="trSfxSw" aria-label="Toggle SFX"></button></div>
-      <div class="tr-set-row" id="trRefillRow"><span>Demo balance</span>
-        <button type="button" class="tr-btn green" id="trRefillBtn" style="width:auto;padding:7px 12px;font-size:11px;">♻️ Refill $1000</button></div>
-      <div class="tr-set-row"><span>Language</span><span style="color:var(--tr-muted);font-size:12px;">English</span></div>`;
-    const wallet = body.querySelector('.wallet-card');
+      <div class="tr-set-row"><span>🎵 Background Music</span><button type="button" class="tr-switch" id="trMusicSw" aria-label="Toggle music"></button></div>
+      <div class="tr-set-row"><span>🔊 Sound Effects</span><button type="button" class="tr-switch" id="trSfxSw" aria-label="Toggle SFX"></button></div>
+      <div class="tr-set-row" id="trRefillRow"><span>💰 Demo Balance</span>
+        <button type="button" class="tr-btn green" id="trRefillBtn">♻️ Refill $1000</button></div>
+      <div class="tr-set-row"><span>🌐 Language</span><span style="color:#94a3b8;font-size:11.5px;font-weight:700;">English</span></div>`;
     if (wallet) wallet.after(card); else body.prepend(card);
 
     $('#trModeDemo').onclick = () => setMode('demo');
@@ -7439,33 +8129,97 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       $('#trSfxSw').classList.toggle('on', sfxOn);
     };
     $('#trRefillBtn').onclick = () => {
-      demoBal = 1000; saveDemo(); applyBalanceUI(); 0;
+      demoBal = 1000; saveDemo(); applyBalanceUI();
+      toast('Demo balance refilled to 1000 USDT', 'ok');
     };
+    paintMode();
   }
 
-  // Mode pill in header
+  // Compact Live/Demo switcher INSIDE .balance-box
   function injectModePill() {
-    const hdr = $('.top-header');
-    if (!hdr || $('#trModeChev')) return;
-    const wrap = document.createElement('div'); wrap.className = 'tr-mode-wrap';
-    wrap.innerHTML = `<button type="button" id="trModeChev" class="tr-chev" aria-label="Play mode">^</button>
-      <div class="tr-mode-menu" id="trModeMenu">
-        <button type="button" data-m="demo">🟡 Demo</button>
-        <button type="button" data-m="live">🔴 Live</button>
-      </div>`;
-    hdr.insertBefore(wrap, hdr.querySelector('.deposit-btn') || null);
-    $('#trModeChev').onclick = (e) => { e.stopPropagation(); $('#trModeMenu').classList.toggle('open'); };
-    $$('#trModeMenu [data-m]').forEach(b => b.onclick = (e) => { e.stopPropagation(); $('#trModeMenu').classList.remove('open'); if (b.dataset.m !== playMode) setMode(b.dataset.m); });
-    document.addEventListener('click', () => { const m = $('#trModeMenu'); if (m) m.classList.remove('open'); });
+    const balBox = $('.top-header .balance-box');
+    if (!balBox || $('#trModeChev')) return;
+    // Remove any old external .tr-mode-wrap if present
+    $$('.top-header > .tr-mode-wrap').forEach(el => el.remove());
+
+    const balLabel = balBox.querySelector('.balance-label');
+    if (balLabel && !$('#trBalModeTag')) {
+      balLabel.innerHTML = `BALANCE <span id="trBalModeTag" class="tr-bal-mode-tag demo">DEMO</span>`;
+    }
+
+    const chevBtn = document.createElement('button');
+    chevBtn.type = 'button';
+    chevBtn.id = 'trModeChev';
+    chevBtn.className = 'tr-chev demo';
+    chevBtn.setAttribute('aria-label', 'Switch Live or Demo mode');
+    chevBtn.innerHTML = `<span id="trModeChevTxt">DEMO</span><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    balBox.appendChild(chevBtn);
+
+    const menu = document.createElement('div');
+    menu.className = 'tr-mode-menu';
+    menu.id = 'trModeMenu';
+    menu.innerHTML = `
+      <button type="button" data-m="demo"><span>🟡 Demo Mode</span><small>Practice</small></button>
+      <button type="button" data-m="live"><span>🟢 Live USDT</span><small>Real Play</small></button>
+      <button type="button" id="trMenuRefillBtn" class="tr-menu-refill">↻ Refill $1000 Demo</button>
+    `;
+    balBox.appendChild(menu);
+
+    const toggleMenu = (e) => {
+      e.stopPropagation();
+      menu.classList.toggle('open');
+    };
+    balBox.style.cursor = 'pointer';
+    balBox.addEventListener('click', toggleMenu);
+    chevBtn.onclick = toggleMenu;
+
+    $$('#trModeMenu [data-m]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        menu.classList.remove('open');
+        if (b.dataset.m !== playMode) setMode(b.dataset.m);
+      };
+    });
+    const mRefill = $('#trMenuRefillBtn');
+    if (mRefill) {
+      mRefill.onclick = (e) => {
+        e.stopPropagation();
+        menu.classList.remove('open');
+        if (playMode !== 'demo') setMode('demo');
+        demoBal = 1000; saveDemo(); applyBalanceUI();
+        toast('Demo balance refilled to 1000 USDT', 'ok');
+      };
+    }
+    document.addEventListener('click', () => { menu.classList.remove('open'); });
   }
 
   // Silence double toast on first setMode: paint only
   function paintMode() {
     const ch = $('#trModeChev');
-    if (ch) { ch.className = 'tr-chev ' + playMode; ch.title = playMode === 'live' ? 'LIVE mode' : 'DEMO mode'; }
+    if (ch) {
+      ch.className = 'tr-chev ' + playMode;
+      ch.title = playMode === 'live' ? 'LIVE mode (Tap to switch)' : 'DEMO mode (Tap to switch)';
+    }
+    const chTxt = $('#trModeChevTxt');
+    if (chTxt) chTxt.textContent = playMode === 'live' ? 'LIVE' : 'DEMO';
+    const tag = $('#trBalModeTag');
+    if (tag) {
+      tag.className = 'tr-bal-mode-tag ' + playMode;
+      tag.textContent = playMode === 'live' ? 'LIVE' : 'DEMO';
+    }
     $$('#trModeMenu [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === playMode));
+    const mRefill = $('#trMenuRefillBtn');
+    if (mRefill) mRefill.style.display = playMode === 'demo' ? 'block' : 'none';
     const refill = $('#trRefillBtn');
     if (refill) refill.style.display = playMode === 'demo' ? '' : 'none';
+    const refillRow = $('#trRefillRow');
+    if (refillRow) refillRow.style.display = playMode === 'demo' ? 'flex' : 'none';
+    const demoBtn = $('#trModeDemo'), liveBtn = $('#trModeLive');
+    if (demoBtn) demoBtn.className = 'tr-btn ' + (playMode === 'demo' ? '' : 'ghost');
+    if (liveBtn) liveBtn.className = 'tr-btn ' + (playMode === 'live' ? '' : 'ghost');
+    $$('#trWalletModeBar [data-wm]').forEach(b => b.classList.toggle('active', b.dataset.wm === playMode));
+    const wRefill = $('#trWalletRefillBtn');
+    if (wRefill) wRefill.style.display = playMode === 'demo' ? 'inline-flex' : 'none';
   }
 
   // ---- Replace fake leaderboard handler ----
