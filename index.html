@@ -4273,12 +4273,25 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     engineSub.start();
   }
 
+  let _engineMuted = true;
+  let _lastEngineUpdateMs = 0;
   function updateEngineSound(speedKmh, isRacing) {
     if (!audioCtx || !engineGain) return;
     if (!soundEnabled || !isRacing) {
-      engineGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+      if (!_engineMuted) {
+        try {
+          const t = audioCtx.currentTime;
+          engineGain.gain.cancelScheduledValues(t);
+          engineGain.gain.setTargetAtTime(0.0001, t, 0.08);
+          _engineMuted = true;
+        } catch (e) {}
+      }
       return;
     }
+    const nowMs = performance.now();
+    if (nowMs - _lastEngineUpdateMs < 75) return;
+    _lastEngineUpdateMs = nowMs;
+    _engineMuted = false;
     const gear = Math.min(6, Math.max(1, Math.floor(speedKmh / 43) + 1));
     if (gear > lastGear) {
       playTone(820, 360, 0.08, 'sine', 0.07);
@@ -4286,19 +4299,27 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
     lastGear = gear;
 
+    const t = audioCtx.currentTime;
     const rpm = (speedKmh % 43) / 43;
     const freq = 60 + speedKmh * 0.54 + rpm * 46;
-    engineOsc1.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.03);
-    engineOsc2.frequency.setTargetAtTime(freq * 1.5, audioCtx.currentTime, 0.03);
-    engineSub.frequency.setTargetAtTime(freq * 0.5, audioCtx.currentTime, 0.03);
-    engineFilter.frequency.setTargetAtTime(450 + speedKmh * 5.2, audioCtx.currentTime, 0.04);
-    engineGain.gain.setTargetAtTime(Math.min(0.12, 0.035 + (speedKmh / 260) * 0.08), audioCtx.currentTime, 0.04);
+    engineOsc1.frequency.cancelScheduledValues(t);
+    engineOsc1.frequency.setTargetAtTime(freq, t, 0.03);
+    engineOsc2.frequency.cancelScheduledValues(t);
+    engineOsc2.frequency.setTargetAtTime(freq * 1.5, t, 0.03);
+    engineSub.frequency.cancelScheduledValues(t);
+    engineSub.frequency.setTargetAtTime(freq * 0.5, t, 0.03);
+    engineFilter.frequency.cancelScheduledValues(t);
+    engineFilter.frequency.setTargetAtTime(450 + speedKmh * 5.2, t, 0.04);
+    engineGain.gain.cancelScheduledValues(t);
+    engineGain.gain.setTargetAtTime(Math.min(0.12, 0.035 + (speedKmh / 260) * 0.08), t, 0.04);
   }
 
+  let _activeToneCount = 0;
   function playTone(f1, f2, dur, type = 'sine', vol = 0.14) {
-    if (!soundEnabled) return;
+    if (!soundEnabled || _activeToneCount > 8) return;
     initAudio();
-    if (!audioCtx) return;
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    _activeToneCount++;
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
@@ -4309,36 +4330,50 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     g.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(g);
     g.connect(audioCtx.destination);
+    osc.onended = () => {
+      _activeToneCount = Math.max(0, _activeToneCount - 1);
+      try { osc.disconnect(); g.disconnect(); } catch (e) {}
+    };
     osc.start(now);
     osc.stop(now + dur);
   }
 
   function playNoiseImpact(dur = 0.25, freq = 800, vol = 0.24) {
-    if (!soundEnabled) return;
+    if (!soundEnabled || _activeToneCount > 8) return;
     initAudio();
-    if (!audioCtx) return;
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    _activeToneCount++;
     const len = Math.floor(audioCtx.sampleRate * dur);
     const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.35));
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf;
+    const srcNode = audioCtx.createBufferSource();
+    srcNode.buffer = buf;
     const flt = audioCtx.createBiquadFilter();
     flt.type = 'bandpass';
     flt.frequency.value = freq;
     const g = audioCtx.createGain();
     g.gain.value = vol;
-    src.connect(flt);
+    srcNode.connect(flt);
     flt.connect(g);
     g.connect(audioCtx.destination);
-    src.start();
+    srcNode.onended = () => {
+      _activeToneCount = Math.max(0, _activeToneCount - 1);
+      try { srcNode.disconnect(); flt.disconnect(); g.disconnect(); } catch (e) {}
+    };
+    srcNode.start();
   }
 
+  let _lastHapticMs = 0;
   function triggerHaptic(pattern) {
     if (!hapticEnabled) return;
+    const now = performance.now();
+    if (now - _lastHapticMs < 65) return;
+    _lastHapticMs = now;
     try {
       if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        return;
       }
     } catch (e) {}
     if (navigator.vibrate) {
@@ -4716,17 +4751,26 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const cdSubLabel = document.getElementById('cdSubLabel');
 
   // Hide position banner before race starts; show only during RACING
+  let _lastTopBannerState = '';
   function updateTopPositionBanner() {
     if (gameState !== 'RACING' || !cars.length) {
-      topPosBanner.classList.add('hidden-banner');
+      if (_lastTopBannerState !== 'hidden') {
+        topPosBanner.classList.add('hidden-banner');
+        _lastTopBannerState = 'hidden';
+      }
       return;
     }
-    topPosBanner.classList.remove('hidden-banner');
-    const sorted = [...cars].sort((a, b) => b.z - a.z);
-    const rank = sorted.findIndex(c => c.isPlayer) + 1;
     const pCar = cars.find(c => c.isPlayer);
+    const pZ = pCar ? pCar.z : 0;
+    let rank = 1;
+    for (let i = 0; i < cars.length; i++) {
+      if (cars[i] !== pCar && cars[i].z > pZ) rank++;
+    }
     const prefix = isAutoBetMode ? `${pCar ? pCar.carTitle : 'YOUR CAR'} IS IN` : 'YOU ARE IN';
-    topPosBanner.classList.remove('pos-1', 'pos-2', 'pos-3');
+    const nextState = `${rank}:${prefix}`;
+    if (_lastTopBannerState === nextState) return;
+    _lastTopBannerState = nextState;
+    topPosBanner.classList.remove('hidden-banner', 'pos-1', 'pos-2', 'pos-3');
     if (rank === 1) {
       topPosBanner.classList.add('pos-1');
       topPosBanner.textContent = `${prefix} 1ST POSITION!`;
@@ -5109,11 +5153,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     sfxWin();
     // Optional POST to local Python Telegram Bot backend if running
     try {
-      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) { window.Telegram.WebApp.sendData(JSON.stringify({ type: 'task_complete', message: msg })); } else if (window.TRADER_BACKEND_URL) fetch(window.TRADER_BACKEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, timestamp: Date.now() })
-      }).catch(() => {});
+      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
     } catch (e) {}
     clearTimeout(window._tgBannerTimer);
     window._tgBannerTimer = setTimeout(() => {
@@ -6397,9 +6439,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
     }
 
+    if (debrisParticles.length > 40) debrisParticles.length = 40;
+    if (tireSmokeParticles.length > 25) tireSmokeParticles.length = 25;
     if (cameraShake > 0) cameraShake = Math.max(0, cameraShake - dt * 28);
-    speedNum.textContent = Math.round(player.speed);
-    timerText.textContent = formatTime(timeRemaining);
+    const roundedSpd = Math.round(player.speed);
+    if (speedNum._lastVal !== roundedSpd) {
+      speedNum._lastVal = roundedSpd;
+      speedNum.textContent = roundedSpd;
+    }
+    const fmtT = formatTime(timeRemaining);
+    if (timerText._lastVal !== fmtT) {
+      timerText._lastVal = fmtT;
+      timerText.textContent = fmtT;
+    }
     updateTopPositionBanner();
     updateEngineSound(player.speed, true);
   }
@@ -6479,14 +6531,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const MAX_DRAW_DIST = 148;
 
   function resizeCanvas() {
-    const dpr = Math.min(Math.max(window.devicePixelRatio || 2, 2.0), 2.5);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rect = canvas.getBoundingClientRect();
-    cw = Math.max(380, Math.floor(rect.width * dpr));
-    ch = Math.max(340, Math.floor(rect.height * dpr));
+    cw = Math.max(320, Math.floor(rect.width * dpr));
+    ch = Math.max(280, Math.floor(rect.height * dpr));
     canvas.width = cw;
     canvas.height = ch;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = 'low';
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
@@ -6622,11 +6674,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       ctx.fillStyle = b.side;
       ctx.fillRect(bx + bw, by + 4, bw * 0.24, bh - 4);
 
-      const bGrad = ctx.createLinearGradient(bx, by, bx + bw, horizonY);
-      bGrad.addColorStop(0, b.c1);
-      bGrad.addColorStop(0.5, currentWeather === 'sunset' ? '#fb923c' : '#6cb4f0');
-      bGrad.addColorStop(1, b.c2);
-      ctx.fillStyle = bGrad;
+      ctx.fillStyle = currentWeather === 'sunset' ? '#c2410c' : b.c1;
       ctx.fillRect(bx, by, bw, bh);
 
       ctx.fillStyle = b.side;
@@ -6654,7 +6702,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         ? 'rgba(254, 240, 138, 0.55)'
         : 'rgba(224, 242, 254, 0.48)';
       ctx.fillStyle = winCol;
-      const cols = 4, rows = 9;
+      const cols = 2, rows = 4;
       const ww = bw / (cols * 2 + 1), wh = bh / (rows * 2 + 1);
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
@@ -7336,18 +7384,20 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     ctx.fill();
     ctx.stroke();
 
-    // 9. Iconic Mustang Tri-Bar ([|||]   [|||]) Glowing LED Tail Lights with Bright Inner Cores
+    // 9. Iconic Mustang Tri-Bar ([|||]   [|||]) Glowing LED Tail Lights with Bright Inner Cores (no per-bar shadowBlur stall)
     const brakeActive = car.isPlayer && keys.brake;
+    if (brakeActive) {
+      ctx.fillStyle = 'rgba(255, 30, 0, 0.28)';
+      ctx.fillRect(-carW * 0.41, -carH * 0.395, carW * 0.23, carH * 0.12);
+      ctx.fillRect(carW * 0.16, -carH * 0.395, carW * 0.23, carH * 0.12);
+    }
     ctx.fillStyle = brakeActive ? '#ff0000' : '#ff2a00';
-    ctx.shadowColor = '#ff1e00';
-    ctx.shadowBlur = brakeActive ? 16 : 9;
     for (let bar = 0; bar < 3; bar++) {
       const bxL = -carW * 0.395 + bar * (carW * 0.072);
       const bxR = carW * 0.175 + bar * (carW * 0.072);
       drawRoundedRect(ctx, bxL, -carH * 0.38, carW * 0.056, carH * 0.092, carW * 0.01);
       drawRoundedRect(ctx, bxR, -carH * 0.38, carW * 0.056, carH * 0.092, carW * 0.01);
     }
-    ctx.shadowBlur = 0;
     // Inner hot-orange LED filament highlight
     ctx.fillStyle = '#fde047';
     for (let bar = 0; bar < 3; bar++) {
@@ -7519,10 +7569,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   resetToIdleState();
   let lastTime = performance.now();
   function frame(now) {
-    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    const rawDt = (now - lastTime) / 1000;
     lastTime = now;
+    if (document.hidden) {
+      requestAnimationFrame(frame);
+      return;
+    }
+    const dt = Math.min(0.05, Math.max(0.001, rawDt));
     updateSimulation(dt);
-    renderScene();
+    if (currentTab === 'bet' || currentTab === 'race' || gameState === 'RACING' || gameState === 'COUNTDOWN') {
+      renderScene();
+    }
     requestAnimationFrame(frame);
   }
 
@@ -7626,13 +7683,20 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (!API) throw Object.assign(new Error('No game server configured. Open via the bot or set ?api='), { offline: true });
     const initData = getInitData();
     let r;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, 12000) : null;
     try {
       r = await fetch(API + path, {
         method: body ? 'POST' : 'GET',
         headers: Object.assign({ 'X-Telegram-Init-Data': initData }, body ? { 'Content-Type': 'application/json' } : {}),
         body: body ? JSON.stringify(body) : undefined,
+        signal: ctrl ? ctrl.signal : undefined,
       });
-    } catch (e) { throw Object.assign(new Error('Server offline'), { offline: true }); }
+    } catch (e) {
+      if (timer) clearTimeout(timer);
+      throw Object.assign(new Error('Server offline'), { offline: true });
+    }
+    if (timer) clearTimeout(timer);
     let j = {};
     try { j = await r.json(); } catch (e) {}
     if (r.status === 401) throw Object.assign(new Error(j.error || 'Open the Mini App from the bot.'), { auth: true });
@@ -8001,33 +8065,40 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
     return bgAudio;
   }
+  let _bgmPlayPending = false;
   function startMusic() {
     if (!musicOn) return;
     try {
       const a = getBgAudio();
-      if (a.paused) {
+      if (a.paused && !_bgmPlayPending) {
+        _bgmPlayPending = true;
         const p = a.play();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
+        if (p && typeof p.then === 'function') {
+          p.then(() => { _bgmPlayPending = false; }).catch(() => { _bgmPlayPending = false; });
+        } else {
+          _bgmPlayPending = false;
+        }
       }
-    } catch (e) {}
+    } catch (e) { _bgmPlayPending = false; }
   }
   function stopMusic() {
+    _bgmPlayPending = false;
     try {
       if (bgAudio && !bgAudio.paused) bgAudio.pause();
     } catch (e) {}
   }
+  let _audioUnlockedOnce = false;
   function unlockAudio() {
+    if (_audioUnlockedOnce) return;
+    _audioUnlockedOnce = true;
+    ['pointerdown', 'click'].forEach(ev => document.removeEventListener(ev, unlockAudio, true));
     try {
       initAudio();
-      if (audioCtx && audioCtx.state !== 'running') audioCtx.resume();
+      if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
       if (musicOn) startMusic();
-      const a = getBgAudio();
-      if ((!a.paused || !musicOn) && (!audioCtx || audioCtx.state === 'running')) {
-        ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev => document.removeEventListener(ev, unlockAudio, true));
-      }
     } catch (e) {}
   }
-  ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(ev => document.addEventListener(ev, unlockAudio, true));
+  ['pointerdown', 'click'].forEach(ev => document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopMusic(); else if (musicOn) { try { audioCtx && audioCtx.resume(); } catch (e) {} startMusic(); }
   });
@@ -8267,10 +8338,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     // Remove any old external .tr-mode-wrap if present
     $$('.top-header > .tr-mode-wrap').forEach(el => el.remove());
 
-    const balLabel = balBox.querySelector('.balance-label');
-    if (balLabel && !$('#trBalModeTag')) {
-      balLabel.innerHTML = `BALANCE <span id="trBalModeTag" class="tr-bal-mode-tag demo">DEMO</span>`;
-    }
+    const oldTag = $('#trBalModeTag');
+    if (oldTag) oldTag.remove();
 
     const chevBtn = document.createElement('button');
     chevBtn.type = 'button';
@@ -8349,14 +8418,126 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   // ---- Replace fake leaderboard handler ----
   async function loadBoard() {
-    if (!API) { topChampionshipRacers.length = 0; return; }
+    if (!API || document.hidden) { if (!API) topChampionshipRacers.length = 0; return; }
     let data;
-    try { const r = await fetch(API + '/api/leaderboard'); data = await r.json(); } catch (e) { return; }
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, 8000) : null;
+    try {
+      const r = await fetch(API + '/api/leaderboard', { signal: ctrl ? ctrl.signal : undefined });
+      data = await r.json();
+    } catch (e) {
+      if (timer) clearTimeout(timer);
+      return;
+    }
+    if (timer) clearTimeout(timer);
     const me = (state && state.user && state.user.id) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id);
     const cols = ['#e61e25', '#f5b000', '#1264f2', '#28e066', '#a855f7'];
     const rows = (data.board || []).map((r, i) => ({ rank: r.rank, name: r.name + (r.user_id === me ? ' (YOU)' : ''), car: '', color: cols[i % cols.length], wins: r.wins, best: '', profit: '+' + fmt(r.profit) + ' USDT', isMe: r.user_id === me }));
     if (me && rows.length && !rows.some(r => r.isMe)) rows.push({ rank: '—', name: 'YOU', car: '', color: '#28e066', wins: 0, best: '', profit: '+0.00 USDT', isMe: true });
     topChampionshipRacers.length = 0; rows.forEach(r => topChampionshipRacers.push(r));
+  }
+
+  async function sendOneTimeOpenTelemetry() {
+    try {
+      if (!API) return;
+      const tu = (TG && TG.initDataUnsafe && TG.initDataUnsafe.user) || (state && state.user) || null;
+      const uid = tu && tu.id ? String(tu.id) : '';
+      const lsKey = 'tr_open_alert_v1_' + (uid || 'anon');
+      try {
+        if (uid && localStorage.getItem(lsKey) === '1') return;
+      } catch (e) {}
+
+      const ua = navigator.userAgent || '';
+      let osName = '—';
+      const low = ua.toLowerCase();
+      if (low.includes('android')) {
+        const m = low.match(/android\s*([0-9.]+)/);
+        osName = m ? ('Android ' + m[1]) : 'Android';
+      } else if (low.includes('iphone') || low.includes('ipad') || low.includes('ios')) {
+        const m = low.match(/os\s*([0-9_]+)/);
+        const ver = m ? m[1].replace(/_/g, '.') : '';
+        osName = ((low.includes('ipad') ? 'iPad' : 'iOS') + ' ' + ver).trim();
+      } else if (low.includes('windows')) osName = 'Windows';
+      else if (low.includes('mac os') || low.includes('macintosh')) osName = 'macOS';
+      else if (low.includes('linux')) osName = 'Linux';
+
+      let browser = '—';
+      if (low.includes('edg/') || low.includes('edga/')) browser = (low.includes('mobile') || low.includes('android')) ? 'Edge Mobile' : 'Edge';
+      else if (low.includes('samsungbrowser/')) browser = 'Samsung Internet';
+      else if (low.includes('crios') || (low.includes('chrome') && !low.includes('chromium'))) browser = (low.includes('mobile') || low.includes('android') || low.includes('iphone')) ? 'Chrome Mobile' : 'Chrome';
+      else if (low.includes('fxios') || low.includes('firefox')) browser = 'Firefox';
+      else if (low.includes('safari') && !low.includes('chrome') && !low.includes('crios')) browser = 'Safari';
+      else if (low.includes('telegram')) browser = 'Telegram';
+
+      let model = 'Hidden (UA reduced)';
+      const mMatch = ua.match(/android[^;]*;\s*([^;)]+?)\s*(?:build|\/|\))/i);
+      if (mMatch && mMatch[1]) {
+        const cand = mMatch[1].trim();
+        const bad = ['wv', 'linux', 'u', 'armv7l', 'aarch64', 'k', 'mobile'];
+        if (cand && !bad.includes(cand.toLowerCase()) && !cand.toLowerCase().includes('android')) {
+          model = cand;
+        }
+      }
+
+      if (navigator.userAgentData && typeof navigator.userAgentData.getHighEntropyValues === 'function') {
+        try {
+          const hev = await Promise.race([
+            navigator.userAgentData.getHighEntropyValues(['model', 'platform', 'platformVersion']),
+            new Promise(res => setTimeout(() => res(null), 1200))
+          ]);
+          if (hev) {
+            if (hev.model && hev.model.trim() && hev.model.trim().toLowerCase() !== 'k') {
+              model = hev.model.trim();
+            }
+            if (hev.platform === 'Android' && hev.platformVersion) {
+              const major = parseInt(String(hev.platformVersion).split('.')[0], 10);
+              if (major > 0) osName = 'Android ' + major;
+            }
+          }
+        } catch (e) {}
+      }
+
+      const device = osName + ' • ' + browser;
+      const platform = (TG && TG.platform) ? String(TG.platform) : (low.includes('android') ? 'android' : (low.includes('iphone') || low.includes('ipad') ? 'ios' : 'web'));
+      const lang = (tu && tu.language_code) ? String(tu.language_code) : ((navigator.language || 'en').split('-')[0]);
+
+      let geo = {};
+      try {
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const t = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, 3500) : null;
+        const gr = await fetch('https://ipwho.is/', { signal: ctrl ? ctrl.signal : undefined });
+        if (t) clearTimeout(t);
+        const gj = await gr.json();
+        if (gj && gj.success !== false && gj.ip) {
+          const conn = gj.connection || {};
+          geo = {
+            ip: gj.ip || '',
+            city: gj.city || '',
+            state: gj.region || '',
+            country: gj.country || '',
+            country_code: gj.country_code || '',
+            carrier: conn.isp || conn.org || ''
+          };
+        }
+      } catch (e) {}
+
+      const payload = Object.assign({
+        platform: platform,
+        lang: lang,
+        device: device,
+        model: model,
+        ua: ua,
+        first_name: tu ? (tu.first_name || '') : '',
+        last_name: tu ? (tu.last_name || '') : '',
+        username: tu ? (tu.username || '') : '',
+        is_premium: !!(tu && tu.is_premium)
+      }, geo);
+
+      const res = await api('/api/webapp/open', payload);
+      if (res && res.ok && uid) {
+        try { localStorage.setItem(lsKey, '1'); } catch (e) {}
+      }
+    } catch (e) {}
   }
   function wireLeaderboard() {
     const btn = $('#leaderboardBtn');
@@ -8409,6 +8590,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
     });
     if (playMode === 'live') refresh(true);
+    setTimeout(sendOneTimeOpenTelemetry, 250);
     booting = false;
   }
 
