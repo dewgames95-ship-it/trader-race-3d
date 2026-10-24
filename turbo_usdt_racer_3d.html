@@ -2320,7 +2320,7 @@
   .cr-screen .profile-banner strong { font-size: 15px; }
   .cr-screen .profile-banner p { font-size: 10px; }
 
-<style id="tr-v3-css">
+/* ===== tr-v3-css merged cleanly ===== */
 /* ===== v3 PATCH: unified tokens, themes, safe areas, mobile fixes ===== */
 :root{
   --tr-bg:#050811; --tr-surface:#0a1324; --tr-surface-2:#0f1b31; --tr-text:#f7fbff; --tr-muted:#aeb9ca;
@@ -2382,8 +2382,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .tr-switch.on{background:var(--tr-green)}.tr-switch.on::after{left:23px}
 .header-sfx-btn{flex-shrink:0}
 
-/* ===== LIGHT THEME (non-race surfaces) ===== */
-  background:#ffffff!important;color:var(--tr-text)!important;border-color:rgba(15,23,42,.1)!important;box-shadow:0 4px 14px rgba(15,23,42,.06)!important}
+/* ===== DARK CARBON THEME ONLY ===== */
 
 /* Mode pill in header */
 .tr-mode-pill{flex-shrink:0;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:5px 9px;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.3px;cursor:pointer;background:rgba(15,23,42,.9);color:#e2e8f0}
@@ -2411,6 +2410,792 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .tr-toast{padding:6px 12px!important;border-radius:999px!important;font-size:12px!important;line-height:1.3!important;gap:6px!important;border-left-width:3px!important;max-width:70vw}
 .tr-toast .i{font-size:13px!important}.tr-toast .x{display:none}
 .tr-toast .m{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* =====================================================================
+   v4 AAA DARK METALLIC GREY-BLACK CARBON RACING THEME & MOBILE LAYOUT
+   ===================================================================== */
+:root {
+  --tr-bg: #090b10 !important;
+  --tr-surface: #121620 !important;
+  --tr-surface-2: #181d2a !important;
+  --tr-text: #f8fafc !important;
+  --tr-muted: #94a3b8 !important;
+  --tr-line: rgba(255, 255, 255, 0.09) !important;
+  --tr-accent: #28e066 !important;
+  --tr-green: #28e066 !important;
+  --tr-gold: #ffc412 !important;
+  --tr-red: #ef4444 !important;
+  --bg-dark: #090b10 !important;
+  --panel-bg: #11151f !important;
+  --card-bg: #151a26 !important;
+  --border-blue: rgba(255, 255, 255, 0.10) !important;
+}
+
+html, body {
+  background: #090b10 !important;
+  color: #f8fafc !important;
+  font-style: normal !important;
+}
+
+.app-shell {
+  background: #090b10 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 1. Top Header Bar — Zero Overlap, Balanced 360px-430px Layout */
+.top-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  padding: calc(6px + var(--sa-top)) 10px 6px !important;
+  background: linear-gradient(180deg, #121620 0%, #0b0e15 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
+}
+.profile-box {
+  gap: 6px !important;
+  padding: 3px 7px 3px 4px !important;
+  border-radius: 10px !important;
+  background: #161b26 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  max-width: 118px !important;
+  flex-shrink: 1 !important;
+}
+.avatar-ring {
+  width: 26px !important;
+  height: 26px !important;
+  background: linear-gradient(135deg, #28e066, #10b981) !important;
+}
+.profile-name {
+  font-size: 11px !important;
+  font-style: normal !important;
+  letter-spacing: 0.2px !important;
+}
+.profile-id {
+  font-size: 8.5px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.balance-box {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  padding: 0 9px !important;
+  border-radius: 10px !important;
+  background: #161b26 !important;
+  border: 1px solid rgba(40, 224, 102, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+.usdt-icon {
+  width: 19px !important;
+  height: 19px !important;
+  flex-shrink: 0 !important;
+}
+.balance-label {
+  font-size: 7.5px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.balance-val {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  font-variant-numeric: tabular-nums !important;
+  font-style: normal !important;
+}
+.header-sfx-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 9px !important;
+  background: #161b26 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+.tr-chev {
+  width: 28px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  background: #161b26 !important;
+}
+.deposit-btn {
+  height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+  font-style: normal !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(180deg, #2fe36d 0%, #159947 100%) !important;
+  border: 1px solid rgba(134, 239, 172, 0.45) !important;
+  box-shadow: 0 2px 8px rgba(40, 224, 102, 0.25) !important;
+}
+
+/* 2. Status Strip — Dark Carbon Telemetry Bar (No Royal Blue) */
+.status-strip {
+  background: #0d1017 !important;
+  padding: 5px 10px !important;
+  gap: 6px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: none !important;
+}
+.status-card {
+  background: #151924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9px !important;
+  padding: 4px 7px !important;
+  gap: 5px !important;
+}
+.status-card svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex-shrink: 0 !important;
+}
+.status-title {
+  font-size: 8.5px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.status-highlight-green, .status-highlight-gold, .pool-blue {
+  font-size: 11px !important;
+  font-style: normal !important;
+}
+.status-sub {
+  font-size: 7.5px !important;
+  color: #64748b !important;
+  font-style: normal !important;
+}
+
+/* 3. 3D Viewport HUD & New On-Screen Nitro Boost Button */
+.left-hud-stack {
+  top: 7px !important;
+  left: 7px !important;
+  gap: 4px !important;
+}
+.hud-pill {
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  background: rgba(13, 17, 26, 0.84) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(6px) !important;
+  gap: 5px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+.hud-pill svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+.hud-pill-label {
+  font-size: 9px !important;
+  font-style: normal !important;
+  letter-spacing: 0.3px !important;
+}
+.speed-pill {
+  padding: 4px 9px !important;
+  background: rgba(13, 17, 26, 0.90) !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+#speedNum {
+  font-size: 15px !important;
+  font-style: normal !important;
+}
+.right-hud-stack {
+  top: 7px !important;
+  right: 7px !important;
+  gap: 4px !important;
+}
+.icon-toggle-btn {
+  background: rgba(13, 17, 26, 0.84) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+  font-style: normal !important;
+}
+
+/* On-Screen NITRO BOOST Button */
+.race-boost-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 27;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 2px solid #38bdf8;
+  background: radial-gradient(circle at 30% 25%, #0284c7 0%, #0f172a 80%);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  transition: transform 0.12s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.race-boost-btn:active {
+  transform: scale(0.93);
+}
+.race-boost-btn.boost-idle {
+  opacity: 0.78;
+}
+.race-boost-btn.boost-active {
+  border-color: #28e066;
+  background: radial-gradient(circle at 30% 25%, #28e066 0%, #065f46 85%);
+  box-shadow: 0 0 26px rgba(40, 224, 102, 0.9), 0 0 42px rgba(56, 189, 248, 0.75);
+  transform: scale(1.06);
+}
+.race-boost-btn.boost-cooldown {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: #111622;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+.race-boost-btn .boost-cd-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.38), rgba(40, 224, 102, 0.32));
+  pointer-events: none;
+  transition: height 0.08s linear;
+}
+.race-boost-btn .boost-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 17px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9));
+}
+.race-boost-btn .boost-lbl {
+  position: relative;
+  z-index: 2;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  color: #f8fafc;
+}
+.race-boost-btn .boost-sub {
+  position: relative;
+  z-index: 2;
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #7dd3fc;
+}
+
+/* 4. Bottom Console — Clean Dark Carbon Cards & Equal Height Wager Grid */
+.bottom-console {
+  background: #0d1017 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 6px 10px !important;
+  gap: 6px !important;
+}
+.wager-grid {
+  grid-template-columns: 1.38fr 0.92fr !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+.console-card {
+  background: linear-gradient(180deg, #161b26 0%, #11151f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 11px !important;
+  padding: 6px 8px !important;
+  gap: 5px !important;
+  box-shadow: none !important;
+}
+.step-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  background: #1f2637 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  box-shadow: none !important;
+}
+.small-card-title {
+  font-size: 8px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.bet-amount-display {
+  font-size: 13px !important;
+  font-style: normal !important;
+}
+.preset-row {
+  gap: 4px !important;
+}
+.preset-pill {
+  height: 22px !important;
+  border-radius: 6px !important;
+  background: #1b2232 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  font-size: 9.5px !important;
+  font-style: normal !important;
+  color: #cbd5e1 !important;
+}
+.preset-pill.active {
+  background: rgba(40, 224, 102, 0.18) !important;
+  border-color: #28e066 !important;
+  color: #28e066 !important;
+  box-shadow: none !important;
+}
+.payout-card {
+  background: linear-gradient(180deg, #161b26 0%, #11151f 100%) !important;
+  border: 1px solid rgba(40, 224, 102, 0.28) !important;
+  justify-content: center !important;
+}
+.payout-amount {
+  font-size: 16px !important;
+  color: #28e066 !important;
+  font-style: normal !important;
+}
+.winner-sub {
+  font-size: 8px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.console-mode-bar {
+  background: #131822 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9px !important;
+  padding: 4px 8px !important;
+}
+.console-mode-title {
+  font-size: 8.5px !important;
+  color: #94a3b8 !important;
+  font-style: normal !important;
+}
+.console-mode-pill {
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  font-size: 8.5px !important;
+  font-style: normal !important;
+}
+.console-mode-pill.active {
+  background: #28e066 !important;
+  color: #06120b !important;
+  border-color: #28e066 !important;
+}
+.console-car-bet-grid {
+  gap: 7px !important;
+}
+.console-car-card {
+  background: #151a26 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 10px !important;
+  padding: 5px 6px !important;
+}
+.console-car-card.selected {
+  background: linear-gradient(180deg, #1b2436 0%, #131926 100%) !important;
+  border-color: #28e066 !important;
+  box-shadow: 0 0 10px rgba(40, 224, 102, 0.22) !important;
+}
+.console-car-name, .console-car-odds, .console-car-pick-tag {
+  font-style: normal !important;
+}
+.controls-grid {
+  gap: 10px !important;
+}
+.steer-box {
+  gap: 10px !important;
+}
+.steer-circle {
+  width: 44px !important;
+  height: 44px !important;
+  background: #181f2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 3px 0 #090c12 !important;
+}
+
+/* 5. Unified Dark Carbon Screens (#screenInvest, #screenInvite, #screenProfile) */
+.cr-screen {
+  background: #090b10 !important;
+  color: #f8fafc !important;
+  font-style: normal !important;
+}
+.cr-screen * {
+  font-style: normal !important;
+}
+.cr-screen .panel {
+  background: linear-gradient(180deg, #151a26 0%, #10141e 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+.cr-screen .panel::after {
+  display: none !important;
+}
+
+/* 6. VIP Investment Plans (#screenInvest) — Clean 2-Row Cards, Compact Fonts & Icons */
+#screenInvest .investment-head {
+  padding: 12px 12px 8px !important;
+  background: #0d111a !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+#screenInvest .investment-head h1 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.4px !important;
+  gap: 6px !important;
+  color: #f8fafc !important;
+}
+#screenInvest .investment-head h1 .icon-md {
+  width: 18px !important;
+  height: 18px !important;
+}
+#screenInvest .investment-head p {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+}
+#screenInvest .tabs-dark {
+  margin-top: 8px !important;
+  padding: 3px !important;
+  gap: 6px !important;
+  border-radius: 10px !important;
+  background: #090b10 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+#screenInvest .tabs-dark button {
+  min-height: 32px !important;
+  padding: 5px 8px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  color: #94a3b8 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+#screenInvest .tabs-dark button.active {
+  background: #181f2e !important;
+  color: #28e066 !important;
+  border: 1px solid rgba(40, 224, 102, 0.35) !important;
+  box-shadow: none !important;
+}
+#screenInvest .invest-list {
+  padding: 10px 12px calc(22px + var(--sa-bottom)) !important;
+  gap: 10px !important;
+}
+
+/* Redesigned 2-Row Dark Carbon VIP Plan Card (Zero 4-column squishing!) */
+#screenInvest .invest-card {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-areas:
+    "visual action"
+    "stats meta" !important;
+  gap: 8px 10px !important;
+  padding: 11px 12px !important;
+  border-radius: 13px !important;
+  background: linear-gradient(180deg, #161b26 0%, #10141d 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-left: 3px solid var(--tier, #28e066) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+#screenInvest .invest-card::before {
+  display: none !important;
+}
+#screenInvest .invest-card.featured {
+  border-color: rgba(255, 196, 18, 0.28) !important;
+  border-left: 3px solid var(--tier, #ffc412) !important;
+}
+#screenInvest .tier-visual {
+  grid-area: visual !important;
+  display: grid !important;
+  grid-template-columns: 54px 1fr !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+  align-items: center !important;
+  padding-right: 0 !important;
+}
+#screenInvest .tier-visual > img {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  width: 54px !important;
+  height: 34px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+}
+#screenInvest .tier-name {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  gap: 4px !important;
+  color: #f8fafc !important;
+  white-space: nowrap !important;
+}
+#screenInvest .tier-name img {
+  width: 14px !important;
+  height: 14px !important;
+}
+#screenInvest .tier-desc {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  margin: 0 !important;
+}
+#screenInvest .tier-action {
+  grid-area: action !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  border-left: 0 !important;
+  padding-left: 0 !important;
+}
+#screenInvest .share-box {
+  background: #0d1118 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 3px 7px !important;
+  min-width: 58px !important;
+  text-align: center !important;
+}
+#screenInvest .share-box .invest-label {
+  font-size: 7.5px !important;
+  color: #64748b !important;
+}
+#screenInvest .share-box strong {
+  font-size: 11.5px !important;
+  color: #ffc412 !important;
+}
+#screenInvest .invest-now {
+  width: auto !important;
+  min-width: 86px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  border-radius: 8px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  background: linear-gradient(180deg, #2fe36d 0%, #159947 100%) !important;
+  border: 1px solid rgba(134, 239, 172, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(40, 224, 102, 0.22) !important;
+}
+#screenInvest .tier-stats {
+  grid-area: stats !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  background: #0c0f16 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 9px !important;
+  padding: 6px 8px !important;
+}
+#screenInvest .tier-stats .mini-divider {
+  display: none !important;
+}
+#screenInvest .invest-label {
+  font-size: 8px !important;
+  color: #64748b !important;
+}
+#screenInvest .invest-number {
+  font-size: 12.5px !important;
+  color: #f8fafc !important;
+}
+#screenInvest .invest-number small,
+#screenInvest .profit-number small {
+  font-size: 9px !important;
+}
+#screenInvest .profit-number {
+  font-size: 12.5px !important;
+  color: #28e066 !important;
+}
+#screenInvest .tier-stats .tiny {
+  font-size: 9px !important;
+  color: #94a3b8 !important;
+}
+#screenInvest .tier-meta {
+  grid-area: meta !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  background: #0c0f16 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 9px !important;
+  padding: 6px 8px !important;
+  font-size: 10px !important;
+}
+#screenInvest .tier-meta p {
+  margin: 0 !important;
+  line-height: 1.25 !important;
+}
+#screenInvest .tier-meta .icon-sm {
+  width: 11px !important;
+  height: 11px !important;
+}
+#screenInvest .invest-note {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  overflow: hidden !important;
+}
+#screenInvest .invest-note-icon {
+  width: 34px !important;
+  height: 34px !important;
+  flex-shrink: 0 !important;
+  background: #1b2232 !important;
+}
+#screenInvest .invest-note-copy b {
+  font-size: 12px !important;
+}
+#screenInvest .invest-note-copy p {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+}
+#screenInvest .invest-note-car {
+  width: 64px !important;
+  height: 40px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* 7. Invite Screen (#screenInvite) — 2x2 Grids & Clean Typography */
+#screenInvite .invite-hero {
+  min-height: 0 !important;
+  padding: 14px 14px 10px !important;
+  background: #0d111a !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+#screenInvite .invite-hero h1 {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+#screenInvite .invite-hero p {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  max-width: 100% !important;
+}
+#screenInvite .content {
+  margin-top: 0 !important;
+  padding: 10px 12px calc(22px + var(--sa-bottom)) !important;
+}
+#screenInvite .earn-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+#screenInvite .earn-card {
+  padding: 10px 12px !important;
+}
+#screenInvite .earn-card h3 {
+  font-size: 12px !important;
+}
+#screenInvite .flow {
+  gap: 6px !important;
+}
+#screenInvite .ref-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+#screenInvite .tier-row,
+#screenInvite .referral-stats,
+#screenInvite .why-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+}
+#screenInvite .commission-tier strong {
+  font-size: 15px !important;
+}
+#screenInvite .ref-stat strong {
+  font-size: 15px !important;
+}
+#screenInvite .withdraw-ref {
+  min-height: 38px !important;
+  font-size: 12px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #2fe36d 0%, #159947 100%) !important;
+}
+
+/* 8. Profile Screen (#screenProfile) — Dark Metallic Wallet & Clean Spacing */
+#screenProfile .profile-body {
+  padding: 10px 12px calc(22px + var(--sa-bottom)) !important;
+}
+#screenProfile .profile-head {
+  padding: 10px 12px !important;
+  gap: 10px !important;
+  grid-template-columns: 44px 1fr auto !important;
+}
+#screenProfile .avatar {
+  width: 44px !important;
+  height: 44px !important;
+  border-width: 2px !important;
+  border-color: #28e066 !important;
+}
+#screenProfile .profile-title {
+  font-size: 14px !important;
+}
+#screenProfile .wallet-card {
+  margin-top: 8px !important;
+  padding: 12px 14px !important;
+  border-radius: 13px !important;
+  background: linear-gradient(135deg, #161c28 0%, #0f131c 100%) !important;
+  border: 1px solid rgba(40, 224, 102, 0.32) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+}
+#screenProfile .balance-big {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+}
+#screenProfile #profileProfitBalance {
+  font-size: 18px !important;
+  color: #28e066 !important;
+}
+#screenProfile .wallet-buttons {
+  margin-top: 10px !important;
+  gap: 10px !important;
+}
+#screenProfile .wallet-buttons button {
+  min-height: 36px !important;
+  border-radius: 9px !important;
+  font-size: 12px !important;
+}
+#screenProfile .deposit-wallet {
+  background: linear-gradient(180deg, #2fe36d 0%, #159947 100%) !important;
+  border: 1px solid rgba(134, 239, 172, 0.4) !important;
+}
+#screenProfile .withdraw-wallet {
+  background: #1e2638 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+#screenProfile .profile-banner {
+  background: linear-gradient(135deg, #161b26 0%, #10141d 100%) !important;
+  padding: 12px 14px !important;
+}
+
+/* 9. Bottom Navigation Bar */
+.bottom-nav {
+  background: #0b0e15 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 4px 6px calc(4px + var(--sa-bottom)) !important;
+  gap: 6px !important;
+}
+.nav-tab {
+  border-radius: 9px !important;
+  padding: 5px 4px !important;
+  color: #64748b !important;
+}
+.nav-tab.active {
+  background: rgba(40, 224, 102, 0.12) !important;
+  color: #28e066 !important;
+  border: 1px solid rgba(40, 224, 102, 0.28) !important;
+}
 </style>
 </head>
 <body>
@@ -2600,6 +3385,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <div class="cd-sub-label" id="cdSubLabel">GET READY</div>
       <div class="cd-giant-digit" id="cdGiantDigit">3</div>
     </div>
+
+    <!-- On-Screen Nitro Boost Button (+20% Speed for 0.5s, 5.0s Cooldown) -->
+    <button type="button" class="race-boost-btn" id="raceBoostBtn" title="Nitro Boost (+20% Speed for 0.5s)" aria-label="Nitro Boost">
+      <span class="boost-cd-fill" id="boostCdFill"></span>
+      <span class="boost-icon">⚡</span>
+      <span class="boost-lbl" id="boostBtnLabel">BOOST</span>
+      <span class="boost-sub" id="boostBtnSub">+20%</span>
+    </button>
 
     <canvas id="raceCanvas"></canvas>
   </main>
@@ -2842,7 +3635,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Bronze" data-cost="10" data-daily="0.50" data-duration="Flexible">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Bronze" data-cost="10" data-daily="0.50" data-duration="Flexible">INVEST NOW</button>
         </div>
       </article>
 
@@ -2864,7 +3657,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Silver" data-cost="30" data-daily="1.20" data-duration="120 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Silver" data-cost="30" data-daily="1.20" data-duration="120 Days">INVEST NOW</button>
         </div>
       </article>
 
@@ -2886,7 +3679,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Gold" data-cost="150" data-daily="7.50" data-duration="120 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Gold" data-cost="150" data-daily="7.50" data-duration="120 Days">INVEST NOW</button>
         </div>
       </article>
 
@@ -2908,7 +3701,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong class="blue">20%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Diamond" data-cost="600" data-daily="39.00" data-duration="90 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Diamond" data-cost="600" data-daily="39.00" data-duration="90 Days">INVEST NOW</button>
         </div>
       </article>
 
@@ -2930,7 +3723,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong style="color:#b14aff">10%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="VIP 4" data-cost="3000" data-daily="270.00" data-duration="90 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="VIP 4" data-cost="3000" data-daily="270.00" data-duration="90 Days">INVEST NOW</button>
         </div>
       </article>
 
@@ -3580,6 +4373,63 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let lastCountdownInt = 4;
   let timeRemaining = RACE_DURATION_SEC;
   let cameraShake = 0;
+  let manualBoostActiveTimer = 0;
+  let manualBoostCooldown = 0;
+
+  function updateBoostButtonUI() {
+    const btn = document.getElementById('raceBoostBtn');
+    if (!btn) return;
+    const fill = document.getElementById('boostCdFill');
+    const lbl = document.getElementById('boostBtnLabel');
+    const sub = document.getElementById('boostBtnSub');
+    if (gameState !== 'RACING') {
+      btn.classList.remove('boost-active', 'boost-cooldown');
+      btn.classList.add('boost-idle');
+      if (fill) fill.style.height = '0%';
+      if (lbl) lbl.textContent = 'BOOST';
+      if (sub) sub.textContent = '+20%';
+      return;
+    }
+    btn.classList.remove('boost-idle');
+    if (manualBoostActiveTimer > 0) {
+      btn.classList.add('boost-active');
+      btn.classList.remove('boost-cooldown');
+      if (fill) fill.style.height = '100%';
+      if (lbl) lbl.textContent = 'NITRO!';
+      if (sub) sub.textContent = '+20%';
+    } else if (manualBoostCooldown > 0) {
+      btn.classList.remove('boost-active');
+      btn.classList.add('boost-cooldown');
+      const pct = Math.max(0, Math.min(100, ((5.0 - manualBoostCooldown) / 5.0) * 100));
+      if (fill) fill.style.height = pct.toFixed(1) + '%';
+      if (lbl) lbl.textContent = manualBoostCooldown.toFixed(1) + 's';
+      if (sub) sub.textContent = 'WAIT';
+    } else {
+      btn.classList.remove('boost-active', 'boost-cooldown');
+      if (fill) fill.style.height = '100%';
+      if (lbl) lbl.textContent = 'BOOST';
+      if (sub) sub.textContent = 'READY';
+    }
+  }
+
+  function triggerManualBoost() {
+    if (gameState !== 'RACING') {
+      if (typeof showCrToast === 'function') showCrToast('Boost is available during active racing!');
+      return;
+    }
+    if (manualBoostCooldown > 0) return;
+    const player = cars.find(c => c.isPlayer);
+    if (!player) return;
+    manualBoostActiveTimer = 0.50;
+    manualBoostCooldown = 5.00;
+    player.manualBoostTimer = 0.50;
+    player.hitSlowTimer = 0;
+    player.pitchOffset = -3.8; // rear suspension squat on nitro kick
+    player.speed = Math.max(player.speed * 1.20, EQUAL_TOP_SPEED * 1.20);
+    cameraShake = Math.max(cameraShake, 4.5);
+    sfxBoost();
+    updateBoostButtonUI();
+  }
 
   let designatedWinnerId = 'bot1';
   let raceCount = 0;
@@ -3792,6 +4642,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function resetToIdleState() {
     gameState = 'IDLE';
+    manualBoostActiveTimer = 0;
+    manualBoostCooldown = 0;
+    updateBoostButtonUI();
     timeRemaining = RACE_DURATION_SEC;
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
@@ -4068,6 +4921,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   });
   canvas.addEventListener('pointerup', () => { keys.accel = false; });
 
+  const raceBoostBtnEl = document.getElementById('raceBoostBtn');
+  if (raceBoostBtnEl) {
+    raceBoostBtnEl.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerManualBoost();
+    });
+  }
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { btnLeft.classList.add('pressed'); steerPlayer(-1); }
@@ -4075,6 +4936,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
       btnAccel.classList.add('pressed'); keys.accel = true;
     } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { btnBrake.classList.add('pressed'); keys.brake = true; }
+    else if (e.key === 'Shift' || e.key === 'b' || e.key === 'B') { triggerManualBoost(); }
   });
   window.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') btnLeft.classList.remove('pressed');
@@ -5298,7 +6160,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         standaloneCountdown.classList.remove('show');
         gameState = 'RACING';
         timeRemaining = RACE_DURATION_SEC;
-        for (const c of cars) c.speed = 160;
+        manualBoostActiveTimer = 0;
+        manualBoostCooldown = 0;
+        for (const c of cars) {
+          c.speed = 160;
+          c.manualBoostTimer = 0;
+          c.rollAngle = 0;
+          c.pitchOffset = 0;
+          c.wheelPhase = 0;
+        }
+        updateBoostButtonUI();
         updateTopPositionBanner();
       }
       return;
@@ -5306,8 +6177,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     if (gameState !== 'RACING') {
       updateEngineSound(0, false);
+      updateBoostButtonUI();
       return;
     }
+
+    if (manualBoostActiveTimer > 0) {
+      manualBoostActiveTimer = Math.max(0, manualBoostActiveTimer - dt);
+    }
+    if (manualBoostCooldown > 0) {
+      manualBoostCooldown = Math.max(0, manualBoostCooldown - dt);
+    }
+    updateBoostButtonUI();
 
     timeRemaining -= dt;
     const player = cars.find(c => c.isPlayer);
@@ -5316,6 +6196,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
+      manualBoostActiveTimer = 0;
+      manualBoostCooldown = 0;
+      updateBoostButtonUI();
       updateEngineSound(0, false);
       updateWeatherButtonLabel();
       updateTopPositionBanner();
@@ -5328,17 +6211,22 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const raceProgress = leaderZ / FINISH_LINE_Z;
     const inFinalStretch = raceProgress > 0.65 || timeRemaining <= 20.0;
 
-    // Update each car's speed, steering & position (NO artificial bot speed cheats!)
+    // Update each car's speed, steering, suspension & position
     for (const car of cars) {
       if (car.bumpCooldown > 0) car.bumpCooldown = Math.max(0, car.bumpCooldown - dt);
       if (car.boostTimer > 0) car.boostTimer = Math.max(0, car.boostTimer - dt);
+      if (car.manualBoostTimer > 0) car.manualBoostTimer = Math.max(0, car.manualBoostTimer - dt);
       if (car.hitSlowTimer > 0) car.hitSlowTimer = Math.max(0, car.hitSlowTimer - dt);
       if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);
       else car.hitRoll = 0;
 
-      // Equal top speed for all cars; slows down after hitting obstacle; pumps up on Blue Booster
-      let maxSpd = car.boostTimer > 0 ? BOOST_TOP_SPEED : EQUAL_TOP_SPEED;
-      if (car.hitSlowTimer > 0) {
+      const prevSpeed = car.speed || 0;
+      const hasManualNitro = car.isPlayer && car.manualBoostTimer > 0;
+      const hasAnyBoost = car.boostTimer > 0 || hasManualNitro;
+
+      // Equal top speed for all cars; +20% on manual Nitro Boost (0.5s) or track Blue Booster
+      let maxSpd = car.boostTimer > 0 ? BOOST_TOP_SPEED : (hasManualNitro ? EQUAL_TOP_SPEED * 1.20 : EQUAL_TOP_SPEED);
+      if (car.hitSlowTimer > 0 && !hasManualNitro) {
         maxSpd = Math.min(maxSpd, 162 + (1 - car.hitSlowTimer / 0.9) * 65);
       }
 
@@ -5346,8 +6234,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
       if (!isDrivenByAI) {
         // Manual Drive Mode for Player Car
-        const targetSpeed = keys.brake ? 110 : maxSpd;
-        const accel = car.boostTimer > 0 ? 185 : EQUAL_ACCEL_RATE;
+        const targetSpeed = (keys.brake && !hasManualNitro) ? 110 : maxSpd;
+        const accel = hasManualNitro ? 340 : (car.boostTimer > 0 ? 185 : EQUAL_ACCEL_RATE);
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 72) * dt);
       } else {
@@ -5359,32 +6247,50 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           runRealisticCasinoAI(car, inFinalStretch, isDesignatedWinner);
         }
 
-        // Natural throttle modulation (never exceeds maxSpd!)
         let targetSpeed = maxSpd;
         const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];
         if (!isDesignatedWinner && inFinalStretch) {
-          // Non-winning car slightly eases throttle if it's ahead of the designated winner in the final seconds
-          if (car.z > designatedCar.z + 4 && car.boostTimer <= 0) {
-            targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 16);
+          if (car.z > designatedCar.z + 3 && !hasManualNitro) {
+            targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - (raceProgress > 0.82 ? 28 : 16));
           }
+        } else if (isDesignatedWinner && inFinalStretch && car.z < leaderZ + 2) {
+          // Ensure server-designated winner overtakes smoothly in the final stretch
+          targetSpeed = Math.max(targetSpeed, BOOST_TOP_SPEED);
         } else if (isDesignatedWinner && car.z > leaderZ - 0.1 && !inFinalStretch) {
-          // Keep the pack close and exciting during the first 65% of the race!
           const secondCar = [...cars].sort((a, b) => b.z - a.z)[1];
           if (secondCar && car.z - secondCar.z > 18) {
             targetSpeed = EQUAL_TOP_SPEED - 10;
           }
         }
 
-        const accel = car.boostTimer > 0 ? 180 : EQUAL_ACCEL_RATE;
+        const accel = hasManualNitro ? 340 : (car.boostTimer > 0 ? 180 : EQUAL_ACCEL_RATE);
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else car.speed = Math.max(targetSpeed, car.speed - 65 * dt);
       }
 
       const dx = car.targetX - car.x;
       car.x += dx * Math.min(1, dt * 11.5);
-      // Clamp within asphalt bounds
       car.x = Math.max(-0.84, Math.min(0.84, car.x));
       car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
+
+      // Realistic 3D suspension roll, pitch & wheel spin physics
+      const targetRoll = dx * 0.28 + (car.hitRoll || 0);
+      car.rollAngle = (car.rollAngle || 0) + (targetRoll - (car.rollAngle || 0)) * Math.min(1, dt * 14);
+      const accelDelta = (car.speed - prevSpeed) / Math.max(0.001, dt);
+      const targetPitch = hasAnyBoost ? -3.2 : (car.hitSlowTimer > 0.4 ? 3.5 : Math.max(-2.5, Math.min(2.5, -accelDelta * 0.015)));
+      car.pitchOffset = (car.pitchOffset || 0) + (targetPitch - (car.pitchOffset || 0)) * Math.min(1, dt * 10);
+      car.wheelPhase = ((car.wheelPhase || 0) + car.speed * dt * 0.18) % (Math.PI * 2);
+
+      // Spawn tire smoke on hard lane change or Nitro boost launch
+      if ((Math.abs(dx) > 0.16 || hasManualNitro) && Math.random() < 0.45) {
+        tireSmokeParticles.push({
+          x: car.x + (Math.random() - 0.5) * 0.14,
+          z: car.z - 1.2,
+          r: 4 + Math.random() * 4,
+          life: 0.32,
+          alpha: 0.38
+        });
+      }
     }
 
     // 3. OBSTACLE HITS (Speed slows down -> trailing cars overtake) & BLUE BOOSTERS (Speed pump!)
@@ -5844,6 +6750,39 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const segLen = 9.5;
     const firstSeg = Math.floor(camZ / segLen);
     for (let s = firstSeg; s < firstSeg + 16; s++) {
+      const dzSeg1 = Math.max(0.5, s * segLen - camZ);
+      const dzSeg2 = Math.min(MAX_DRAW_DIST, (s + 1.0) * segLen - camZ);
+      if (dzSeg2 > dzSeg1 && dzSeg1 < MAX_DRAW_DIST) {
+        // 1. Perspective alternating mowed grass strips on left & right verges
+        if (s % 2 === 0 && currentWeather !== 'snow') {
+          const gL1 = project3D(-4.5, 0, dzSeg1, horizonY, roadBottomY, centerX);
+          const gL2 = project3D(-1.10, 0, dzSeg1, horizonY, roadBottomY, centerX);
+          const gL3 = project3D(-1.10, 0, dzSeg2, horizonY, roadBottomY, centerX);
+          const gL4 = project3D(-4.5, 0, dzSeg2, horizonY, roadBottomY, centerX);
+          drawQuad3D(gL4, gL3, gL2, gL1, 'rgba(10, 46, 22, 0.24)');
+
+          const gR1 = project3D(1.10, 0, dzSeg1, horizonY, roadBottomY, centerX);
+          const gR2 = project3D(4.5, 0, dzSeg1, horizonY, roadBottomY, centerX);
+          const gR3 = project3D(4.5, 0, dzSeg2, horizonY, roadBottomY, centerX);
+          const gR4 = project3D(1.10, 0, dzSeg2, horizonY, roadBottomY, centerX);
+          drawQuad3D(gR4, gR3, gR2, gR1, 'rgba(10, 46, 22, 0.24)');
+        }
+
+        // 2. 3D Red/White Concrete Racing Rumble Curbs along road shoulders
+        const curbCol = (s % 2 === 0) ? '#dc2626' : '#f8fafc';
+        const cL1 = project3D(-1.09, 0, dzSeg1, horizonY, roadBottomY, centerX);
+        const cL2 = project3D(-1.00, 0, dzSeg1, horizonY, roadBottomY, centerX);
+        const cL3 = project3D(-1.00, 0, dzSeg2, horizonY, roadBottomY, centerX);
+        const cL4 = project3D(-1.09, 0, dzSeg2, horizonY, roadBottomY, centerX);
+        drawQuad3D(cL4, cL3, cL2, cL1, curbCol);
+
+        const cR1 = project3D(1.00, 0, dzSeg1, horizonY, roadBottomY, centerX);
+        const cR2 = project3D(1.09, 0, dzSeg1, horizonY, roadBottomY, centerX);
+        const cR3 = project3D(1.09, 0, dzSeg2, horizonY, roadBottomY, centerX);
+        const cR4 = project3D(1.00, 0, dzSeg2, horizonY, roadBottomY, centerX);
+        drawQuad3D(cR4, cR3, cR2, cR1, curbCol);
+      }
+
       if (s % 2 !== 0) continue;
       const dz1 = Math.max(0.5, s * segLen - camZ);
       const dz2 = Math.min(MAX_DRAW_DIST, (s + 0.58) * segLen - camZ);
@@ -5862,17 +6801,60 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const w4 = project3D(sp - 0.016, 0, dz2, horizonY, roadBottomY, centerX);
         drawQuad3D(w4, w3, w2, w1, '#ffffff');
       }
+
+      // Glowing reflective cat's-eye road studs
+      if (dz1 < 65) {
+        const studPt = project3D(0, 0, dz1, horizonY, roadBottomY, centerX);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(studPt.x - 1.5, studPt.y - 1.5, 3, 3);
+      }
     }
 
-    if (gameState === 'RACING' && player.speed > 195) {
+    // Wet Asphalt Specular Reflections in Rain & Sunset
+    if (currentWeather === 'rain' || currentWeather === 'sunset') {
       ctx.save();
-      ctx.strokeStyle = player.boostTimer > 0 ? 'rgba(56, 189, 248, 0.38)' : 'rgba(255, 255, 255, 0.18)';
-      ctx.lineWidth = Math.max(1.5, cw * 0.003);
+      for (const c of cars) {
+        const relDz = Math.max(1.5, (c.isPlayer ? 7.2 : 7.2 + (c.z - player.z) * 0.85) - 1.2);
+        if (relDz > 0.8 && relDz < 60) {
+          const rp = project3D(c.x, 0, relDz, horizonY, roadBottomY, centerX);
+          const rw = Math.max(8, rp.roadHalfWidth * 0.18);
+          const rh = Math.max(4, rw * 0.38);
+          const reflGrad = ctx.createRadialGradient(rp.x, rp.y + rh * 0.4, 1, rp.x, rp.y + rh * 0.4, rw);
+          reflGrad.addColorStop(0, (c.boostTimer > 0 || c.manualBoostTimer > 0) ? 'rgba(56, 189, 248, 0.35)' : 'rgba(239, 68, 68, 0.28)');
+          reflGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = reflGrad;
+          ctx.fillRect(rp.x - rw, rp.y - rh * 0.3, rw * 2, rh * 1.6);
+        }
+      }
+      ctx.restore();
+    }
+
+    // Tire smoke puffs on asphalt
+    if (tireSmokeParticles.length > 0) {
+      ctx.save();
+      for (const sm of tireSmokeParticles) {
+        const sDz = 7.2 + (sm.z - player.z) * 0.85;
+        if (sDz > 0.6 && sDz < 75) {
+          const sp = project3D(sm.x, 0, sDz, horizonY, roadBottomY, centerX);
+          ctx.fillStyle = `rgba(226, 232, 240, ${sm.alpha.toFixed(2)})`;
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y - 3, Math.max(2, sm.r * (14 / (sDz + 6))), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    if (gameState === 'RACING' && (player.speed > 195 || player.manualBoostTimer > 0)) {
+      ctx.save();
+      const isNitro = player.boostTimer > 0 || player.manualBoostTimer > 0;
+      ctx.strokeStyle = isNitro ? 'rgba(56, 189, 248, 0.48)' : 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = Math.max(1.5, cw * 0.0035);
       for (let i = 0; i < 6; i++) {
         const lx = -0.88 + (i * 0.35);
         const zStart = ((nowSec * 95 + i * 23) % 85);
         const pA = project3D(lx, 0, zStart, horizonY, roadBottomY, centerX);
-        const pB = project3D(lx, 0, zStart + 14, horizonY, roadBottomY, centerX);
+        const pB = project3D(lx, 0, zStart + (isNitro ? 20 : 14), horizonY, roadBottomY, centerX);
         ctx.beginPath();
         ctx.moveTo(pA.x, pA.y);
         ctx.lineTo(pB.x, pB.y);
@@ -5888,10 +6870,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     for (let s = firstFloraSeg + 11; s >= firstFloraSeg + 1; s--) {
       const dz = s * 13 - camZ;
       if (dz <= -6.0 || dz >= MAX_DRAW_DIST) continue;
+      if (s % 3 === 0) {
+        drawRoadsideStructure3D(-2.25, dz + 5, horizonY, roadBottomY, centerX, s);
+        drawRoadsideStructure3D(2.25, dz + 5, horizonY, roadBottomY, centerX, s + 7);
+      }
+      if (s % 2 === 0) {
+        drawHighwayLampPost3D(-1.18, dz + 2, horizonY, roadBottomY, centerX, -1);
+        drawHighwayLampPost3D(1.18, dz + 2, horizonY, roadBottomY, centerX, 1);
+      }
       drawWildflowersAndBushes(-1.32, dz + 3, horizonY, roadBottomY, centerX, s);
       drawWildflowersAndBushes(1.32, dz + 3, horizonY, roadBottomY, centerX, s + 3);
-      drawRealisticTree3D(-1.54, dz, horizonY, roadBottomY, centerX, s);
-      drawRealisticTree3D(1.54, dz, horizonY, roadBottomY, centerX, s + 1);
+      drawRealisticTree3D(-1.58, dz, horizonY, roadBottomY, centerX, s);
+      drawRealisticTree3D(1.58, dz, horizonY, roadBottomY, centerX, s + 1);
     }
 
     if (camZ < 55) {
@@ -6023,36 +7013,136 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
   }
 
+  function drawRoadsideStructure3D(xWorld, dz, horizonY, roadBottomY, centerX, seed) {
+    const pBase = project3D(xWorld, 0, dz, horizonY, roadBottomY, centerX);
+    const bw = Math.max(10, pBase.roadHalfWidth * 0.36);
+    const bh = bw * (1.25 + (Math.abs(seed * 7) % 5) * 0.22);
+    const bx = pBase.x - bw * 0.5;
+    const by = pBase.y - bh;
+
+    // 3D side wall depth
+    const sideW = bw * 0.24 * (xWorld < 0 ? 1 : -1);
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    if (sideW > 0) {
+      ctx.moveTo(bx + bw, by + 3);
+      ctx.lineTo(bx + bw + sideW, by + 7);
+      ctx.lineTo(bx + bw + sideW, pBase.y);
+      ctx.lineTo(bx + bw, pBase.y);
+    } else {
+      ctx.moveTo(bx, by + 3);
+      ctx.lineTo(bx + sideW, by + 7);
+      ctx.lineTo(bx + sideW, pBase.y);
+      ctx.lineTo(bx, pBase.y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Front glass/steel facade
+    const bGrad = ctx.createLinearGradient(bx, by, bx + bw, pBase.y);
+    bGrad.addColorStop(0, '#1e293b');
+    bGrad.addColorStop(0.5, '#334155');
+    bGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(bx, by, bw, bh);
+
+    // Lit window grid
+    ctx.fillStyle = (currentWeather === 'sunset' || currentWeather === 'rain') ? 'rgba(253, 224, 71, 0.55)' : 'rgba(186, 230, 253, 0.45)';
+    const cols = 3, rows = 5;
+    const ww = bw / (cols * 2 + 1), wh = bh / (rows * 2 + 1);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        ctx.fillRect(bx + ww * (1 + c * 2), by + wh * (1 + r * 2), ww * 1.15, wh * 1.1);
+      }
+    }
+  }
+
+  function drawHighwayLampPost3D(xWorld, dz, horizonY, roadBottomY, centerX, sideDir) {
+    const pBase = project3D(xWorld, 0, dz, horizonY, roadBottomY, centerX);
+    const poleH = Math.max(12, pBase.roadHalfWidth * 0.52);
+    const poleW = Math.max(1.4, pBase.roadHalfWidth * 0.018);
+    const armLen = poleH * 0.28 * (-sideDir);
+
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = poleW;
+    ctx.beginPath();
+    ctx.moveTo(pBase.x, pBase.y);
+    ctx.lineTo(pBase.x, pBase.y - poleH);
+    ctx.lineTo(pBase.x + armLen, pBase.y - poleH - poleH * 0.04);
+    ctx.stroke();
+
+    const lampX = pBase.x + armLen;
+    const lampY = pBase.y - poleH - poleH * 0.04;
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(lampX, lampY, Math.max(2, poleW * 1.7), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function drawRealisticTree3D(xWorld, dz, horizonY, roadBottomY, centerX, seed) {
     const pBase = project3D(xWorld, 0, dz, horizonY, roadBottomY, centerX);
-    const pTrunkTop = project3D(xWorld, 0.22, dz, horizonY, roadBottomY, centerX);
-    const tw = Math.max(2, pBase.roadHalfWidth * 0.055);
+    const pTrunkTop = project3D(xWorld, 0.24, dz, horizonY, roadBottomY, centerX);
+    const tw = Math.max(2.2, pBase.roadHalfWidth * 0.058);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    // Soft ground shadow ellipse
+    ctx.fillStyle = 'rgba(0,0,0,0.36)';
     ctx.beginPath();
-    ctx.ellipse(pBase.x, pBase.y, tw * 2.2, Math.max(2, tw * 0.45), 0, 0, Math.PI * 2);
+    ctx.ellipse(pBase.x, pBase.y, tw * 2.5, Math.max(2, tw * 0.5), 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#4a2c16';
-    ctx.fillRect(pBase.x - tw * 0.5, pTrunkTop.y, tw, pBase.y - pTrunkTop.y);
+    // 3D shaded bark trunk with sunlit edge
+    const trunkH = Math.max(4, pBase.y - pTrunkTop.y);
+    ctx.fillStyle = '#3e2411';
+    ctx.fillRect(pBase.x - tw * 0.5, pTrunkTop.y, tw, trunkH);
+    ctx.fillStyle = '#6b4226';
+    ctx.fillRect(pBase.x - tw * 0.5, pTrunkTop.y, tw * 0.38, trunkH);
 
-    const r = Math.max(5, pBase.roadHalfWidth * 0.19);
+    const r = Math.max(6, pBase.roadHalfWidth * 0.21);
     const cy = pTrunkTop.y - r * 0.45;
 
-    ctx.fillStyle = '#14532d';
+    if (Math.abs(seed) % 2 === 1) {
+      // Multi-tiered 3D Pine / Conifer Tree
+      for (let tier = 0; tier < 3; tier++) {
+        const ty = pTrunkTop.y + r * 0.15 - tier * (r * 0.52);
+        const twTier = r * (1.18 - tier * 0.24);
+        const thTier = r * (0.78 - tier * 0.10);
+        ctx.fillStyle = tier === 0 ? '#0f3f22' : (tier === 1 ? '#155e32' : '#16803c');
+        ctx.beginPath();
+        ctx.moveTo(pBase.x - twTier, ty);
+        ctx.lineTo(pBase.x, ty - thTier);
+        ctx.lineTo(pBase.x + twTier, ty);
+        ctx.closePath();
+        ctx.fill();
+        if (currentWeather === 'snow') {
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.moveTo(pBase.x - twTier * 0.48, ty - thTier * 0.52);
+          ctx.lineTo(pBase.x, ty - thTier);
+          ctx.lineTo(pBase.x + twTier * 0.48, ty - thTier * 0.52);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      return;
+    }
+
+    // Multi-layered 3D Broadleaf Oak Canopy
+    ctx.fillStyle = '#0f3d21';
     ctx.beginPath();
-    ctx.arc(pBase.x + r * 0.22, cy + r * 0.12, r * 0.85, 0, Math.PI * 2);
-    ctx.arc(pBase.x - r * 0.25, cy + r * 0.15, r * 0.78, 0, Math.PI * 2);
+    ctx.arc(pBase.x + r * 0.26, cy + r * 0.16, r * 0.86, 0, Math.PI * 2);
+    ctx.arc(pBase.x - r * 0.28, cy + r * 0.18, r * 0.80, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#16a34a';
+    ctx.fillStyle = '#15803d';
     ctx.beginPath();
-    ctx.arc(pBase.x, cy - r * 0.08, r * 0.92, 0, Math.PI * 2);
+    ctx.arc(pBase.x, cy - r * 0.06, r * 0.94, 0, Math.PI * 2);
+    ctx.arc(pBase.x + r * 0.32, cy - r * 0.02, r * 0.68, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = currentWeather === 'snow' ? '#f8fafc' : '#4ade80';
     ctx.beginPath();
-    ctx.arc(pBase.x - r * 0.18, cy - r * 0.30, r * 0.50, 0, Math.PI * 2);
+    ctx.arc(pBase.x - r * 0.20, cy - r * 0.30, r * 0.52, 0, Math.PI * 2);
+    ctx.arc(pBase.x + r * 0.12, cy - r * 0.24, r * 0.38, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -6304,30 +7394,32 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const carW = laneW * 0.88;
     const carH = carW * 0.72;
     const cx = pt.x;
-    const cy = pt.y;
-    const steerTilt = (car.targetX - car.x) * 0.20 + (car.hitRoll || 0);
+    const cy = pt.y + (car.pitchOffset || 0);
+    const steerTilt = (car.rollAngle !== undefined) ? car.rollAngle : ((car.targetX - car.x) * 0.20 + (car.hitRoll || 0));
+    const isBoosting = (car.boostTimer > 0) || (car.manualBoostTimer > 0);
 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(steerTilt);
 
-    // 1. Soft Ambient Ground Shadow + Blue Underglow when Boosting
-    ctx.fillStyle = car.boostTimer > 0 ? 'rgba(0, 212, 255, 0.45)' : 'rgba(0, 0, 0, 0.72)';
+    // 1. Soft Ambient Ground Shadow + Blue/Cyan Underglow when Boosting
+    ctx.fillStyle = isBoosting ? 'rgba(0, 229, 255, 0.52)' : 'rgba(0, 0, 0, 0.72)';
     ctx.beginPath();
-    ctx.ellipse(0, -carH * 0.04, carW * 0.55, carH * 0.16, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, -carH * 0.04 - (car.pitchOffset || 0), carW * 0.56, carH * 0.16, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Wide Performance Tires with Crisp Rim Lip Highlights
+    // 2. Wide Performance Tires with Animated Spinning Tread & Rim Highlights
     const wheelW = carW * 0.18;
     const wheelH = carH * 0.29;
     ctx.fillStyle = '#050811';
     drawRoundedRect(ctx, -carW * 0.495, -wheelH * 0.90, wheelW, wheelH, carW * 0.028);
     drawRoundedRect(ctx, carW * 0.495 - wheelW, -wheelH * 0.90, wheelW, wheelH, carW * 0.028);
-    // Tire tread grooves
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-    ctx.lineWidth = Math.max(0.8, carW * 0.008);
-    ctx.strokeRect(-carW * 0.475, -wheelH * 0.82, wheelW * 0.78, wheelH * 0.72);
-    ctx.strokeRect(carW * 0.495 - wheelW * 0.89, -wheelH * 0.82, wheelW * 0.78, wheelH * 0.72);
+    // Animated spinning tire tread bands
+    const wPhase = (car.wheelPhase || 0) % 1;
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.32)';
+    ctx.lineWidth = Math.max(0.9, carW * 0.009);
+    ctx.strokeRect(-carW * 0.475, -wheelH * (0.78 + wPhase * 0.06), wheelW * 0.78, wheelH * 0.68);
+    ctx.strokeRect(carW * 0.495 - wheelW * 0.89, -wheelH * (0.78 + wPhase * 0.06), wheelW * 0.78, wheelH * 0.68);
 
     // 3. Sculpted High-Definition Mustang GT500 Fastback Body with Crisp Dark Outline
     const bodyGrad = ctx.createLinearGradient(-carW * 0.5, -carH, carW * 0.5, -carH * 0.1);
@@ -6488,16 +7580,25 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       ctx.fillStyle = '#0f172a';
       ctx.beginPath(); ctx.arc(ex, exhaustY, Math.max(1.0, carW * 0.014), 0, Math.PI * 2); ctx.fill();
     }
-    if (gameState === 'RACING' && (car.boostTimer > 0 || car.speed > 195)) {
+    if (gameState === 'RACING' && (isBoosting || car.speed > 195)) {
       for (const ex of [-carW * 0.275, carW * 0.275]) {
-        const flameLen = (car.boostTimer > 0 ? 0.32 : 0.15) * carH * (0.8 + Math.random() * 0.4);
-        ctx.fillStyle = car.boostTimer > 0 ? '#00e5ff' : '#fb923c';
+        const flameLen = (isBoosting ? 0.38 : 0.15) * carH * (0.82 + Math.random() * 0.42);
+        ctx.fillStyle = isBoosting ? '#00e5ff' : '#fb923c';
         ctx.beginPath();
-        ctx.moveTo(ex - carW * 0.035, exhaustY);
-        ctx.lineTo(ex + carW * 0.035, exhaustY);
+        ctx.moveTo(ex - carW * 0.038, exhaustY);
+        ctx.lineTo(ex + carW * 0.038, exhaustY);
         ctx.lineTo(ex, exhaustY + flameLen);
         ctx.closePath();
         ctx.fill();
+        if (isBoosting) {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(ex - carW * 0.018, exhaustY);
+          ctx.lineTo(ex + carW * 0.018, exhaustY);
+          ctx.lineTo(ex, exhaustY + flameLen * 0.55);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
     }
 
@@ -6706,10 +7807,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (msg) $('#trOffMsg').textContent = msg;
   }
 
-  // ---- Live / Demo mode ----
+  // ---- Live / Demo mode (Default to DEMO when opened in standalone browser outside Telegram) ----
   let booting = true;
   let playMode = 'demo';
-  try { playMode = localStorage.getItem('tr_mode') || 'demo'; } catch (e) {}
+  try {
+    const savedMode = localStorage.getItem('tr_mode');
+    const hasTgData = !!((TG && TG.initData) || new URLSearchParams((location.hash || '').slice(1)).get('tgWebAppData'));
+    if (qp.get('demo') === '1' || !hasTgData) {
+      playMode = 'demo';
+    } else if (savedMode) {
+      playMode = savedMode;
+    }
+  } catch (e) {}
   let demoBal = 1000;
   try { demoBal = parseFloat(localStorage.getItem('tr_demo_bal') || '1000') || 1000; } catch (e) {}
   let state = null, online = false, busy = false;
@@ -7208,9 +8317,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const presets = $('.preset-row') || $$('.preset-pill')[0]?.parentElement;
     if (presets && !$('#trCustomBet')) {
       const box = document.createElement('div');
-      box.style.cssText = 'display:flex;gap:6px;align-items:center;padding:4px 6px;width:100%;';
-      box.innerHTML = `<input id="trCustomBet" type="number" step="0.1" inputmode="decimal" placeholder="Custom bet" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#fff;font-weight:800;font-size:13px;" />
-        <button type="button" id="trCustomBetGo" style="padding:8px 12px;border-radius:10px;border:0;background:#1d7dfa;color:#fff;font-weight:900;">SET</button>`;
+      box.style.cssText = 'display:flex;gap:5px;align-items:center;padding:2px 0 0;width:100%;';
+      box.innerHTML = `<input id="trCustomBet" type="number" step="0.1" inputmode="decimal" placeholder="Custom USDT" style="flex:1;min-width:0;height:25px;padding:2px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:#0b0e15;color:#f8fafc;font-weight:800;font-size:11px;" />
+        <button type="button" id="trCustomBetGo" style="height:25px;padding:0 10px;border-radius:6px;border:0;background:#28e066;color:#05140b;font-weight:900;font-size:10.5px;cursor:pointer;">SET</button>`;
       presets.parentElement && presets.parentElement.appendChild(box);
     }
     const applyCustom = () => {
