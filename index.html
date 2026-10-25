@@ -3259,6 +3259,107 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   letter-spacing: 0.3px !important;
 }
 </style>
+
+<style id="v4-unified-overrides">
+  /* Spacious, highly readable Invest Cards (2-row feel, bold 12px-14px numbers) */
+  .cr-screen .invest-list {
+    padding: 8px 10px 20px !important;
+  }
+  .cr-screen .invest-card {
+    min-height: 112px !important;
+    margin: 8px 0 !important;
+    padding: 10px 10px !important;
+    grid-template-columns: 27% 27% 25% 21% !important;
+    gap: 2px !important;
+    border-radius: 13px !important;
+    background: linear-gradient(145deg, rgba(16, 28, 52, 0.97), rgba(8, 14, 28, 0.99)) !important;
+    border: 1px solid rgba(56, 189, 248, 0.22) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+  }
+  .cr-screen .tier-name {
+    font-size: 12.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.2px !important;
+  }
+  .cr-screen .tier-desc {
+    font-size: 9.5px !important;
+    color: #cbd5e1 !important;
+    margin-top: 2px !important;
+  }
+  .cr-screen .tier-visual > img {
+    height: 46px !important;
+  }
+  .cr-screen .invest-label {
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.2px !important;
+  }
+  .cr-screen .invest-number {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+  }
+  .cr-screen .profit-number {
+    font-size: 12.5px !important;
+    font-weight: 900 !important;
+    color: #28e066 !important;
+  }
+  .cr-screen .invest-number small,
+  .cr-screen .profit-number small {
+    font-size: 8.5px !important;
+    font-weight: 800 !important;
+  }
+  .cr-screen .tier-stats .tiny {
+    font-size: 9px !important;
+    color: #cbd5e1 !important;
+  }
+  .cr-screen .tier-meta p,
+  .cr-screen .tier-meta p.tiny {
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+  }
+  .cr-screen .tier-meta p b {
+    font-size: 11px !important;
+    font-weight: 900 !important;
+  }
+  .cr-screen .share-box .invest-label {
+    font-size: 8px !important;
+  }
+  .cr-screen .share-box strong {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+  }
+  .cr-screen .invest-now {
+    min-height: 34px !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    border-radius: 8px !important;
+  }
+  /* Official crisp USDT badge everywhere */
+  .tether-badge {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Unified dark racing cockpit surface across Invest, Invite, and Profile */
+  #screenInvest, #screenInvite, #screenProfile {
+    background: radial-gradient(circle at 50% 0%, rgba(29, 139, 255, 0.14), rgba(5, 8, 17, 0.98) 65%) !important;
+  }
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+</style>
 </head>
 <body>
 
@@ -3266,10 +3367,24 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   <!-- 1. TOP HEADER BAR -->
   <header class="top-header">
     <div class="profile-box">
-      <div class="avatar-ring">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2C6.5 2 3 6 3 11.5C3 15.5 5 19 8.5 20.5L10 21H18L20 17.5V11C20 5.5 16.5 2 12 2Z" fill="#ef4444" stroke="#111" stroke-width="1.5"/>
-          <path d="M7 10H19V14H9L7 10Z" fill="#0f172a" stroke="#94a3b8" stroke-width="1.2"/>
+      <div class="avatar-ring" id="topHeaderAvatarRing">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <defs>
+            <linearGradient id="helmGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="55%" stop-color="#2563eb"/>
+              <stop offset="100%" stop-color="#1e1b4b"/>
+            </linearGradient>
+            <linearGradient id="visorGrad" x1="6" y1="12" x2="28" y2="18" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#28e066"/>
+              <stop offset="50%" stop-color="#38bdf8"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+          </defs>
+          <path d="M16 3C8.8 3 4 8.2 4 15.2C4 20.4 6.6 24.8 11.2 26.8L13.2 28H24.5L27.5 23.2V14.5C27.5 7.4 22.8 3 16 3Z" fill="url(#helmGrad)" stroke="#7dd3fc" stroke-width="1.4"/>
+          <path d="M9.5 6.5C13 4.8 18.5 4.8 22 6.8" stroke="rgba(255,255,255,0.55)" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M9.5 13H26.8L25.2 18.8H11.5L9.5 13Z" fill="url(#visorGrad)" stroke="#e2e8f0" stroke-width="1.1" stroke-linejoin="round"/>
+          <path d="M12 22.5H23.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="profile-meta">
@@ -3281,10 +3396,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     <div class="balance-box">
       <div class="balance-left">
-        <div class="usdt-icon">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M5 6H19V9H13.5V18H10.5V9H5V6Z" fill="#ffffff"/>
-            <ellipse cx="12" cy="11.5" rx="8" ry="2.2" stroke="#ffffff" stroke-width="1.6"/>
+        <div class="usdt-icon" style="background:transparent !important;box-shadow:none !important;padding:0 !important;">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="16" fill="#26A17B"/>
+            <path fill="#ffffff" d="M17.922 17.383v-.002c-.11.008-.677.042-1.942.042-1.01 0-1.721-.03-1.971-.042v.003c-3.888-.171-6.79-.848-6.79-1.658 0-.809 2.902-1.486 6.79-1.66v2.644c.254.018.982.061 1.988.061 1.207 0 1.812-.05 1.925-.06v-2.643c3.88.173 6.775.85 6.775 1.658 0 .81-2.895 1.485-6.775 1.657m0-3.59v-2.366h5.414V7.819H8.595v3.608h5.414v2.365c-4.4.202-7.709 1.074-7.709 2.118 0 1.044 3.309 1.915 7.709 2.118v7.582h3.913v-7.584c4.393-.202 7.694-1.073 7.694-2.116 0-1.043-3.301-1.914-7.694-2.117"/>
           </svg>
         </div>
         <div class="balance-info">
@@ -4704,6 +4819,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function resetToIdleState() {
     gameState = 'IDLE';
+    cameraShake = 0;
+    if (typeof cars !== 'undefined' && Array.isArray(cars)) {
+      for (const c of cars) { c.hitRoll = 0; c.hitSlowTimer = 0; c.boostTimer = 0; c.bumpCooldown = 0; c.speed = 0; }
+    }
     timeRemaining = RACE_DURATION_SEC;
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
@@ -6224,6 +6343,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
 
     if (gameState !== 'RACING') {
+      cameraShake = 0;
       updateEngineSound(0, false);
       return;
     }
@@ -6235,6 +6355,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
+      cameraShake = 0;
+      debrisParticles = [];
+      tireSmokeParticles = [];
+      for (const c of cars) {
+        c.hitRoll = 0;
+        c.hitSlowTimer = 0;
+        c.boostTimer = 0;
+        c.bumpCooldown = 0;
+        c.speed = 0;
+      }
       updateEngineSound(0, false);
       updateWeatherButtonLabel();
       updateTopPositionBanner();
@@ -6601,8 +6731,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   function renderScene() {
     const player = cars.find(c => c.isPlayer) || cars[0];
     const camZ = player.z;
-    const shakeX = cameraShake > 0 ? (Math.random() - 0.5) * cameraShake : 0;
-    const shakeY = cameraShake > 0 ? (Math.random() - 0.5) * cameraShake : 0;
+    const shakeX = (gameState === 'RACING' && cameraShake > 0) ? (Math.random() - 0.5) * cameraShake : 0;
+    const shakeY = (gameState === 'RACING' && cameraShake > 0) ? (Math.random() - 0.5) * cameraShake : 0;
 
     const horizonY = Math.floor(ch * 0.35) + shakeY;
     const roadBottomY = ch + shakeY;
@@ -7458,15 +7588,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const _lbl = car.floatLabel || car.name;
-    ctx.fillText(_lbl, tagW * 0.07 - (car.isAI ? tagH * 0.45 : 0), tagY + 0.5);
-    if (car.isAI) {
-      const _tx = tagW * 0.07 + ctx.measureText(_lbl).width / 2 - tagH * 0.2;
-      ctx.fillStyle = '#334155';
-      drawRoundedRect(ctx, _tx, tagY - tagH * 0.32, tagH * 0.95, tagH * 0.64, tagH * 0.15);
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = `900 ${Math.max(7, Math.floor(tagH * 0.42))}px "Segoe UI", sans-serif`;
-      ctx.fillText('AI', _tx + tagH * 0.475, tagY + 0.5);
-    }
+    ctx.fillText(_lbl, tagW * 0.07, tagY + 0.5);
 
     ctx.restore();
   }
@@ -7568,6 +7690,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   resetToIdleState();
   let lastTime = performance.now();
+  let smoothDt = 1 / 60;
   function frame(now) {
     const rawDt = (now - lastTime) / 1000;
     lastTime = now;
@@ -7575,9 +7698,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       requestAnimationFrame(frame);
       return;
     }
-    const dt = Math.min(0.05, Math.max(0.001, rawDt));
-    updateSimulation(dt);
-    if (currentTab === 'bet' || currentTab === 'race' || gameState === 'RACING' || gameState === 'COUNTDOWN') {
+    const clampedDt = Math.min(0.05, Math.max(0.0005, rawDt));
+    smoothDt = smoothDt * 0.75 + clampedDt * 0.25;
+    updateSimulation(smoothDt);
+    if (currentTab === 'bet' || currentTab === 'race' || gameState === 'RACING' || gameState === 'COUNTDOWN' || gameState === 'MATCHMAKING') {
       renderScene();
     }
     requestAnimationFrame(frame);
@@ -7763,6 +7887,82 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         $$('.ref-value').forEach(el => { el.textContent = String(state.user.id); });
       }
     }
+    // Photo avatar upgrade if Telegram user has photo_url
+    try {
+      const photoUrl = (tu && tu.photo_url) || '';
+      const ring = $('#topHeaderAvatarRing');
+      if (ring && photoUrl && !ring.dataset.photoLoaded) {
+        ring.dataset.photoLoaded = '1';
+        const img = new Image();
+        img.onload = () => {
+          ring.innerHTML = `<img src="${esc(photoUrl)}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" />`;
+        };
+        img.src = photoUrl;
+      }
+    } catch (e) {}
+    renderLiveWalletHistory();
+  }
+
+  function renderLiveWalletHistory() {
+    const body = $('.profile-body') || $('#screenProfile');
+    if (!body) return;
+    let sec = $('#trLiveWalletHistory');
+    if (!sec) {
+      sec = document.createElement('section');
+      sec.id = 'trLiveWalletHistory';
+      sec.className = 'tr-settings';
+      sec.style.marginTop = '10px';
+      const settingsCard = $('#trSettings');
+      if (settingsCard) settingsCard.before(sec);
+      else body.appendChild(sec);
+    }
+    if (playMode !== 'live' || !state) {
+      sec.style.display = 'none';
+      return;
+    }
+    sec.style.display = 'block';
+    const deps = (state.deposits || []).slice(0, 8);
+    const wds = (state.withdrawals || []).slice(0, 8);
+    const depRows = deps.length ? deps.map(d => {
+      const st = d.status === 'confirming'
+        ? `<span style="color:#fbbf24;font-weight:800;">⏳ Confirming (${d.confirmations || 1}/3)</span>`
+        : `<span style="color:#28e066;font-weight:800;">✅ Completed</span>`;
+      const txh = d.tx_hash ? String(d.tx_hash).split(':')[0] : '';
+      const link = txh && txh.startsWith('0x')
+        ? `<a href="https://bscscan.com/tx/${esc(txh)}" target="_blank" rel="noopener" style="color:#38bdf8;font-size:10px;text-decoration:underline;">BSCScan ↗</a>`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(8,15,28,0.85);border:1px solid rgba(148,163,184,0.16);border-radius:8px;margin-top:5px;font-size:11px;">
+        <div><b style="color:#28e066;">+${fmt(d.amount)} USDT</b> <span style="color:#64748b;font-size:9.5px;">Deposit</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${st} ${link}</div>
+      </div>`;
+    }).join('') : `<div style="font-size:11px;color:#64748b;padding:6px 0;">No live deposits yet.</div>`;
+
+    const wdRows = wds.length ? wds.map(w => {
+      let st = `<span style="color:#fbbf24;font-weight:800;">⏳ Pending (Max 12h)</span>`;
+      if (w.status === 'paid_auto' || w.status === 'paid_manual') st = `<span style="color:#28e066;font-weight:800;">✅ Paid</span>`;
+      else if (w.status === 'rejected') st = `<span style="color:#ef4444;font-weight:800;">❌ Cancelled${w.note ? ' (' + esc(w.note) + ')' : ''}</span>`;
+      const txh = w.txid ? String(w.txid).trim() : '';
+      const link = txh && txh.startsWith('0x')
+        ? `<a href="https://bscscan.com/tx/${esc(txh)}" target="_blank" rel="noopener" style="color:#38bdf8;font-size:10px;text-decoration:underline;">BSCScan ↗</a>`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(8,15,28,0.85);border:1px solid rgba(148,163,184,0.16);border-radius:8px;margin-top:5px;font-size:11px;">
+        <div><b style="color:#f8fafc;">-${fmt(w.amount)} USDT</b> <span style="color:#64748b;font-size:9.5px;">#${w.id}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${st} ${link}</div>
+      </div>`;
+    }).join('') : `<div style="font-size:11px;color:#64748b;padding:6px 0;">No withdrawals yet.</div>`;
+
+    sec.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h4 style="margin:0;">📜 LIVE DEPOSITS &amp; WITHDRAWALS</h4>
+        <button type="button" class="tr-btn ghost" id="trProfCheckDepBtn" style="padding:3px 8px;font-size:10px;width:auto;">🔄 Check Deposit</button>
+      </div>
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;margin-top:4px;">RECENT DEPOSITS (BSC BEP20)</div>
+      ${depRows}
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;margin-top:8px;">RECENT WITHDRAWALS</div>
+      ${wdRows}
+    `;
+    const cBtn = $('#trProfCheckDepBtn');
+    if (cBtn) cBtn.onclick = () => openLiveDeposit();
   }
 
   async function refresh(force) {
@@ -7813,6 +8013,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const amount = +currentBet;
     if (amount < minBet || amount > maxBet) { toast(`Bet must be ${minBet}–${maxBet} USDT`, 'warn'); return; }
 
+    try { if (typeof initAudio === 'function') initAudio(); if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(()=>{}); if (musicOn) startMusic(); } catch (e) {}
     if (playMode === 'demo') {
       if (demoBal < amount) { toast('Insufficient demo balance. Tap Refill $1000.', 'warn'); return; }
       demoBal = +fmt(demoBal - amount);
@@ -7833,7 +8034,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (!online) { toast('Server offline — switch to Demo or retry.', 'error'); refresh(true); return; }
     busy = true;
     try {
-      const j = await api('/api/bet', { amount, mode: raceModeCars, car: selectedPlayerTheme });
+      const j = await api('/api/bet', { amount, mode: raceModeCars, car: selectedPlayerTheme, drive_type: isAutoBetMode ? 'auto' : 'manual' });
       pendingBet = Object.assign({ demo: false }, j.result);
       state = j; applyBalanceUI();
       designatedWinnerId = pendingBet.winner;
@@ -7847,6 +8048,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function startMatchmakingUI() {
     // Keep the original 10s matchmaking + joined text behaviour
+    cameraShake = 0;
+    if (musicOn) startMusic();
     gameState = 'MATCHMAKING';
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
@@ -7911,49 +8114,157 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
   }, true);
 
-  // ---- Deposit / Withdraw modals (replace fake top-ups in Live) ----
+  // ---- Official USDT SVG + Deposit / Withdraw modals + Live Wallet History ----
+  const OFFICIAL_USDT_SVG = `<svg width="20" height="20" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;vertical-align:middle;"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path fill="#ffffff" d="M17.922 17.383v-.002c-.11.008-.677.042-1.942.042-1.01 0-1.721-.03-1.971-.042v.003c-3.888-.171-6.79-.848-6.79-1.658 0-.809 2.902-1.486 6.79-1.66v2.644c.254.018.982.061 1.988.061 1.207 0 1.812-.05 1.925-.06v-2.643c3.88.173 6.775.85 6.775 1.658 0 .81-2.895 1.485-6.775 1.657m0-3.59v-2.366h5.414V7.819H8.595v3.608h5.414v2.365c-4.4.202-7.709 1.074-7.709 2.118 0 1.044 3.309 1.915 7.709 2.118v7.582h3.913v-7.584c4.393-.202 7.694-1.073 7.694-2.116 0-1.043-3.301-1.914-7.694-2.117"/></svg>`;
+
+  let _depPollTimer = null;
+  function stopDepPoll() { if (_depPollTimer) { clearInterval(_depPollTimer); _depPollTimer = null; } }
+
+  async function triggerDepositCheck(silent) {
+    if (!online || playMode !== 'live') return;
+    const statusBox = $('#trDepLiveStatus');
+    const btn = $('#trCheckDepBtn');
+    if (btn && !silent) { btn.disabled = true; btn.textContent = '⏳ Scanning BSC Blockchain…'; }
+    try {
+      const j = await api('/api/deposit/check', {});
+      state = j; applyBalanceUI();
+      const res = j.result || {};
+      const deps = j.deposits || [];
+      const latest = deps[0];
+      if (statusBox) {
+        if (res.status === 'completed' || (latest && latest.status === 'completed' && (Date.now()/1000 - latest.created_at) < 120)) {
+          const d = latest || res;
+          const txh = d.tx_hash || '';
+          statusBox.innerHTML = `<div style="background:rgba(40,224,102,0.14);border:1px solid #28e066;border-radius:9px;padding:8px 10px;margin-top:8px;text-align:left;font-size:11.5px;color:#e2e8f0;">
+            <b style="color:#28e066;">✅ Deposit Credited! (+${fmt(d.amount || 0)} USDT)</b><br/>
+            ${txh ? `<a href="https://bscscan.com/tx/${esc(txh)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:underline;font-size:10.5px;">🔗 View on BSCScan (${esc(txh.slice(0,10))}…)</a>` : ''}
+          </div>`;
+          if (!silent) toast('Deposit credited!', 'success');
+        } else if (res.status === 'confirming' || (latest && latest.status === 'confirming')) {
+          const d = (res.status === 'confirming') ? res : latest;
+          const txh = d.tx_hash || '';
+          statusBox.innerHTML = `<div style="background:rgba(245,158,11,0.14);border:1px solid #f59e0b;border-radius:9px;padding:8px 10px;margin-top:8px;text-align:left;font-size:11.5px;color:#e2e8f0;">
+            <b style="color:#fbbf24;">⏳ Deposit Confirming (${d.confirmations || 1}/${d.required || 3} blocks)…</b><br/>
+            <span>Amount: <b>${fmt(d.amount || 0)} USDT</b> — auto-credits in ~6 seconds!</span><br/>
+            ${txh ? `<a href="https://bscscan.com/tx/${esc(txh)}" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:underline;font-size:10.5px;">🔗 View on BSCScan (${esc(txh.slice(0,10))}…)</a>` : ''}
+          </div>`;
+          if (!silent) toast('Deposit detected! Confirming on BSC…', 'info');
+        } else if (!silent) {
+          statusBox.innerHTML = `<div style="font-size:11px;color:#94a3b8;margin-top:6px;">No new incoming transaction found in the last ~45 seconds. Auto-scanning every 6s…</div>`;
+        }
+      }
+    } catch (e) {
+      if (!silent) toast(e.message || 'Scan failed', 'error');
+    } finally {
+      if (btn && !silent) { btn.disabled = false; btn.textContent = '🔄 Check Payment Now'; }
+    }
+  }
+
   function openLiveDeposit() {
+    stopDepPoll();
     const addr = (state && state.deposit_address) || '';
-    const minD = (state && state.settings && state.settings.min_deposit) || 1;
-    modalSvgHolder.innerHTML = '💵';
-    modalTitle.textContent = 'DEPOSIT USDT';
-    modalSubtitle.textContent = addr ? 'USDT (BEP20) · Min ' + minD + ' USDT' : 'Deposits not configured yet';
+    const minD = (state && state.settings && state.settings.min_deposit) || 0.5;
+    modalSvgHolder.innerHTML = OFFICIAL_USDT_SVG.replace('width="20" height="20"', 'width="44" height="44"');
+    modalTitle.textContent = 'DEPOSIT USDT (BEP20)';
+    modalSubtitle.textContent = addr ? `Min ${minD} USDT · Max: No Limit · Instant Credit` : 'Loading wallet address…';
     modalSubtitle.style.color = '#28e066';
     modalBodyContent.innerHTML = addr
-      ? `<p class="tr-note">Send only <b>USDT (BEP20) on BNB Smart Chain</b> to your personal address. Other networks will be lost.</p>
-         <div class="tr-addr" id="trDepAddr">${esc(addr)}</div>
-         <button class="tr-btn ghost" style="margin-top:10px" id="trCopyAddr">📋 Copy address</button>
-         <p class="tr-note" style="margin-top:10px">Balance updates automatically after confirmation.</p>`
-      : `<p class="tr-note">The admin has not set up the HD wallet yet. Please check back soon.</p>`;
+      ? `<div style="text-align:left;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.28);border-radius:10px;padding:9px 11px;margin-bottom:8px;">
+           <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;margin-bottom:4px;">
+             <span>Network: <b style="color:#facc15;">BNB Smart Chain (BEP20)</b></span>
+             <span style="color:#28e066;font-weight:800;">⚡ ~9 Sec</span>
+           </div>
+           <div style="font-size:10.5px;color:#cbd5e1;">Send <b>USDT (BEP20)</b> to your personal deposit address below. Any detected amount is credited automatically after 3 confirmations.</div>
+         </div>
+         <div class="tr-addr" id="trDepAddr" style="font-size:11.5px;padding:10px;background:#060c18;border:1px solid rgba(40,224,102,0.4);border-radius:9px;word-break:break-all;color:#f8fafc;font-family:monospace;">${esc(addr)}</div>
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+           <button class="tr-btn ghost" id="trCopyAddr" style="margin:0;">📋 Copy Address</button>
+           <button class="tr-btn green" id="trCheckDepBtn" style="margin:0;">🔄 Check Payment Now</button>
+         </div>
+         <div id="trDepLiveStatus"></div>`
+      : `<p class="tr-note">Connecting to server wallet… Please tap Retry or reopen from Telegram.</p>`;
     modalActionBtn.textContent = 'CLOSE';
     resultModalBackdrop.classList.add('open');
     showBack();
     $('#trCopyAddr') && ($('#trCopyAddr').onclick = () => {
-      navigator.clipboard.writeText(addr).then(() => toast('Address copied', 'success')).catch(() => toast('Copy failed', 'error'));
+      navigator.clipboard.writeText(addr).then(() => toast('Deposit address copied!', 'success')).catch(() => toast('Copy failed', 'error'));
     });
+    $('#trCheckDepBtn') && ($('#trCheckDepBtn').onclick = () => triggerDepositCheck(false));
+    if (addr) {
+      triggerDepositCheck(true);
+      _depPollTimer = setInterval(() => {
+        if (!resultModalBackdrop.classList.contains('open')) { stopDepPoll(); return; }
+        triggerDepositCheck(true);
+      }, 6000);
+    }
   }
+
   function openLiveWithdraw() {
-    const avail = state ? state.balance : 0;
-    const minW = (state && state.settings && state.settings.min_withdraw) || 5;
-    const maxW = (state && state.settings && state.settings.max_withdraw) || 1000;
-    modalSvgHolder.innerHTML = '📤';
-    modalTitle.textContent = 'WITHDRAW USDT';
-    modalSubtitle.textContent = 'Available: ' + fmt(avail) + ' USDT';
+    stopDepPoll();
+    const avail = state ? +state.balance : 0;
+    const minW = (state && state.settings && +state.settings.min_withdraw) || 0.5;
+    const maxW = (state && state.settings && +state.settings.max_withdraw) || 0;
+    const maxLabel = maxW > 0 ? `${maxW} USDT` : 'No Limit';
+    modalSvgHolder.innerHTML = OFFICIAL_USDT_SVG.replace('width="20" height="20"', 'width="44" height="44"');
+    modalTitle.textContent = 'WITHDRAW USDT (BEP20)';
+    modalSubtitle.textContent = `Available: ${fmt(avail)} USDT · Min ${minW} USDT · Max ${maxLabel}`;
     modalSubtitle.style.color = '#38bdf8';
     modalBodyContent.innerHTML = `
-      <input class="tr-field" id="trWdAddr" placeholder="USDT (BEP20) address (0x…)" />
-      <input class="tr-field" id="trWdAmt" type="number" step="0.01" min="${minW}" max="${Math.min(maxW, avail)}" placeholder="Amount (min ${minW})" style="margin-top:8px" />
-      <p class="tr-note" style="margin-top:8px">Requests are reviewed by admin (Pay Auto / Manual / Reject).</p>
-      <button class="tr-btn" id="trWdSend" style="margin-top:10px">Submit withdrawal</button>`;
+      <div style="text-align:left;">
+        <label style="font-size:10.5px;font-weight:800;color:#94a3b8;display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span>RECEIVING USDT (BEP20) ADDRESS</span>
+          <span id="trWdAddrStatus" style="color:#64748b;">0x… (BSC)</span>
+        </label>
+        <input class="tr-field" id="trWdAddr" placeholder="Paste 0x… BEP20 wallet address" autocomplete="off" spellcheck="false" />
+        <label style="font-size:10.5px;font-weight:800;color:#94a3b8;display:flex;justify-content:space-between;margin:8px 0 4px;">
+          <span>WITHDRAWAL AMOUNT (USDT)</span>
+          <span style="color:#28e066;">Min: ${minW} USDT</span>
+        </label>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <input class="tr-field" id="trWdAmt" type="number" step="0.01" min="${minW}" placeholder="Enter amount (min ${minW})" style="margin:0;flex:1;" />
+          <button type="button" class="tr-btn ghost" id="trWdMaxBtn" style="margin:0;width:auto;padding:0 14px;font-weight:900;color:#28e066;border-color:rgba(40,224,102,0.45);flex-shrink:0;">MAX</button>
+        </div>
+        <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.2);border-radius:8px;padding:7px 9px;margin-top:8px;font-size:10.5px;color:#94a3b8;line-height:1.35;">
+          🕒 <b>Estimated Completion:</b> Within 12 hours (instant on Auto-Pay).<br/>
+          🔗 You will receive a Telegram notification with your clickable <b>BSCScan</b> transaction link once sent.
+        </div>
+        <button class="tr-btn" id="trWdSend" style="margin-top:10px;width:100%;">📤 Submit Withdrawal</button>
+      </div>`;
     modalActionBtn.textContent = 'CLOSE';
     resultModalBackdrop.classList.add('open');
     showBack();
+    const addrInp = $('#trWdAddr');
+    const addrSt = $('#trWdAddrStatus');
+    const amtInp = $('#trWdAmt');
+    if (addrInp && addrSt) {
+      addrInp.addEventListener('input', () => {
+        const v = addrInp.value.trim();
+        if (!v) { addrSt.textContent = '0x… (BSC)'; addrSt.style.color = '#64748b'; }
+        else if (/^0x[a-fA-F0-9]{40}$/.test(v)) { addrSt.textContent = '✓ Valid BEP20'; addrSt.style.color = '#28e066'; }
+        else { addrSt.textContent = '✗ Must be 0x + 40 hex chars'; addrSt.style.color = '#ef4444'; }
+      });
+    }
+    $('#trWdMaxBtn') && ($('#trWdMaxBtn').onclick = () => {
+      const cap = maxW > 0 ? Math.min(avail, maxW) : avail;
+      if (amtInp) amtInp.value = cap > 0 ? fmt(cap) : '';
+    });
     $('#trWdSend').onclick = async () => {
+      const a = (addrInp ? addrInp.value.trim() : '');
+      const amt = parseFloat(amtInp ? amtInp.value : '0');
+      if (!/^0x[a-fA-F0-9]{40}$/.test(a)) { toast('Enter a valid USDT (BEP20) 0x address', 'error'); return; }
+      if (!isFinite(amt) || amt < minW) { toast(`Minimum withdrawal is ${minW} USDT`, 'warn'); return; }
+      if (amt > avail + 1e-6) { toast('Insufficient live balance', 'warn'); return; }
+      const btn = $('#trWdSend');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Submitting…'; }
       try {
-        const j = await api('/api/withdraw', { amount: parseFloat($('#trWdAmt').value), address: $('#trWdAddr').value.trim() });
-        state = j; applyBalanceUI(); toast('Withdrawal request #' + j.result.withdrawal_id + ' submitted', 'success');
+        const j = await api('/api/withdraw', { amount: amt, address: a });
+        state = j; applyBalanceUI();
+        toast('Withdrawal #' + j.result.withdrawal_id + ' submitted (Est. within 12h)', 'success');
         closeResultModal();
-      } catch (e) { toast(e.message, 'error'); }
+      } catch (e) {
+        toast(e.message || 'Withdrawal failed', 'error');
+        if (btn) { btn.disabled = false; btn.textContent = '📤 Submit Withdrawal'; }
+      }
     };
   }
 
@@ -8561,6 +8872,26 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   // ---- Boot ----
   function boot() {
+    // Anti-inspect / right-click / DevTools shortcuts deterrent
+    try {
+      document.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; }, true);
+      document.addEventListener('dragstart', (e) => { e.preventDefault(); return false; }, true);
+      window.addEventListener('keydown', (e) => {
+        const k = (e.key || '').toUpperCase();
+        if (e.keyCode === 123 || k === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (k === 'I' || k === 'J' || k === 'C')) ||
+            (e.metaKey && e.altKey && (k === 'I' || k === 'J' || k === 'C' || k === 'U')) ||
+            (e.ctrlKey && (k === 'U' || k === 'S'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+    } catch (e) {}
+    // Replace all .tether-badge with official crisp #26A17B USDT SVG
+    try {
+      $$('.tether-badge').forEach(el => { el.innerHTML = OFFICIAL_USDT_SVG; });
+    } catch (e) {}
     // Zero out fake profile/stats until server data arrives
     try {
       profitBalanceUsdt = 0; totalInvestmentUsdt = 0; totalProfitReceivedUsdt = 0;
