@@ -4510,7 +4510,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   let _activeToneCount = 0;
   function playTone(f1, f2, dur, type = 'sine', vol = 0.14) {
-    if (!soundEnabled || _activeToneCount > 8) return;
+    if (window._trFastForwarding || !soundEnabled || _activeToneCount > 8) return;
     initAudio();
     if (!audioCtx || audioCtx.state !== 'running') return;
     _activeToneCount++;
@@ -4533,7 +4533,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   }
 
   function playNoiseImpact(dur = 0.25, freq = 800, vol = 0.24) {
-    if (!soundEnabled || _activeToneCount > 8) return;
+    if (window._trFastForwarding || !soundEnabled || _activeToneCount > 8) return;
     initAudio();
     if (!audioCtx || audioCtx.state !== 'running') return;
     _activeToneCount++;
@@ -4560,7 +4560,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   let _lastHapticMs = 0;
   function triggerHaptic(pattern) {
-    if (!hapticEnabled) return;
+    if (window._trFastForwarding || !hapticEnabled) return;
     const now = performance.now();
     if (now - _lastHapticMs < 65) return;
     _lastHapticMs = now;
@@ -4738,8 +4738,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       {
         id: 'bot1',
         name: ai1,
-        displayName: 'Player 2',
-        floatLabel: 'Player 2',
+        displayName: 'Player 1',
+        floatLabel: 'Player 1',
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -4782,8 +4782,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       cars.push({
         id: 'bot2',
         name: ai2,
-        displayName: 'Player 3',
-        floatLabel: 'Player 3',
+        displayName: 'Player 2',
+        floatLabel: 'Player 2',
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -4803,7 +4803,24 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
   }
 
-  function generateTrackObjects() {
+  function makeRoomRng(seedStr) {
+    if (!seedStr) return () => Math.random();
+    let h = 2166136261 >>> 0;
+    const s = String(seedStr);
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return function () {
+      h += 0x6D2B79F5;
+      let t = Math.imul(h ^ (h >>> 15), 1 | h);
+      t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function generateTrackObjects(seedStr) {
+    const rng = makeRoomRng(seedStr || (window._trActiveRoom && window._trActiveRoom.room_id) || "");
     trackObjects = [
       { id: 1, z: 76, lane: 1, x: LANE_CENTERS[1], type: 'boost', broken: false, hitAnimTimer: 0, hitBy: new Set() },
       { id: 2, z: 76, lane: 2, x: LANE_CENTERS[2], type: 'boost', broken: false, hitAnimTimer: 0, hitBy: new Set() },
@@ -4815,29 +4832,29 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     for (let dist = 420; dist < FINISH_LINE_Z - 110; dist += 84) {
       const used = new Set();
-      const cnt = Math.random() < 0.64 ? 2 : 1;
+      const cnt = rng() < 0.64 ? 2 : 1;
       for (let i = 0; i < cnt; i++) {
-        const l = Math.floor(Math.random() * 4);
+        const l = Math.floor(rng() * 4);
         if (used.has(l)) continue;
         used.add(l);
         const type = obstacleTypes[(nextId + i) % obstacleTypes.length];
         trackObjects.push({
           id: nextId++,
-          z: dist + (Math.random() * 6 - 3),
+          z: dist + (rng() * 6 - 3),
           lane: l,
           x: LANE_CENTERS[l],
           type,
           broken: false,
           hitAnimTimer: 0,
-          hitDir: Math.random() < 0.5 ? 1 : -1,
+          hitDir: rng() < 0.5 ? 1 : -1,
           hitBy: new Set()
         });
       }
 
-      if (Math.random() < 0.68) {
+      if (rng() < 0.68) {
         const freeLanes = [0, 1, 2, 3].filter(l => !used.has(l));
         if (freeLanes.length > 0) {
-          const bl = freeLanes[Math.floor(Math.random() * freeLanes.length)];
+          const bl = freeLanes[Math.floor(rng() * freeLanes.length)];
           trackObjects.push({
             id: nextId++,
             z: dist + 46,
@@ -5135,6 +5152,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       player.targetX = LANE_CENTERS[nextLane];
       spawnTireSmoke(player.x, player.z);
       sfxSteer();
+      if (typeof window._trPushTelemetryNow === "function") window._trPushTelemetryNow();
     }
   }
 
@@ -6478,13 +6496,62 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
 
       const isDrivenByAI = !car.isPlayer || isAutoBetMode;
+      const nowMs = performance.now();
+      const tel = (!car.isPlayer && car.isRemoteHuman && car.remoteTelemetry) ? car.remoteTelemetry : null;
+      const hasFreshRemote = !!(tel && (nowMs - (tel.recvMs || 0) < 3800) && typeof tel.z === "number" && tel.z > 0.5);
 
-      if (!isDrivenByAI) {
+      if (hasFreshRemote) {
+        // Real-Time Multiplayer Sync: mirror remote player's exact Left/Right lane steering & live progress!
+        const isDesignatedWinner = (car.id === designatedWinnerId);
+        const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];
+        if (typeof tel.lane === "number" && tel.lane >= 0 && tel.lane <= 3) {
+          if (tel.lane > car.lane) car.lastSteerDir = 1;
+          else if (tel.lane < car.lane) car.lastSteerDir = -1;
+          car.lane = tel.lane;
+        }
+        if (typeof tel.target_x === "number") {
+          car.targetX = Math.max(-0.78, Math.min(0.78, tel.target_x));
+        } else if (typeof tel.lane === "number" && LANE_CENTERS[tel.lane] !== undefined) {
+          car.targetX = LANE_CENTERS[tel.lane];
+        }
+        if (typeof tel.x === "number") {
+          car.x += (tel.x - car.x) * Math.min(1, dt * 10.0);
+        }
+        if (typeof tel.boost === "number" && tel.boost > car.boostTimer) {
+          car.boostTimer = tel.boost;
+        }
+        let targetSpeed = (typeof tel.speed === "number" && tel.speed > 40) ? Math.min(BOOST_TOP_SPEED, tel.speed) : maxSpd;
+        if (!isDesignatedWinner && inFinalStretch && car.z > designatedCar.z + 4) {
+          targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 16);
+        }
+        const accel = car.boostTimer > 0 ? 185 : EQUAL_ACCEL_RATE;
+        if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
+        else car.speed = Math.max(targetSpeed, car.speed - 70 * dt);
+
+        const dx = car.targetX - car.x;
+        car.x += dx * Math.min(1, dt * 12.5);
+        car.x = Math.max(-0.84, Math.min(0.84, car.x));
+        car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
+
+        // Smoothly dead-reckon & blend z toward remote player's live z during main race
+        if (raceProgress < 0.80) {
+          const ageSec = Math.min(0.45, Math.max(0, (nowMs - (tel.recvMs || nowMs)) / 1000));
+          const predZ = tel.z + (tel.speed || car.speed) * WORLD_SPEED_SCALE * ageSec;
+          const zErr = predZ - car.z;
+          if (Math.abs(zErr) > 55) car.z = predZ;
+          else car.z += zErr * Math.min(1, dt * 5.5);
+        }
+      } else if (!isDrivenByAI) {
         // Manual Drive Mode for Player Car
         const targetSpeed = keys.brake ? 110 : maxSpd;
         const accel = car.boostTimer > 0 ? 185 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 72) * dt);
+
+        const dx = car.targetX - car.x;
+        car.x += dx * Math.min(1, dt * 11.5);
+        car.x = Math.max(-0.84, Math.min(0.84, car.x));
+        car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
       } else {
         // AI-Driven Car (All 3 cars in Car Bet Mode, or Bots in Manual Mode)
         const isDesignatedWinner = (car.id === designatedWinnerId);
@@ -6513,13 +6580,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const accel = car.boostTimer > 0 ? 180 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else car.speed = Math.max(targetSpeed, car.speed - 65 * dt);
-      }
 
-      const dx = car.targetX - car.x;
-      car.x += dx * Math.min(1, dt * 11.5);
-      // Clamp within asphalt bounds
-      car.x = Math.max(-0.84, Math.min(0.84, car.x));
-      car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
+        const dx = car.targetX - car.x;
+        car.x += dx * Math.min(1, dt * 11.5);
+        // Clamp within asphalt bounds
+        car.x = Math.max(-0.84, Math.min(0.84, car.x));
+        car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
+      }
     }
 
     // 3. OBSTACLE HITS (Speed slows down -> trailing cars overtake) & BLUE BOOSTERS (Speed pump!)
@@ -7775,19 +7842,65 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   }
 
   resetToIdleState();
-  let lastTime = performance.now();
+  let lastSimWallMs = Date.now();
   let smoothDt = 1 / 60;
-  function frame(now) {
-    const rawDt = (now - lastTime) / 1000;
-    lastTime = now;
-    if (document.hidden) {
-      requestAnimationFrame(frame);
+
+  function advanceSimulationToWallClock() {
+    const nowWall = Date.now();
+    const elapsedSec = (nowWall - lastSimWallMs) / 1000;
+    lastSimWallMs = nowWall;
+    if (elapsedSec <= 0) return;
+
+    const isActiveMatch = (gameState === 'MATCHMAKING' || gameState === 'COUNTDOWN' || gameState === 'RACING');
+    if (!isActiveMatch) {
+      const clampedDt = Math.min(0.05, Math.max(0.0005, elapsedSec));
+      smoothDt = smoothDt * 0.75 + clampedDt * 0.25;
+      updateSimulation(smoothDt);
       return;
     }
-    const clampedDt = Math.min(0.05, Math.max(0.0005, rawDt));
-    smoothDt = smoothDt * 0.75 + clampedDt * 0.25;
-    updateSimulation(smoothDt);
-    if (currentTab === 'bet' || currentTab === 'race' || gameState === 'RACING' || gameState === 'COUNTDOWN' || gameState === 'MATCHMAKING') {
+
+    // Active match (MATCHMAKING / COUNTDOWN / RACING): NEVER pause when minimized or screen-off!
+    // Catch up elapsed wall-clock time in fixed 0.05s steps so backgrounded matches progress in real time.
+    const totalCatchup = Math.min(90.0, elapsedSec);
+    if (totalCatchup <= 0.065) {
+      const clampedDt = Math.max(0.0005, totalCatchup);
+      smoothDt = smoothDt * 0.75 + clampedDt * 0.25;
+      updateSimulation(smoothDt);
+    } else {
+      const step = 0.05;
+      let rem = totalCatchup;
+      window._trFastForwarding = true;
+      try {
+        let guard = 0;
+        while (rem > 0.0005 && guard < 2000 && (gameState === 'MATCHMAKING' || gameState === 'COUNTDOWN' || gameState === 'RACING')) {
+          const dtStep = Math.min(step, rem);
+          updateSimulation(dtStep);
+          rem -= dtStep;
+          guard++;
+        }
+      } finally {
+        window._trFastForwarding = false;
+      }
+    }
+  }
+
+  // Background ticker so matches keep running & auto-finish even when tab/app is minimized (document.hidden === true)
+  setInterval(() => {
+    if (gameState === 'MATCHMAKING' || gameState === 'COUNTDOWN' || gameState === 'RACING') {
+      advanceSimulationToWallClock();
+    }
+  }, 250);
+
+  document.addEventListener('visibilitychange', () => {
+    advanceSimulationToWallClock();
+    if (!document.hidden && (currentTab === 'bet' || currentTab === 'race' || gameState !== 'IDLE')) {
+      try { renderScene(); } catch (e) {}
+    }
+  });
+
+  function frame(now) {
+    advanceSimulationToWallClock();
+    if (!document.hidden && (currentTab === 'bet' || currentTab === 'race' || gameState === 'RACING' || gameState === 'COUNTDOWN' || gameState === 'MATCHMAKING')) {
       renderScene();
     }
     requestAnimationFrame(frame);
@@ -8175,10 +8288,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function syncCarsAndLabelsWithRoom() {
     if (!Array.isArray(cars) || !cars.length) return;
-    const myUid = getMyUidStr();
-    const myMasked = maskUidFour(myUid);
     const room = window._trActiveRoom;
-    const isWaitPhase = (gameState === 'IDLE' || (gameState === 'MATCHMAKING' && matchmakingTimer > 0.4));
 
     if (room && room.assigned_car && CAR_THEMES[room.assigned_car] && room.assigned_car !== selectedPlayerTheme) {
       applyAssignedCarUI(room.assigned_car);
@@ -8187,28 +8297,47 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const pCar = cars.find(c => c.isPlayer);
     if (pCar && CAR_THEMES[selectedPlayerTheme]) {
       Object.assign(pCar, CAR_THEMES[selectedPlayerTheme]);
-      pCar.floatLabel = `YOU • ${myMasked}`;
-      pCar.displayName = `YOU (${myMasked})`;
-      pCar.name = `YOU (${CAR_THEMES[selectedPlayerTheme].nameLabel} • ${myMasked})`;
+      // 3D Car Tag on Track: ALWAYS "YOU" (never User ID / BOT!)
+      pCar.floatLabel = 'YOU';
+      pCar.displayName = 'YOU';
+      pCar.name = `YOU (${CAR_THEMES[selectedPlayerTheme].nameLabel})`;
     }
 
     const botCars = cars.filter(c => !c.isPlayer);
+    const startLanesBySlot = [1, 2, 0];
     if (room && Array.isArray(room.slots) && gameState !== 'IDLE') {
+      const mySlot = room.slots.find(s => s.car === selectedPlayerTheme);
+      if (mySlot && pCar && (gameState === 'MATCHMAKING' || gameState === 'COUNTDOWN')) {
+        const sl = startLanesBySlot[mySlot.slot_index % 3] ?? 1;
+        pCar.lane = sl;
+        pCar.x = LANE_CENTERS[sl];
+        pCar.targetX = LANE_CENTERS[sl];
+      }
+
       const oppSlots = room.slots.filter(s => s.car !== selectedPlayerTheme);
       botCars.forEach((bc, idx) => {
         const s = oppSlots[idx];
-        if (!s) return;
+        const pLabel = `Player ${idx + 1}`;
+        if (!s) {
+          bc.floatLabel = pLabel;
+          bc.displayName = pLabel;
+          return;
+        }
         const theme = CAR_THEMES[s.car] || CAR_THEMES.blue;
         Object.assign(bc, theme);
-        if (!s.is_bot && s.uid) {
-          bc.floatLabel = s.masked_id;
-          bc.displayName = s.masked_id;
-          bc.name = `${theme.nameLabel} (${s.masked_id})`;
-        } else {
-          const bLbl = s.bot_label || `BOT #${idx + 1}`;
-          bc.floatLabel = isWaitPhase ? 'WAIT…' : bLbl;
-          bc.displayName = bLbl;
-          bc.name = `${theme.nameLabel} (${bLbl})`;
+        // 3D Car Tag on Track: ALWAYS "Player 1" / "Player 2" (never User ID / BOT / WAIT!)
+        bc.floatLabel = pLabel;
+        bc.displayName = pLabel;
+        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.isRemoteHuman = (!s.is_bot && !!s.uid);
+        if (s.telemetry && typeof s.telemetry.z === 'number') {
+          bc.remoteTelemetry = Object.assign({}, s.telemetry, { recvMs: performance.now() });
+        }
+        if (gameState === 'MATCHMAKING' || gameState === 'COUNTDOWN') {
+          const sl = startLanesBySlot[s.slot_index % 3] ?? ((idx === 0) ? 2 : 0);
+          bc.lane = sl;
+          bc.x = LANE_CENTERS[sl];
+          bc.targetX = LANE_CENTERS[sl];
         }
       });
 
@@ -8226,10 +8355,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const k = oppKeys[idx] || 'blue';
         const theme = CAR_THEMES[k];
         Object.assign(bc, theme);
-        const bLbl = `BOT #${idx + 1}`;
-        bc.floatLabel = isWaitPhase ? 'WAIT…' : bLbl;
-        bc.displayName = bLbl;
-        bc.name = `${theme.nameLabel} (${bLbl})`;
+        const pLabel = `Player ${idx + 1}`;
+        bc.floatLabel = pLabel;
+        bc.displayName = pLabel;
+        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.isRemoteHuman = false;
+        bc.remoteTelemetry = null;
       });
     }
     renderHudPlayersCard();
@@ -8278,23 +8409,69 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     syncCarsAndLabelsWithRoom();
   }
 
+  window._trPushTelemetryNow = async function() {
+    const rm = window._trActiveRoom;
+    if (!rm || !rm.room_id || gameState !== 'RACING') return;
+    const pCar = cars.find(c => c.isPlayer);
+    if (!pCar) return;
+    try {
+      const r = await api('/api/match/status', {
+        room_id: rm.room_id,
+        uid: getMyUidStr(),
+        telemetry: {
+          x: +pCar.x.toFixed(4),
+          target_x: +pCar.targetX.toFixed(4),
+          lane: pCar.lane | 0,
+          z: +pCar.z.toFixed(2),
+          speed: +pCar.speed.toFixed(1),
+          boost: +(pCar.boostTimer || 0).toFixed(2),
+          roll: +(pCar.bodyRoll || 0).toFixed(3)
+        }
+      });
+      if (r && r.ok && r.room) applyRoomSnapshot(r.room);
+    } catch (e) {}
+  };
+
+  let _roomSyncInFlight = false;
   function startRoomPolling(roomId) {
     stopRoomPolling();
     if (!roomId || !API) return;
     const myUid = getMyUidStr();
     _roomPollTimer = setInterval(async () => {
-      if (gameState !== 'MATCHMAKING' && gameState !== 'COUNTDOWN') {
+      if (gameState !== 'MATCHMAKING' && gameState !== 'COUNTDOWN' && gameState !== 'RACING') {
         stopRoomPolling();
         return;
       }
+      if (_roomSyncInFlight) return;
+      _roomSyncInFlight = true;
       try {
-        const r = await fetch(`${API}/api/match/status?room_id=${encodeURIComponent(roomId)}&uid=${encodeURIComponent(myUid)}`);
+        const pCar = cars.find(c => c.isPlayer);
+        const payload = {
+          room_id: roomId,
+          uid: myUid,
+          telemetry: (pCar && gameState === 'RACING') ? {
+            x: +pCar.x.toFixed(4),
+            target_x: +pCar.targetX.toFixed(4),
+            lane: pCar.lane,
+            z: +pCar.z.toFixed(2),
+            speed: +pCar.speed.toFixed(1),
+            boost: +(pCar.boostTimer || 0).toFixed(2),
+            roll: +(pCar.hitRoll || 0).toFixed(3)
+          } : null
+        };
+        const r = await fetch(`${API}/api/match/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
         const j = await r.json();
         if (j && j.ok && j.room) {
           applyRoomSnapshot(j.room);
         }
-      } catch (e) {}
-    }, 750);
+      } catch (e) {} finally {
+        _roomSyncInFlight = false;
+      }
+    }, 240);
   }
 
   function cacheDepositAddress(addr) {
@@ -8426,14 +8603,51 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     } finally { busy = false; }
   };
 
+  function savePendingDemoBet(pb) {
+    if (!pb || !pb.demo) return;
+    try {
+      localStorage.setItem('tr_pending_demo_bet', JSON.stringify({
+        bet_id: pb.bet_id,
+        payout: +pb.payout || 0,
+        amount: +pb.amount || 0,
+        winner: pb.winner || 'bot1',
+        created_at: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  function clearPendingDemoBet() {
+    try { localStorage.removeItem('tr_pending_demo_bet'); } catch (e) {}
+  }
+
+  function settleOrphanedDemoBetOnBoot() {
+    try {
+      const raw = localStorage.getItem('tr_pending_demo_bet');
+      if (!raw) return;
+      localStorage.removeItem('tr_pending_demo_bet');
+      const saved = JSON.parse(raw);
+      if (saved && saved.payout > 0) {
+        demoBal = +fmt(demoBal + (+saved.payout));
+        saveDemo();
+        applyBalanceUI();
+        setTimeout(() => toast(`Previous background race settled: +${fmt(saved.payout)} Demo USDT!`, 'success'), 400);
+      }
+    } catch (e) {}
+  }
+
   function startMatchmakingUI(roomObj) {
     cameraShake = 0;
     if (musicOn) startMusic();
+    if (pendingBet && pendingBet.demo) savePendingDemoBet(pendingBet);
+    lastSimWallMs = Date.now();
     gameState = 'MATCHMAKING';
     const initRem = (roomObj && typeof roomObj.remaining_sec === 'number') ? Math.max(1.0, +roomObj.remaining_sec) : 10.0;
     matchmakingTimer = initRem;
     lastMatchmakingSecInt = Math.ceil(initRem) + 1;
     if (roomObj) {
+      if (roomObj.room_id) {
+        try { generateTrackObjects(roomObj.room_id); } catch (e) {}
+      }
       applyRoomSnapshot(roomObj);
       startRoomPolling(roomObj.room_id);
     } else {
@@ -8467,10 +8681,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       const wi = sorted.findIndex(c => c.id === wid);
       if (wi > 0) { const [w] = sorted.splice(wi, 1); sorted.unshift(w); }
       rank = sorted.findIndex(c => c.isPlayer) + 1;
-      if (pendingBet.demo && pendingBet.payout > 0) {
-        demoBal = +fmt(demoBal + pendingBet.payout);
-        saveDemo();
-        applyBalanceUI();
+      if (pendingBet.demo) {
+        clearPendingDemoBet();
+        if (pendingBet.payout > 0) {
+          demoBal = +fmt(demoBal + pendingBet.payout);
+          saveDemo();
+          applyBalanceUI();
+        }
       } else if (!pendingBet.demo && pendingBet.bet_id) {
         try { const j = await api('/api/race/result', { bet_id: pendingBet.bet_id }); state = j; applyBalanceUI(); } catch (e) {}
       }
@@ -9532,6 +9749,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (!soundEnabled) { musicOn = false; sfxOn = false; }
     rewireWalletButtons();
     wireLeaderboard();
+    settleOrphanedDemoBetOnBoot();
     loadBoard();
     applyBalanceUI();
     // Replace casino user-visible strings if any remain in DOM
