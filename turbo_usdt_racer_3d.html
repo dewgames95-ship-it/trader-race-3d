@@ -278,6 +278,33 @@
     background: #0b1528;
   }
 
+  #raceCanvas3d, #raceOverlay2d {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: none;
+  }
+  #raceCanvas3d { z-index: 1; }
+  #raceOverlay2d { z-index: 2; }
+  #tr3dLoad {
+    position: absolute;
+    right: 8px; bottom: 8px;
+    z-index: 3;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(8, 13, 24, 0.82);
+    border: 1px solid #28e066;
+    color: #e2e8f0;
+    font-size: 9px;
+    font-weight: 800;
+    pointer-events: none;
+  }
+  #tr3dLoad b { color: #28e066; }
+  /* 3-car mode only */
+  #cardMode2 { display: none !important; }
+
   #raceCanvas {
     width: 100%;
     height: 100%;
@@ -3643,6 +3670,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     </div>
 
     <canvas id="raceCanvas"></canvas>
+    <canvas id="raceCanvas3d"></canvas>
+    <canvas id="raceOverlay2d"></canvas>
+    <div id="tr3dLoad">LOADING 3D <b id="tr3dLoadPct">0%</b></div>
   </main>
 
   <!-- 4. BOTTOM CONSOLE -->
@@ -4638,6 +4668,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let currentWeather = 'sunny';
 
   function pickRandomDifferentWeather() {
+    // Sunny climate only
+    currentWeather = 'sunny';
+    updateWeatherButtonLabel();
+    return;
     const others = WEATHER_THEMES.filter(w => w !== currentWeather);
     currentWeather = others[Math.floor(Math.random() * others.length)];
     updateWeatherButtonLabel();
@@ -5267,7 +5301,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   });
 
   function selectRaceMode(n) {
-    raceModeCars = n;
+    raceModeCars = 3; n = 3; // 3-car mode only
     cardMode2.classList.toggle('selected', n === 2);
     cardMode3.classList.toggle('selected', n === 3);
     triggerHaptic(30);
@@ -6809,7 +6843,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // =========================================================================
   // 7. ULTRA-HD 3D MUSTANG GT RENDERER & RIGHT-SIDE POSITION METER
   // =========================================================================
-  const ctx = canvas.getContext('2d', { alpha: false });
+  let ctx = canvas.getContext('2d', { alpha: false });
+  const baseCtx2d = ctx;
+  const overlayCanvas = document.getElementById('raceOverlay2d');
+  const overlayCtx = overlayCanvas ? overlayCanvas.getContext('2d') : null;
+  const canvas3d = document.getElementById('raceCanvas3d');
+  let tr3dShown = false;
   let cw = 600, ch = 660;
   const MAX_DRAW_DIST = 148;
 
@@ -6947,6 +6986,33 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       ctx.arc(cx + r * 1.45, cy + r * 0.08, r * 0.65, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // ---- Real 3D world (Three.js) drawn above the sky + clouds ----
+    const _t3 = window.TR3D;
+    const _ld = document.getElementById('tr3dLoad');
+    if (_ld) {
+      if (!_t3 || _t3.ready || _t3.failed) _ld.style.display = 'none';
+      else { const _pc = document.getElementById('tr3dLoadPct'); if (_pc) _pc.textContent = Math.round((_t3.progress || 0) * 100) + '%'; }
+    }
+    if (_t3 && _t3.ready && canvas3d && overlayCtx) {
+      if (!tr3dShown) { tr3dShown = true; canvas3d.style.display = 'block'; overlayCanvas.style.display = 'block'; }
+      ctx.fillStyle = '#d4f0ff';
+      ctx.fillRect(0, horizonY, cw, ch - horizonY);
+      let _ok = false;
+      try {
+        _ok = _t3.render({ cars, player, trackObjects, debris: debrisParticles, gameState, shake: cameraShake, finishZ: FINISH_LINE_Z });
+      } catch (e) { _ok = false; }
+      if (_ok) {
+        if (overlayCanvas.width !== cw || overlayCanvas.height !== ch) { overlayCanvas.width = cw; overlayCanvas.height = ch; }
+        overlayCtx.clearRect(0, 0, cw, ch);
+        if (gameState === 'RACING') {
+          ctx = overlayCtx;
+          try { drawRightMiniMap(); } finally { ctx = baseCtx2d; }
+        }
+        return;
+      }
+    }
+    if (tr3dShown) { tr3dShown = false; canvas3d.style.display = 'none'; overlayCanvas.style.display = 'none'; }
 
     for (const b of skylineMonuments) {
       const bx = b.x * cw + parallaxX;
@@ -9771,5 +9837,6 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   requestAnimationFrame(frame);
 })();
 </script>
+<script type="module" src="game3d/scene3d.js?v=20261110-r13"></script>
 </body>
 </html>
