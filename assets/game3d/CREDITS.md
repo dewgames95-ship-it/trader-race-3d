@@ -2,7 +2,7 @@
 
 | File | What it is | Source | Licence |
 |---|---|---|---|
-| `car.glb` | Sports car used for all three racers | "Ferrari 458 Italia" by vicent091036 (Sketchfab), taken from the three.js examples (`examples/models/gltf/ferrari.glb`) | Credit required. Confirm the model's licence on its Sketchfab page before commercial use. |
+| `car.glb` | Sports car used for all three racers (Ferrari F8 Tributo, textures removed, badges dropped, simplified) | "Ferrari F8 Tributo" on Sketchfab: https://sketchfab.com/3d-models/ferrari-f8-tributo-61d8929fd08048bf8ee2e143df2de796 | CC-BY 4.0 (credit required) |
 | `car_ao.png` | Soft contact shadow under the car | three.js examples (`examples/models/gltf/ferrari_ao.png`) | Same as the car model |
 | `sky.jpg`, `sky_front.jpg` | Sky photo (reflections and visible sky) | "Kloofendal 48d Partly Cloudy (Pure Sky)" HDRI, Poly Haven | CC0 |
 | `flora.webp` | Tree and rock cut-outs | Renders of Poly Haven models: Fir Tree 01, Pine Tree 01, Tree Small 02, Jacaranda Tree, Island Tree 01, Rock Moss Set 01 | CC0 |

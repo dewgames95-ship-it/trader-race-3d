@@ -8509,9 +8509,15 @@ window.dispatchEvent(new Event('tr-three'));
     // Detailed sports car (GLB). Model: "Ferrari 458 Italia" by vicent091036 via the three.js examples;
     // interior and all badges were stripped and the mesh simplified for phones. See assets/game3d/CREDITS.md.
     const carKit = carModel ? (() => {
+      // Fit the template once: 4.5 m long, on the road, nose pointing down the road (-z).
+      carModel.rotation.set(0, Math.PI, 0);
+      carModel.scale.setScalar(1);
       carModel.updateMatrixWorld(true);
-      const zOf = (name) => { const o = carModel.getObjectByName(name); return o ? new T.Box3().setFromObject(o).getCenter(new T.Vector3()).z : 0; };
-      if (zOf('lights') > zOf('brakes')) carModel.rotation.y = Math.PI;       // nose must point down the road (-z)
+      const fb = new T.Box3().setFromObject(carModel), fs = fb.getSize(new T.Vector3());
+      carModel.scale.setScalar(CAR_L / Math.max(fs.x, fs.z));
+      carModel.updateMatrixWorld(true);
+      const fb2 = new T.Box3().setFromObject(carModel), fc = fb2.getCenter(new T.Vector3());
+      carModel.position.set(-fc.x, -fb2.min.y, -fc.z);
       const shared = {
         Glass_Gray: new T.MeshStandardMaterial({ color: 0x0b1118, metalness: 0.9, roughness: 0.05, envMapIntensity: 1.5, transparent: true, opacity: 0.62, depthWrite: false }),
         Leather: new T.MeshStandardMaterial({ color: 0x1b1c20, roughness: 0.7, metalness: 0 }),
@@ -8544,7 +8550,7 @@ window.dispatchEvent(new Event('tr-three'));
         const mn = o.material && o.material.name;
         o.material = mn === 'Body_Color' ? rig.paint : (mn === 'Taillight_Glass' ? rig.tailMat : (carKit.shared[mn] || carKit.fallback));
       });
-      for (const wn of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) { const w = model.getObjectByName(wn); if (w) rig.wheels.push(w); }
+      model.traverse((o) => { if (/^wheel(FL|FR|BL|BR)\.|^wheel_(fl|fr|rl|rr)$/.test(o.name)) rig.wheels.push(o); });
       rig.tilt.add(model);
       rig.flameMat = new T.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false });
       rig.flames = [-0.36, 0.36].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x, 0.27, 2.2); f.visible = false; rig.tilt.add(f); return f; });
@@ -8714,7 +8720,7 @@ window.dispatchEvent(new Event('tr-three'));
     if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
     // ---------- per-frame ----------
-    const CAM_H = 6.6, CAM_BACK = 10.1;
+    const CAM_H = 9.0, CAM_BACK = 15.0; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
     let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, slowFrames = 0, frameCount = 0;
     const tmpColor = new T.Color();
@@ -8742,7 +8748,7 @@ window.dispatchEvent(new Event('tr-three'));
       fovKick += ((boosting ? 1 : 0) - fovKick) * Math.min(1, dt * 4);
       const shake = (racing && cameraShake > 0) ? cameraShake * 0.012 : 0;
       camera.position.set(camX + (Math.random() - 0.5) * shake, CAM_H + (Math.random() - 0.5) * shake, pz + CAM_BACK + fovKick * 0.5);
-      camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
+      camera.lookAt(camX * 0.92, 0.4, pz + CAM_BACK - 75);
       camera.zoom = 1 - fovKick * 0.03; camera.updateProjectionMatrix();
 
       const cz = camera.position.z;
