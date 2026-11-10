@@ -17,13 +17,13 @@ meshopt decoder, BufferGeometryUtils, SkeletonUtils, RoomEnvironment.
 ```html
 <script type="importmap">
 { "imports": {
-  "three": "./vendor/three/build/three.module.js",
-  "three/addons/": "./vendor/three/addons/",
-  "postprocessing": "./vendor/postprocessing/postprocessing.js"
+  "three": "./assets/vendor/three/build/three.module.js",
+  "three/addons/": "./assets/vendor/three/addons/",
+  "postprocessing": "./assets/vendor/postprocessing/postprocessing.js"
 } }
 </script>
-<script src="./vendor/gsap/gsap.min.js"></script>
-<script src="./vendor/howler/howler.min.js"></script>
+<script src="./assets/vendor/gsap/gsap.min.js"></script>
+<script src="./assets/vendor/howler/howler.min.js"></script>
 <script type="module">
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -31,4 +31,4 @@ meshopt decoder, BufferGeometryUtils, SkeletonUtils, RoomEnvironment.
 </script>
 ```
 
-Open `vendor/check.html` through a web server to confirm every library loads.
+Open `assets/vendor/check.html` through a web server to confirm every library loads.
