@@ -4,8 +4,8 @@
   //     WebGL or the library is unavailable.
   // =========================================================================
   const R3D = { status: 'pending', overlayDirty: true };
-  const R3D_XS = 7.0;   // metres per lane-space unit (road half-width = 1.0)
-  const R3D_ZS = 0.48;  // metres per track-distance unit (kept low so the sense of speed matches the 2D view)
+  const R3D_XS = 4.1;   // metres per lane-space unit (road half-width = 1.0)
+  const R3D_ZS = 0.36;  // metres per track-distance unit (kept low so the sense of speed matches the 2D view)
 
   function r3dFail(reason) {
     if (R3D.status === 'failed') return;
@@ -281,7 +281,7 @@
         g.fillStyle = gr; g.fillRect(u(lc - 0.17), 0, u(lc + 0.17) - u(lc - 0.17), Hh);
       }
       g.fillStyle = '#f4f6f8';
-      g.fillRect(u(-1) - 2, 0, 11, Hh); g.fillRect(u(1) - 9, 0, 11, Hh);       // solid edge lines
+      g.fillRect(u(-1) - 2, 0, 16, Hh); g.fillRect(u(1) - 14, 0, 16, Hh);       // solid edge lines
     }
     const roadTex = canvasTex(roadC, { wrapT: T.RepeatWrapping });
     roadTex.repeat.set(1, ROAD_LEN / ROAD_PERIOD);
@@ -292,12 +292,12 @@
 
     // Lane dashes: world-anchored instances re-used as the camera moves.
     const DASH_PERIOD = 19, DASH_ROWS = 46;
-    const dashGeo = flatOnRoad(0.24, DASH_PERIOD * 0.46 * R3D_ZS);
+    const dashGeo = flatOnRoad(0.17, DASH_PERIOD * 0.42 * R3D_ZS);
     const dashes = new T.InstancedMesh(dashGeo, new T.MeshBasicMaterial({ color: 0xffffff }), DASH_ROWS * 3);
     dashes.frustumCulled = false; dashes.position.y = 0.012;
     {
       const cY = col('#ffd21f'), cW = col('#f8fafc');
-      for (let r = 0; r < DASH_ROWS; r++) for (let l = 0; l < 3; l++) dashes.setColorAt(r * 3 + l, l === 1 ? cY : cW);
+      for (let r = 0; r < DASH_ROWS; r++) for (let l = 0; l < 3; l++) dashes.setColorAt(r * 3 + l, cW);
     }
     scene.add(dashes);
 
@@ -327,14 +327,14 @@
     scene.add(railLights);
 
     // ---------- roadside flora (instanced, world-anchored by segment index) ----------
-    const FLORA_SEG = 26, FLORA_ROWS = 32;
+    const FLORA_SEG = 22, FLORA_ROWS = 40;
     const trunkGeo = new T.CylinderGeometry(0.15, 0.22, 1, 6); trunkGeo.translate(0, 0.5, 0);
     const trunks = new T.InstancedMesh(trunkGeo, new T.MeshLambertMaterial({ color: 0x7a4a26 }), FLORA_ROWS * 6);
     const leafMat = new T.MeshLambertMaterial({ color: 0xffffff });
     const blobs = new T.InstancedMesh(new T.SphereGeometry(1, 10, 7), leafMat, FLORA_ROWS * 16);
     const coneGeo = new T.ConeGeometry(1, 1, 7); coneGeo.translate(0, 0.5, 0);
     const cones = new T.InstancedMesh(coneGeo, leafMat, FLORA_ROWS * 12);
-    const dots = new T.InstancedMesh(new T.SphereGeometry(1, 6, 4), new T.MeshBasicMaterial({ color: 0xffffff }), FLORA_ROWS * 8);
+    const dots = new T.InstancedMesh(new T.SphereGeometry(1, 6, 4), new T.MeshBasicMaterial({ color: 0xffffff }), FLORA_ROWS * 10);
     for (const m of [trunks, blobs, cones, dots]) { m.frustumCulled = false; scene.add(m); }
     const LEAF = { a: col('#23a845'), b: col('#4fd066'), c: col('#1b8f3a'), pine: col('#1f7d3c'), pine2: col('#2a9448'), bush: col('#2c9c44') };
     const FLOWER = [col('#ffffff'), col('#ffd84a'), col('#ff6b6b'), col('#c59bff')];
@@ -380,7 +380,7 @@
     const FLORA_META = {"fir0":{"u0":0.00098,"u1":0.17041,"v0":0.00293,"v1":0.99219,"aspect":0.3425},"fir1":{"u0":0.17139,"u1":0.33203,"v0":0.00293,"v1":0.71875,"aspect":0.4488},"fir2":{"u0":0.33301,"u1":0.48828,"v0":0.00293,"v1":0.72852,"aspect":0.428},"pines":{"u0":0.48926,"u1":0.79688,"v0":0.40918,"v1":0.99414,"aspect":1.0518},"leafy0":{"u0":0.79785,"u1":0.99609,"v0":0.40918,"v1":0.99414,"aspect":0.6778},"leafy1":{"u0":0.48926,"u1":0.75195,"v0":0.00293,"v1":0.40039,"aspect":1.3219},"leafy2":{"u0":0.75293,"u1":0.93799,"v0":0.00293,"v1":0.40039,"aspect":0.9312},"rock0":{"u0":0.93896,"u1":0.99561,"v0":0.00293,"v1":0.10449,"aspect":1.1154},"rock1":{"u0":0.93896,"u1":0.99561,"v0":0.10742,"v1":0.19727,"aspect":1.2609},"rock2":{"u0":0.93896,"u1":0.99561,"v0":0.2002,"v1":0.28125,"aspect":1.3976}};
     const floraMat = new T.MeshBasicMaterial({ map: floraTex, alphaTest: 0.42, side: T.DoubleSide });
     const species = {};
-    const treeShade = new T.InstancedMesh(new T.CircleGeometry(1, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: 0x0b2410, transparent: true, opacity: 0.22, depthWrite: false }), FLORA_ROWS * 8);
+    const treeShade = new T.InstancedMesh(new T.CircleGeometry(1, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: 0x0b2410, transparent: true, opacity: 0.22, depthWrite: false }), FLORA_ROWS * 10);
     treeShade.frustumCulled = false; treeShade.position.y = 0.01; treeShade.count = 0;
     if (floraTex) {
       floraTex.colorSpace = T.SRGBColorSpace; floraTex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
@@ -390,7 +390,7 @@
         const P = [], U = [], uv = [[m.u0, m.v0], [m.u1, m.v0], [m.u1, m.v1], [m.u0, m.v1]];
         for (const ax of (name.startsWith('rock') ? ['x'] : ['x', 'z'])) { const q = quad(ax); for (const i of [0, 1, 2, 0, 2, 3]) { P.push(...q[i]); U.push(...uv[i]); } }
         g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
-        const mesh = new T.InstancedMesh(g, floraMat, FLORA_ROWS * 8);
+        const mesh = new T.InstancedMesh(g, floraMat, FLORA_ROWS * 10);
         mesh.frustumCulled = false; mesh.count = 0; scene.add(mesh);
         species[name] = { mesh, n: 0 };
       }
@@ -400,29 +400,32 @@
       let di = 0, si = 0;
       for (const k in species) species[k].n = 0;
       const plant = (name, x, z, h, flip, shade) => {
-        const sp = species[name]; if (sp.n >= FLORA_ROWS * 8) return;
+        const sp = species[name]; if (sp.n >= FLORA_ROWS * 10) return;
         put(sp.mesh, sp.n++, x, -0.05, z, flip ? -h : h, h, h);
-        if (shade && si < FLORA_ROWS * 8) put(treeShade, si++, x + shade * 0.5, 0, z + shade * 0.2, shade * 1.5, 1, shade);
+        if (shade && si < FLORA_ROWS * 10) put(treeShade, si++, x + shade * 0.5, 0, z + shade * 0.2, shade * 1.5, 1, shade);
       };
       const FIRS = ['fir0', 'fir1', 'fir2'], LEAFY = ['leafy0', 'leafy2', 'leafy1'], ROCKS = ['rock0', 'rock1', 'rock2'];
-      const segLen = FLORA_SEG * R3D_ZS;
+      const segLen = FLORA_SEG * R3D_ZS, EDGE = RAIL_X + 1.6;
       for (let k = 0; k < FLORA_ROWS; k++) {
         const s = base + k - 2, z = -(s * FLORA_SEG) * R3D_ZS;
         for (const side of [-1, 1]) {
           const n = s * 2 + (side > 0 ? 1 : 0), r = (q) => hash(n * q);
-          // front row, alternating conifers and broadleaf like the reference
-          if (r(1.3) < 0.55) plant(FIRS[Math.floor(r(2.1) * 3)], side * (11.4 + r(3.7) * 1.6), z, 13 + r(4.9) * 6, r(5.3) < 0.5, 2.4);
-          else plant(LEAFY[Math.floor(r(2.1) * 2)], side * (12.2 + r(3.7) * 1.4), z, 8 + r(4.9) * 3, r(5.3) < 0.5, 3.2);
-          if (r(6.1) < 0.7) plant(r(6.7) < 0.5 ? 'leafy1' : FIRS[Math.floor(r(7.3) * 3)], side * (13.5 + r(7.9) * 3), z - segLen * 0.5, r(6.7) < 0.5 ? 5.5 + r(8.3) * 2 : 12 + r(8.3) * 5, r(8.9) < 0.5, 2.6);
-          // deeper rows fill the view out to the tree line
-          plant(FIRS[Math.floor(r(9.7) * 3)], side * (18 + r(10.3) * 6), z - segLen * r(10.9), 16 + r(11.3) * 7, r(11.9) < 0.5, 3);
-          plant('pines', side * (29 + r(12.7) * 10), z - segLen * r(13.1), 17 + r(13.7) * 7, r(14.3) < 0.5, 0);
-          plant(r(15.1) < 0.5 ? 'pines' : 'fir0', side * (46 + r(15.7) * 26), z - segLen * r(16.3), 22 + r(16.9) * 9, r(17.3) < 0.5, 0);
-          if (r(18.1) < 0.4) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (9.2 + r(19.3) * 1.2), z - segLen * 0.3, 0.7 + r(19.9) * 0.6, r(20.3) < 0.5, 0);
-          // wildflower specks on the verge
+          // stretches of dense planting alternate with open gaps
+          const dens = hash(Math.floor(s / 4) * 7.13 + (side > 0 ? 3.1 : 0));
+          const leafy = (x, zz, h) => plant(LEAFY[Math.floor(r(2.1 + x) * 3)], x, zz, h, r(5.3 + x) < 0.5, h * 0.36);
+          if (dens > 0.28) {
+            if (r(1.3) < 0.82) leafy(side * (EDGE + r(3.7) * 1.8), z, 4.6 + r(4.9) * 2.4);
+            else plant(FIRS[Math.floor(r(2.1) * 3)], side * (EDGE + 0.6 + r(3.7) * 1.6), z, 7 + r(4.9) * 3, r(5.3) < 0.5, 1.6);
+            if (dens > 0.6) leafy(side * (EDGE + 1.2 + r(7.9) * 3.4), z - segLen * 0.5, 4.2 + r(8.3) * 2.6);
+          }
+          if (dens > 0.15) leafy(side * (EDGE + 6 + r(10.3) * 6), z - segLen * r(10.9), 6 + r(11.3) * 3);
+          if (r(12.1) < 0.7) plant(r(12.5) < 0.6 ? LEAFY[Math.floor(r(12.9) * 2)] : FIRS[Math.floor(r(12.9) * 3)], side * (EDGE + 15 + r(12.7) * 10), z - segLen * r(13.1), 8 + r(13.7) * 4, r(14.3) < 0.5, 0);
+          plant(r(15.1) < 0.5 ? 'pines' : 'leafy0', side * (EDGE + 30 + r(15.7) * 28), z - segLen * r(16.3), 11 + r(16.9) * 6, r(17.3) < 0.5, 0);
+          if (r(18.1) < 0.55) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
+          // grass tufts and wildflower specks on the verge
           const fc = FLOWER[Math.floor(r(21.1) * FLOWER.length)];
           for (let f = 0; f < 4; f++) {
-            put(dots, di, side * (8.9 + hash(n * 22.3 + f) * 2.6), 0.09, z - segLen * hash(n * 23.9 + f), 0.085, 0.085, 0.085);
+            put(dots, di, side * (RAIL_X + 0.5 + hash(n * 22.3 + f) * 3.4), 0.07, z - segLen * hash(n * 23.9 + f), 0.07, 0.07, 0.07);
             dots.setColorAt(di++, f % 2 ? fc : FLOWER[0]);
           }
         }
@@ -441,12 +444,12 @@
       for (let r = 0; r < 2; r++) for (let c = 0; c < 16; c++) { g.fillStyle = (r + c) % 2 === 0 ? '#f8fafc' : '#0f172a'; g.fillRect(c * 16, r * 16, 16, 16); }
     }
     const chkTex = canvasTex(chkC, { magFilter: T.NearestFilter });
-    const lineDepth = 3.0;
+    const lineDepth = 1.5;
     const roadText = (text) => {
       const c = makeCanvas(1024, 256), g = c.getContext('2d');
       g.font = '900 210px "Segoe UI", "Arial Black", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillStyle = 'rgba(248,250,252,0.94)'; g.fillText(text, 512, 138, 980);
-      const m = new T.Mesh(flatOnRoad(R3D_XS * 1.5, 6.0), new T.MeshBasicMaterial({ map: canvasTex(c), transparent: true, depthWrite: false }));
+      const m = new T.Mesh(flatOnRoad(R3D_XS * 0.6, 1.9), new T.MeshBasicMaterial({ map: canvasTex(c), transparent: true, depthWrite: false }));
       m.position.y = 0.016; m.renderOrder = 2;
       return m;
     };
@@ -454,13 +457,13 @@
       const g = new T.Group();
       const strip = new T.Mesh(flatOnRoad(2 * R3D_XS, lineDepth), new T.MeshBasicMaterial({ map: chkTex }));
       strip.position.set(0, 0.014, -lineDepth / 2); strip.renderOrder = 1;
-      const txt = roadText(text); txt.position.z = -lineDepth - 4.6;
+      const txt = roadText(text); txt.position.z = -lineDepth - 3.4;
       g.add(strip, txt);
       g.position.z = -trackZ * R3D_ZS;
       scene.add(g);
       return g;
     };
-    const START_TRACK_Z = 6.2; // just ahead of the car noses on the grid
+    const START_TRACK_Z = 8.6; // just ahead of the car noses on the grid
     makeLine(START_TRACK_Z, 'START');
     const finishGroup = makeLine(FINISH_LINE_Z, 'FINISH');
     {
@@ -638,58 +641,53 @@
       scene.add(rig.group, rig.tag);
       return rig;
     };
-    // Detailed sports car (GLB). Model: "Ferrari 458 Italia" by vicent091036 via the three.js examples;
-    // interior and all badges were stripped and the mesh simplified for phones. See assets/game3d/CREDITS.md.
+    // Sports car GLB supplied by the owner (assets/game3d/car.glb). Its own textures are kept;
+    // only the body paint colour changes per car. See assets/game3d/CREDITS.md.
     const carKit = carModel ? (() => {
-      // Fit the template once: 4.5 m long, on the road, nose pointing down the road (-z).
+      // Fit the template once: 4.9 m long, on the road, nose pointing down the road (-z).
       carModel.rotation.set(0, Math.PI, 0);
-      carModel.scale.setScalar(1);
       carModel.updateMatrixWorld(true);
       const fb = new T.Box3().setFromObject(carModel), fs = fb.getSize(new T.Vector3());
-      carModel.scale.setScalar(CAR_L / Math.max(fs.x, fs.z));
+      carModel.scale.setScalar(4.9 / Math.max(fs.x, fs.z));
       carModel.updateMatrixWorld(true);
       const fb2 = new T.Box3().setFromObject(carModel), fc = fb2.getCenter(new T.Vector3());
       carModel.position.set(-fc.x, -fb2.min.y, -fc.z);
-      const shared = {
-        Glass_Gray: new T.MeshStandardMaterial({ color: 0x0b1118, metalness: 0.9, roughness: 0.05, envMapIntensity: 1.5, transparent: true, opacity: 0.62, depthWrite: false }),
-        Leather: new T.MeshStandardMaterial({ color: 0x1b1c20, roughness: 0.7, metalness: 0 }),
-        Leather_red: new T.MeshStandardMaterial({ color: 0x5a1414, roughness: 0.65, metalness: 0 }),
-        Interior_dark: new T.MeshStandardMaterial({ color: 0x121316, roughness: 0.8, metalness: 0 }),
-        Interior_light: new T.MeshStandardMaterial({ color: 0x24262b, roughness: 0.75, metalness: 0.1 }),
-        Carpet: new T.MeshStandardMaterial({ color: 0x0e0f11, roughness: 0.95, metalness: 0 }),
-        Carbon_Fiber: new T.MeshStandardMaterial({ color: 0x141518, roughness: 0.4, metalness: 0.4 }),
-        Ferrari_Yellow: new T.MeshStandardMaterial({ color: 0x2a2c31, roughness: 0.4, metalness: 0.8 }), // hub caps, repainted plain
-        Tires: new T.MeshStandardMaterial({ color: 0x101113, roughness: 0.85, metalness: 0 }),
-        metal_gray: new T.MeshStandardMaterial({ color: 0xb9bfc8, metalness: 1, roughness: 0.32 }),
-        metal_chrome: new T.MeshStandardMaterial({ color: 0xe8ebef, metalness: 1, roughness: 0.12 }),
-        plastic_gray: new T.MeshStandardMaterial({ color: 0x17191d, metalness: 0.2, roughness: 0.6 }),
-        Projector_Glass: new T.MeshStandardMaterial({ color: 0xf2f6ff, emissive: 0xcfd9ff, emissiveIntensity: 0.35, metalness: 0.6, roughness: 0.1 }),
-        Turn_Signal_LED: new T.MeshBasicMaterial({ color: 0xfff1d0 })
-      };
-      const fallback = new T.MeshStandardMaterial({ color: 0x15171b, metalness: 0.5, roughness: 0.45 });
-      return { shared, fallback };
+      const src = {};
+      carModel.traverse((o) => { if (o.isMesh && o.material) { src[o.material.name] = o.material; if (o.material.map) o.material.map.anisotropy = 4; } });
+      const glass = new T.MeshStandardMaterial({ color: 0x05080c, metalness: 0.9, roughness: 0.06, envMapIntensity: 1.6, transparent: true, opacity: 0.86 });
+      const glowMap = src['Material.009'] && src['Material.009'].map;
+      const glow = (opacity) => new T.MeshBasicMaterial({ map: glowMap, transparent: true, opacity, blending: T.AdditiveBlending, depthWrite: false, fog: false });
+      for (const k in src) { if ('envMapIntensity' in src[k]) src[k].envMapIntensity = 1.1; }
+      return { src, glass, glow, paintMap: src['Material.001'] && src['Material.001'].map };
     })() : null;
-    const aoGeo = flatOnRoad(0.655 * 4, 1.3 * 4);
+    const aoGeo = flatOnRoad(2.9, 5.9);
     const aoMat = carAoTex ? new T.MeshBasicMaterial({ map: carAoTex, blending: T.MultiplyBlending, toneMapped: false, transparent: true, premultipliedAlpha: true, depthWrite: false }) : shadowMat;
     const makeRigGLB = () => {
       const rig = { group: new T.Group(), tilt: new T.Group(), wheels: [], themeKey: null, tagKey: null, yaw: 0 };
-      rig.paint = new T.MeshPhysicalMaterial({ color: 0xff0000, metalness: 0.3, roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2 });
+      // the paint texture is a white ambient-occlusion map, so the colour simply multiplies in
+      rig.paint = new T.MeshPhysicalMaterial({ color: 0xff0000, map: carKit.paintMap || null, metalness: 0.25, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 1.25 });
       rig.stripe = { color: { set() {} } };
-      rig.tailMat = new T.MeshStandardMaterial({ color: 0x5a0606, emissive: 0xff2414, emissiveIntensity: 0.6, roughness: 0.3 });
+      rig.brakeGlow = carKit.glow(0.55);
+      const lampGlow = carKit.glow(0.5);
       const model = carModel.clone(true);
       model.traverse((o) => {
+        if (/^wheel(FL|FR|BL|BR)\d*$/.test(o.name)) rig.wheels.push(o);
         if (!o.isMesh) return;
-        const mn = o.material && o.material.name;
-        o.material = mn === 'Body_Color' ? rig.paint : (mn === 'Taillight_Glass' ? rig.tailMat : (carKit.shared[mn] || carKit.fallback));
+        const mn = o.material && o.material.name, nodeName = (o.parent && o.parent.name || '') + o.name;
+        if (mn === 'Material.001') o.material = rig.paint;
+        else if (mn === 'Material.009') {
+          if (/reverse/.test(nodeName)) o.visible = false;
+          else o.material = /brakes/.test(nodeName) ? rig.brakeGlow : lampGlow;
+          o.renderOrder = 4;
+        } else if (/glass/.test(mn || '')) o.material = carKit.glass;
       });
-      model.traverse((o) => { if (/^wheel(FL|FR|BL|BR)\.|^wheel_(fl|fr|rl|rr)$/.test(o.name)) rig.wheels.push(o); });
       rig.tilt.add(model);
       rig.flameMat = new T.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false });
-      rig.flames = [-0.36, 0.36].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x, 0.27, 2.2); f.visible = false; rig.tilt.add(f); return f; });
+      rig.flames = [-0.42, 0.42].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x, 0.3, 2.4); f.visible = false; rig.tilt.add(f); return f; });
       rig.shadow = new T.Mesh(aoGeo, aoMat); rig.shadow.position.y = 0.022; rig.shadow.renderOrder = 3;
       rig.tag = new T.Sprite(new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
-      rig.setBrake = (on) => { rig.tailMat.emissiveIntensity = on ? 2.4 : 0.6; };
+      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.4; };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -701,9 +699,9 @@
     const boostC = makeCanvas(128, 512);
     {
       const g = boostC.getContext('2d');
-      g.fillStyle = 'rgba(2,132,199,0.9)'; rr(g, 5, 5, 118, 502, 12); g.fill();
+      g.fillStyle = 'rgba(12,38,74,0.96)'; rr(g, 5, 5, 118, 502, 12); g.fill();
       g.strokeStyle = '#7dd3fc'; g.lineWidth = 7; g.stroke();
-      g.fillStyle = 'rgba(8,60,120,0.55)'; rr(g, 14, 20, 100, 74, 8); g.fill();
+      g.fillStyle = 'rgba(20,70,130,0.95)'; rr(g, 14, 20, 100, 74, 8); g.fill();
       g.fillStyle = '#ffffff'; g.font = '900 italic 30px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText('BOOST', 70, 59);
       g.fillStyle = '#fde047'; g.beginPath(); g.moveTo(26, 40); g.lineTo(16, 62); g.lineTo(24, 62); g.lineTo(19, 80); g.lineTo(33, 54); g.lineTo(25, 54); g.closePath(); g.fill();
@@ -716,7 +714,7 @@
     }
     const chevTex = canvasTex(chevC, { wrapT: T.RepeatWrapping });
     chevTex.repeat.set(1, 3);
-    const PAD_W = 0.38 * R3D_XS, PAD_L = 15 * R3D_ZS;
+    const PAD_W = 0.46 * R3D_XS, PAD_L = 12 * R3D_ZS;
     const padMat = new T.MeshBasicMaterial({ map: canvasTex(boostC), transparent: true, depthWrite: false });
     const chevMat = new T.MeshBasicMaterial({ map: chevTex, transparent: true, depthWrite: false });
     const padGlowMat = new T.MeshBasicMaterial({ map: glowTex, color: 0x22d3ee, transparent: true, opacity: 0.5, depthWrite: false, blending: T.AdditiveBlending });
@@ -756,22 +754,44 @@
         ...[[-1, 1.3], [1, 1.3], [-1, -1.7], [1, -1.7]].map(([sx, z]) => { const g = new T.CylinderGeometry(0.44, 0.44, 0.3, 12); g.rotateZ(Math.PI / 2); return part(g, '#111318', sx * 1.0, 0.44, z); })
       ])
     };
+    const tyre = (x, y, z) => { const g = new T.TorusGeometry(0.3, 0.14, 8, 14); g.rotateX(Math.PI / 2); return part(g, '#15171a', x, y, z); };
+    OBJ_GEO.tyres = merge([0, 1, 2].flatMap((i) => [tyre(-0.5, 0.14 + i * 0.27, 0), tyre(0.5, 0.14 + i * 0.27, 0.05)]).concat([tyre(0, 0.14, 0.5), tyre(0, 0.41, 0.5)]));
+    OBJ_GEO.barricade = merge([
+      part(new T.BoxGeometry(1.5, 0.22, 0.06), '#f97316', 0, 0.82, 0), part(new T.BoxGeometry(1.5, 0.22, 0.06), '#f8fafc', 0, 0.5, 0),
+      ...[-0.62, 0.62].flatMap((x) => [part(new T.BoxGeometry(0.07, 1.0, 0.07), '#d1d5db', x, 0.5, 0.16, 0.3, 0, 0), part(new T.BoxGeometry(0.07, 1.0, 0.07), '#d1d5db', x, 0.5, -0.16, -0.3, 0, 0)]),
+      part(new T.SphereGeometry(0.09, 8, 6), '#fbbf24', -0.62, 1.03, 0), part(new T.SphereGeometry(0.09, 8, 6), '#fbbf24', 0.62, 1.03, 0)
+    ]);
+    OBJ_GEO.roadblockBase = merge([part(new T.BoxGeometry(0.5, 0.16, 0.6), '#4b5563', -0.85, 0.08, 0), part(new T.BoxGeometry(0.5, 0.16, 0.6), '#4b5563', 0.85, 0.08, 0), part(new T.BoxGeometry(0.1, 0.9, 0.1), '#e5e7eb', -0.85, 0.55, 0), part(new T.BoxGeometry(0.1, 0.9, 0.1), '#e5e7eb', 0.85, 0.55, 0)]);
+    const roadblockPlank = new T.BoxGeometry(2.1, 0.32, 0.07); roadblockPlank.translate(0, 0.86, 0);
+    const redStripeTex = (() => {
+      const c = makeCanvas(128, 32), g = c.getContext('2d');
+      g.fillStyle = '#f8fafc'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#dc2626';
+      for (let i = -1; i < 9; i++) { g.beginPath(); g.moveTo(i * 32, 32); g.lineTo(i * 32 + 16, 32); g.lineTo(i * 32 + 32, 0); g.lineTo(i * 32 + 16, 0); g.closePath(); g.fill(); }
+      return canvasTex(c);
+    })();
+    const roadblockMat = new T.MeshLambertMaterial({ map: redStripeTex });
+    const oilC = makeCanvas(128, 128);
+    {
+      const g = oilC.getContext('2d'); g.fillStyle = 'rgba(6,7,10,0.92)';
+      for (const [x, y, rx, ry] of [[64, 64, 44, 34], [40, 52, 22, 18], [88, 78, 26, 18], [70, 38, 20, 12]]) { g.beginPath(); g.ellipse(x, y, rx, ry, 0.3, 0, Math.PI * 2); g.fill(); }
+      const gr = g.createLinearGradient(30, 40, 100, 90); gr.addColorStop(0, 'rgba(120,90,200,0.35)'); gr.addColorStop(0.5, 'rgba(60,160,190,0.3)'); gr.addColorStop(1, 'rgba(200,170,80,0.25)');
+      g.globalCompositeOperation = 'source-atop'; g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    }
+    const oilMat = new T.MeshStandardMaterial({ map: canvasTex(oilC), transparent: true, roughness: 0.08, metalness: 0.4, depthWrite: false });
     const barrierTop = new T.BoxGeometry(2.5, 0.72, 0.42); barrierTop.translate(0, 0.64, 0);
     const barrierMat = new T.MeshLambertMaterial({ map: stripeTex });
     const wreckMats = [new T.MeshLambertMaterial({ color: 0x8792a2 }), new T.MeshLambertMaterial({ color: 0x1b2330 }), new T.MeshLambertMaterial({ color: 0x6f7a8a }), darkMat];
     const OBJ_MAKE = {
       boost: makePad,
       cone: () => new T.Mesh(OBJ_GEO.cone, matVC),
+      tyres: () => new T.Mesh(OBJ_GEO.tyres, matVC),
+      barricade: () => new T.Mesh(OBJ_GEO.barricade, matVC),
+      roadblock: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.roadblockBase, matVC), new T.Mesh(roadblockPlank, roadblockMat)); return g; },
+      oil: () => { const m = new T.Mesh(flatOnRoad(2.2, 2.2), oilMat); m.position.y = 0.02; m.renderOrder = 2; const g = new T.Group(); g.add(m); return g; },
       barrel: () => new T.Mesh(OBJ_GEO.barrel, matVC),
       barrier: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.barrierBase, matVC), new T.Mesh(barrierTop, barrierMat)); return g; },
       brokentruck: () => { const g = new T.Group(), m = new T.Mesh(OBJ_GEO.brokentruck, matVC); m.rotation.y = 0.5; m.scale.setScalar(0.82); g.add(m); return g; },
       brokencar: () => {
-        if (carKit) {
-          const g = new T.Group(), m = carModel.clone(true), dull = new T.MeshStandardMaterial({ color: 0x7b8594, metalness: 0.3, roughness: 0.7 });
-          m.traverse((o) => { if (o.isMesh) { const mn = o.material && o.material.name; o.material = mn === 'Body_Color' ? dull : (carKit.shared[mn] || carKit.fallback); } });
-          m.rotation.y += 0.95; m.rotation.z = 0.05; g.add(m);
-          return g;
-        }
         const g = new T.Group(), body = new T.Mesh(carBodyGeo, wreckMats); body.rotation.set(0, 0.95, 0.07); body.position.y = -0.06;
         g.add(body);
         for (const [x, z] of [[-0.9, 1.0], [0.9, -1.0]]) { const w = new T.Mesh(wheelGeo, matVC); w.position.set(x, 0.3, z); w.rotation.y = 0.95; g.add(w); }
@@ -844,15 +864,15 @@
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       // hold the horizontal view steady so the road fills the width on any phone shape
-      camera.fov = Math.max(42, Math.min(82, 2 * Math.atan(Math.tan(T.MathUtils.degToRad(32.5)) / camera.aspect) * 180 / Math.PI));
-      camPitch = 0.26 * Math.tan(T.MathUtils.degToRad(camera.fov / 2));
+      camera.fov = Math.max(36, Math.min(74, 2 * Math.atan(Math.tan(T.MathUtils.degToRad(26)) / camera.aspect) * 180 / Math.PI));
+      camPitch = 0.30 * Math.tan(T.MathUtils.degToRad(camera.fov / 2));
       camera.updateProjectionMatrix();
     };
     window.addEventListener('resize', resize);
     if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
     // ---------- per-frame ----------
-    const CAM_H = 9.0, CAM_BACK = 15.0; // higher chase cam: far obstacles and the road ahead are visible
+    const CAM_H = 4.9, CAM_BACK = 10.2; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
     let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, slowFrames = 0, frameCount = 0;
     const tmpColor = new T.Color();
@@ -880,7 +900,7 @@
       fovKick += ((boosting ? 1 : 0) - fovKick) * Math.min(1, dt * 4);
       const shake = (racing && cameraShake > 0) ? cameraShake * 0.012 : 0;
       camera.position.set(camX + (Math.random() - 0.5) * shake, CAM_H + (Math.random() - 0.5) * shake, pz + CAM_BACK + fovKick * 0.5);
-      camera.lookAt(camX * 0.92, 0.4, pz + CAM_BACK - 75);
+      camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
       camera.zoom = 1 - fovKick * 0.03; camera.updateProjectionMatrix();
 
       const cz = camera.position.z;
@@ -896,8 +916,7 @@
       const dBase = Math.floor(camTrack / DASH_PERIOD);
       for (let r = 0; r < DASH_ROWS; r++) {
         const tz = (dBase + r - 2) * DASH_PERIOD + DASH_PERIOD * 0.23, z = -tz * R3D_ZS;
-        const sc = (tz > 2 && tz < 36) ? 0 : 1;                               // keep the START lettering clear
-        put(dashes, r * 3, -0.5 * R3D_XS, 0, z, sc, 1, sc); put(dashes, r * 3 + 1, 0, 0, z, 1.25 * sc, 1, sc); put(dashes, r * 3 + 2, 0.5 * R3D_XS, 0, z, sc, 1, sc);
+        put(dashes, r * 3, -R3D_XS / 3, 0, z, 1, 1, 1); put(dashes, r * 3 + 1, 0, -5, z, 0, 0, 0); put(dashes, r * 3 + 2, R3D_XS / 3, 0, z, 1, 1, 1);
       }
       dashes.instanceMatrix.needsUpdate = true;
       if (dashes.instanceColor && !R3D.dashColorSent) { dashes.instanceColor.needsUpdate = true; R3D.dashColorSent = true; }
@@ -921,7 +940,7 @@
       // Track distance is compressed for the scenery, so cars nose-to-tail in the simulation would
       // overlap on screen. Spread neighbours out by up to one car length, walking outward from the player.
       const order = cars.slice().sort((a, b) => a.z - b.z), pIdx = order.indexOf(player);
-      const SPREAD = Math.max(0, 4.75 - 5.35 * R3D_ZS);
+      const SPREAD = Math.max(0, 5.2 - 5.35 * R3D_ZS);
       const gapM = (u) => u * R3D_ZS + Math.min(u, 5.35) / 5.35 * SPREAD;
       player._vz = 0;
       for (let i = pIdx + 1; i < order.length; i++) order[i]._vz = order[i - 1]._vz + gapM(order[i].z - order[i - 1].z);
@@ -952,9 +971,9 @@
         const braking = !racing || car.hitSlowTimer > 0 || (car.isPlayer && keys.brake);
         rig.setBrake(braking);
         const dist = Math.max(1, camera.position.distanceTo(rig.group.position));
-        const ts = Math.max(1, dist / 13.5) * 2.05;
+        const ts = Math.max(1, dist / 13.5) * 1.3;
         rig.tag.scale.set(ts, ts / 3, 1);
-        rig.tag.position.set(x, 1.62, z);
+        rig.tag.position.set(x, 1.4, z);
       }
 
       // track objects

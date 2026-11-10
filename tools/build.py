@@ -20,7 +20,8 @@ R3D_END = "  // <<< R3D-END\n"
 LOADER_BEGIN = "<!-- R3D-LOADER-BEGIN -->\n"
 LOADER_END = "<!-- R3D-LOADER-END -->\n"
 
-LOADER = f"""<script type="importmap">
+LOADER = f"""<style>#centerStartCircle {{ scale: 0.72; }}</style>
+<script type="importmap">
 {{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/" }} }}
 </script>
 <script type="module">
@@ -68,6 +69,32 @@ def main():
         src = once(src, "  function renderScene() {\n", "  function renderScene2D() {\n", "renderScene()")
     if "canvas.getContext('2d', { alpha: true })" not in src:
         src = once(src, "canvas.getContext('2d', { alpha: false })", "canvas.getContext('2d', { alpha: true })", "2d context")
+
+    # Brief v3: three lanes, fixed grid order (yellow / blue / red), more and more varied obstacles.
+    SIM = [
+        ("const LANE_CENTERS = [-0.75, -0.25, 0.25, 0.75];", "const LANE_CENTERS = [-0.6667, 0, 0.6667];", 1),
+        ("    const availLanes = [0, 1, 2, 3];\n    for (let i = availLanes.length - 1; i > 0; i--) {", "    const availLanes = [1, 2, 0]; // grid: bot2 left, bot1 middle, player right\n    for (let i = 0; i > 0; i--) {", 1),
+        ("{ id: 1, z: 76, lane: 1, x: LANE_CENTERS[1],", "{ id: 1, z: 76, lane: 0, x: LANE_CENTERS[0],", 1),
+        ("{ id: 4, z: 215, lane: 3, x: LANE_CENTERS[3],", "{ id: 4, z: 215, lane: 1, x: LANE_CENTERS[1],", 1),
+        ("const obstacleTypes = ['barrier', 'cone', 'barrel', 'brokentruck', 'brokencar'];", "const obstacleTypes = ['barrier', 'cone', 'tyres', 'roadblock', 'oil', 'barricade', 'barrel'];", 1),
+        ("dist < FINISH_LINE_Z - 110; dist += 84)", "dist < FINISH_LINE_Z - 110; dist += 64)", 1),
+        ("const l = Math.floor(rng() * 4);", "const l = Math.floor(rng() * 3);", 1),
+        ("const freeLanes = [0, 1, 2, 3].filter(", "const freeLanes = [0, 1, 2].filter(", 1),
+        ("Math.min(3, player.lane + dir)", "Math.min(2, player.lane + dir)", 1),
+        ("Math.min(3, victim.lane + knockDir)", "Math.min(2, victim.lane + knockDir)", 1),
+        ("Math.min(3, altLane)", "Math.min(2, altLane)", 1),
+        ("const altLane = rearCar.lane < 2 ?", "const altLane = rearCar.lane < 1 ?", 1),
+        ("tel.lane >= 0 && tel.lane <= 3)", "tel.lane >= 0 && tel.lane <= 2)", 1),
+        ("    const scores = [0, 0, 0, 0];", "    const scores = [0, 0, 0];", 1),
+        ("for (let l = 0; l < 4; l++) {", "for (let l = 0; l < 3; l++) {", 2),
+        ("const MIN_DX = 0.34;", "const MIN_DX = 0.44;", 1),
+    ]
+    for old, new, count in SIM:
+        if new in src and old not in src:
+            continue
+        if src.count(old) != count:
+            sys.exit(f"build: sim patch expected {count} of '{old[:40]}', found {src.count(old)}")
+        src = src.replace(old, new)
 
     r3d = (ROOT / "tools" / "r3d.js").read_text(encoding="utf-8")
     src = once(src, ANCHOR, R3D_BEGIN + r3d + R3D_END + ANCHOR, "render-loop anchor")
