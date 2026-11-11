@@ -395,6 +395,20 @@
     railLights.frustumCulled = false; railLights.visible = false;
     scene.add(railLights);
 
+    // street lights (one merged lamp post, instanced along both sides)
+    const LAMP_GAP = 34, LAMP_ROWS = 16;
+    const lampGeo = merge([
+      part(new T.CylinderGeometry(0.07, 0.11, 7.2, 8), '#59626e', 0, 3.6, 0),
+      part(new T.CylinderGeometry(0.16, 0.2, 0.5, 8), '#3f4650', 0, 0.25, 0),
+      part(new T.CylinderGeometry(0.05, 0.06, 2.3, 6), '#59626e', -1.05, 7.3, 0, 0, 0, Math.PI / 2 - 0.16),
+      part(new T.BoxGeometry(0.85, 0.12, 0.34), '#2f353d', -2.3, 7.42, 0),
+      part(new T.BoxGeometry(0.7, 0.05, 0.26), '#fff6d8', -2.3, 7.34, 0)
+    ]);
+    const lamps = new T.InstancedMesh(lampGeo, matVC, LAMP_ROWS * 2);
+    lamps.frustumCulled = false; scene.add(lamps);
+    const qFlip = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), Math.PI);
+    let lampBase = null;
+
     // ---------- roadside flora (instanced, world-anchored by segment index) ----------
     const FLORA_SEG = 22, FLORA_ROWS = 40;
     const trunkGeo = new T.CylinderGeometry(0.15, 0.22, 1, 6); trunkGeo.translate(0, 0.5, 0);
@@ -892,7 +906,7 @@
     }
     const chevTex = canvasTex(chevC, { wrapT: T.RepeatWrapping });
     chevTex.repeat.set(1, 3);
-    const PAD_W = 0.46 * R3D_XS, PAD_L = 12 * R3D_ZS;
+    const PAD_W = 0.5 * R3D_XS, PAD_L = 14.4 * R3D_ZS;
     const padMat = new T.MeshBasicMaterial({ map: canvasTex(boostC), transparent: true, depthWrite: false });
     const chevMat = new T.MeshBasicMaterial({ map: chevTex, transparent: true, depthWrite: false });
     const padGlowMat = new T.MeshBasicMaterial({ map: glowTex, color: 0x38bdf8, transparent: true, opacity: 0.85, depthWrite: false, blending: T.AdditiveBlending });
@@ -932,6 +946,28 @@
         ...[[-1, 1.3], [1, 1.3], [-1, -1.7], [1, -1.7]].map(([sx, z]) => { const g = new T.CylinderGeometry(0.44, 0.44, 0.3, 12); g.rotateZ(Math.PI / 2); return part(g, '#111318', sx * 1.0, 0.44, z); })
       ])
     };
+    // jump ramp surfaces
+    const jumpDeckMat = (() => {
+      const c = makeCanvas(256, 512), g = c.getContext('2d');
+      g.fillStyle = '#f5c518'; g.fillRect(0, 0, 256, 512);
+      g.strokeStyle = '#141414'; g.lineWidth = 34; g.lineJoin = 'miter';
+      for (const y of [150, 270, 390]) { g.beginPath(); g.moveTo(26, y + 60); g.lineTo(128, y - 30); g.lineTo(230, y + 60); g.stroke(); }
+      g.fillStyle = '#141414'; g.fillRect(0, 0, 256, 96);
+      g.fillStyle = '#f5c518'; g.font = '900 italic 64px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('JUMP', 128, 50);
+      g.strokeStyle = '#141414'; g.lineWidth = 12; g.strokeRect(6, 6, 244, 500);
+      return new T.MeshStandardMaterial({ map: canvasTex(c), roughness: 0.55, metalness: 0.25 });
+    })();
+    const jumpBodyMat = new T.MeshStandardMaterial({ color: 0x2b2f36, roughness: 0.6, metalness: 0.5 });
+    const jumpEdgeMat = new T.MeshStandardMaterial({ color: 0xd9dee5, roughness: 0.3, metalness: 0.9 });
+    const jumpSignMat = (() => {
+      const c = makeCanvas(256, 128), g = c.getContext('2d');
+      g.fillStyle = 'rgba(20,20,20,0.92)'; rr(g, 4, 4, 248, 120, 22); g.fill(); g.strokeStyle = '#f5c518'; g.lineWidth = 8; g.stroke();
+      g.fillStyle = '#f5c518'; g.font = '900 italic 58px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('JUMP', 104, 66);
+      g.beginPath(); g.moveTo(196, 92); g.lineTo(196, 58); g.lineTo(180, 58); g.lineTo(210, 26); g.lineTo(240, 58); g.lineTo(224, 58); g.lineTo(224, 92); g.closePath(); g.fill();
+      return new T.SpriteMaterial({ map: canvasTex(c), transparent: true, depthWrite: false, fog: false });
+    })();
+    // speed bump: rounded strip across the lane
+    const bumpGeo = (() => { const g = new T.CylinderGeometry(0.34, 0.34, 2.5, 18, 1, false, 0, Math.PI); g.rotateZ(Math.PI / 2); g.rotateX(-Math.PI / 2); g.scale(1, 0.55, 1); return g; })();
     const tyre = (x, y, z) => { const g = new T.TorusGeometry(0.3, 0.14, 8, 14); g.rotateX(Math.PI / 2); return part(g, '#15171a', x, y, z); };
     OBJ_GEO.tyres = merge([0, 1, 2].flatMap((i) => [tyre(-0.5, 0.14 + i * 0.27, 0), tyre(0.5, 0.14 + i * 0.27, 0.05)]).concat([tyre(0, 0.14, 0.5), tyre(0, 0.41, 0.5)]));
     OBJ_GEO.barricade = merge([
@@ -956,6 +992,14 @@
       g.globalCompositeOperation = 'source-atop'; g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     }
     const oilMat = new T.MeshStandardMaterial({ map: canvasTex(oilC), transparent: true, roughness: 0.08, metalness: 0.4, depthWrite: false });
+    const bumpMat = new T.MeshStandardMaterial({ map: stripeTex, roughness: 0.7, metalness: 0.05 });
+    const crate = (x, y, z, sz, ry) => {
+      const parts = [part(new T.BoxGeometry(sz, sz, sz), '#b98545', x, y, z, 0, ry, 0)];
+      for (const [dx, dy] of [[0, 0.5], [0, -0.5]]) parts.push(part(new T.BoxGeometry(sz * 1.04, sz * 0.12, sz * 1.04), '#7c5527', x, y + dy * sz * 0.86, z, 0, ry, 0));
+      for (const sx of [-1, 1]) parts.push(part(new T.BoxGeometry(sz * 0.12, sz * 1.02, sz * 1.04), '#8b6230', x + Math.cos(ry) * sx * sz * 0.44, y, z - Math.sin(ry) * sx * sz * 0.44, 0, ry, 0));
+      return parts;
+    };
+    OBJ_GEO.crates = merge([...crate(-0.5, 0.4, 0, 0.8, 0.12), ...crate(0.42, 0.4, 0.08, 0.8, -0.2), ...crate(-0.05, 1.18, 0.02, 0.74, 0.5)]);
     const barrierTop = new T.BoxGeometry(2.5, 0.72, 0.42); barrierTop.translate(0, 0.64, 0);
     const barrierMat = new T.MeshLambertMaterial({ map: stripeTex });
     const wreckMats = [new T.MeshLambertMaterial({ color: 0x8792a2 }), new T.MeshLambertMaterial({ color: 0x1b2330 }), new T.MeshLambertMaterial({ color: 0x6f7a8a }), darkMat];
@@ -970,11 +1014,19 @@
       barrier: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.barrierBase, matVC), new T.Mesh(barrierTop, barrierMat)); return g; },
       brokentruck: () => { const g = new T.Group(), m = new T.Mesh(OBJ_GEO.brokentruck, matVC); m.rotation.y = 1.28; m.rotation.z = 0.04; m.scale.setScalar(0.98); g.add(m, new T.Mesh(OBJ_GEO.cone, matVC)); g.children[1].position.set(0, 0, 3.2); return g; },
       jump: () => {
-        const sh = new T.Shape([[0, 0], [3.4, 0], [3.4, 0.75]].map(([a, b2]) => new T.Vector2(a, b2)));
-        const geo = new T.ExtrudeGeometry(sh, { depth: 2.3, bevelEnabled: false }); geo.rotateY(Math.PI / 2); geo.translate(-1.15, 0, 1.7);
-        const g = new T.Group(); g.add(new T.Mesh(geo, new T.MeshLambertMaterial({ map: stripeTex })));
+        // sloped steel ramp: chevron deck with a JUMP marking, dark side plates, an arrow sign you can read from far
+        const W = 2.3, L = 4.2, H = 1.05, slope = Math.hypot(L, H);
+        const deck = new T.Mesh(new T.PlaneGeometry(W, slope), jumpDeckMat);
+        deck.rotation.x = -Math.PI / 2 + Math.atan2(H, L); deck.position.set(0, H / 2 + 0.01, 0);
+        const sideShape = new T.Shape([[0, 0], [L, 0], [L, H]].map(([a, b2]) => new T.Vector2(a, b2)));
+        const body = new T.ExtrudeGeometry(sideShape, { depth: W, bevelEnabled: false }); body.rotateY(Math.PI / 2); body.translate(-W / 2, 0, L / 2);
+        const lip = new T.Mesh(new T.BoxGeometry(W + 0.12, 0.09, 0.14), jumpEdgeMat); lip.position.set(0, H + 0.02, -L / 2);
+        const sign = new T.Sprite(jumpSignMat); sign.scale.set(1.5, 0.75, 1); sign.position.set(0, H + 1.5, -L / 2);
+        const g = new T.Group(); g.add(new T.Mesh(body, jumpBodyMat), deck, lip, sign);
         return g;
       },
+      bump: () => { const g = new T.Group(), m = new T.Mesh(bumpGeo, bumpMat); g.add(m); return g; },
+      crates: () => new T.Mesh(OBJ_GEO.crates, matVC),
       brokencar: () => {
         const g = new T.Group(), body = new T.Mesh(carBodyGeo, wreckMats); body.rotation.set(0, 0.95, 0.07); body.position.y = -0.06;
         g.add(body);
@@ -1022,7 +1074,8 @@
       const photoSky = key === 'sunny' && !!skyDome;
       scene.background = skyTex(SKY[key] ? key : 'sunny');
       if (skyDome) skyDome.visible = photoSky;
-      for (const c of cloudsGL) c.visible = !photoSky;
+      cloudsGL.forEach((c, i) => { c.visible = !photoSky || i < 3; });
+      cloudMat.opacity = photoSky ? 0.55 : 1;
       floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) { m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint); }
       scene.environmentIntensity = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
       scene.fog.color.set(w.fog);
@@ -1058,6 +1111,7 @@
     // ---------- per-frame ----------
     const CAM_H = 5.7, CAM_BACK = 11.8; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
+    let curveFor = null, curve = null, bendSm = 0;
     let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, slowFrames = 0, frameCount = 0;
     const tmpColor = new T.Color();
     R3D.render = () => {
@@ -1087,8 +1141,17 @@
       camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
       camera.zoom = 1 - fovKick * 0.03; camera.updateProjectionMatrix();
       // sweeping left/right bends that change slowly along the track
-      const bendPhase = player.z / 520;
-      camera.projectionMatrix.elements[4] = 0.00042 * Math.sin(bendPhase) + 0.00018 * Math.sin(bendPhase * 2.3 + 1.1);
+      // Track shape is re-rolled for every race from its obstacle layout (same for everyone in a room):
+      // a left/right bias plus two S-bend waves, eased in after the start grid.
+      if (curveFor !== trackObjects) {
+        curveFor = trackObjects;
+        let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
+        curve = { bias: (hash(sd + 1) - 0.5) * 0.0005, a1: 0.00034 + hash(sd + 2) * 0.00022, f1: 380 + hash(sd + 3) * 260, p1: hash(sd + 4) * 6.283, a2: 0.00012 + hash(sd + 5) * 0.00016, f2: 150 + hash(sd + 6) * 110, p2: hash(sd + 7) * 6.283 };
+      }
+      const cEase = Math.min(1, Math.max(0, (player.z - 40) / 260)), cS = cEase * cEase * (3 - 2 * cEase);
+      const bendNow = cS * (curve.bias + curve.a1 * Math.sin(player.z / curve.f1 + curve.p1) + curve.a2 * Math.sin(player.z / curve.f2 + curve.p2));
+      bendSm += (bendNow - bendSm) * Math.min(1, dt * 3);
+      camera.projectionMatrix.elements[4] = bendSm;
 
       const cz = camera.position.z;
       backdrop.position.set(camX * 0.4, 0, cz);
@@ -1096,7 +1159,7 @@
       grassTex.offset.y = -(grass.position.z / GRASS_PERIOD) % 1;
       road.position.z = cz - ROAD_LEN * 0.4; rails.position.z = road.position.z;
       roadTex.offset.y = -(road.position.z / ROAD_PERIOD) % 1;
-      for (const c of cloudsGL) c.position.x = ((c.userData.x0 + tSec * c.userData.spd + 720) % 1440) - 720;
+      for (const c of cloudsGL) c.position.x = ((c.userData.x0 + tSec * c.userData.spd * 0.25 + 720) % 1440) - 720;
 
       // lane dashes + rail posts (world-anchored, wrapped ahead of the camera)
       const camTrack = -cz / R3D_ZS;
@@ -1120,6 +1183,16 @@
         railLightPos[o + 3] = RAIL_X - 0.1; railLightPos[o + 4] = 0.5; railLightPos[o + 5] = z;
       }
       railLightGeo.attributes.position.needsUpdate = true;
+      const lBaseL = Math.floor(-cz / LAMP_GAP);
+      if (lBaseL !== lampBase) {
+        lampBase = lBaseL;
+        for (let r = 0; r < LAMP_ROWS; r++) {
+          const z = -(lBaseL + r - 1) * LAMP_GAP - 9;
+          lamps.setMatrixAt(r * 2, m4.compose(v3a.set(RAIL_X + 1.0, 0, z), q0, v3b.set(1, 1, 1)));
+          lamps.setMatrixAt(r * 2 + 1, m4.compose(v3a.set(-RAIL_X - 1.0, 0, z + LAMP_GAP / 2), qFlip, v3b.set(1, 1, 1)));
+        }
+        lamps.instanceMatrix.needsUpdate = true;
+      }
       const cBase = Math.floor(-cz / CITY_CHUNK);
       if (cBase !== cityBase) { cityBase = cBase; layoutCity(cBase); }
       const fBase = Math.floor(camTrack / FLORA_SEG);
@@ -1148,7 +1221,7 @@
         const moving = racing ? Math.min(1, car.speed / 258) : 0;
         if (car.scrapeTimer > 0) car.scrapeTimer = Math.max(0, car.scrapeTimer - dt);
         const scrape = car.scrapeTimer > 0 ? Math.sin((1 - car.scrapeTimer / 0.45) * Math.PI) : 0;
-        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / 0.8 : 0, hop = 4 * air * (1 - air);
+        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 1.25) : 0, hop = 4 * air * (1 - air) * 1.45;
         rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop * 1.7, z);
         rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.3 : 0;
         rig.shadow.position.y = 0.022 - hop * 1.7; rig.shadow.scale.setScalar(1 - hop * 0.25);
@@ -1174,19 +1247,23 @@
       // track objects
       const used = {};
       for (const obj of trackObjects) {
-        if (obj.broken) continue;
         const dzTrack = obj.z - player.z;
-        if (dzTrack < -30 || dzTrack > 560) continue;
+        if (dzTrack < -40 || dzTrack > 600) continue;
         const n = used[obj.type] = (used[obj.type] || 0) + 1;
         const m = acquire(obj.type, n - 1);
         m.visible = true;
         if (obj.type === 'boost') {
-          m.position.set(obj.x * R3D_XS, 0, -(obj.z + 5) * R3D_ZS);
+          m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
+        } else if (obj.type === 'jump' || obj.type === 'oil' || obj.type === 'bump') {
+          m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
         } else {
-          const k = obj.hitAnimTimer > 0 ? 1 - obj.hitAnimTimer / 0.32 : 0, dir = obj.hitDir || 1;
-          m.position.set(obj.x * R3D_XS + dir * k * 3.2, k * 1.5, -(obj.z + 0.9) * R3D_ZS - k * 2.5);
-          m.rotation.set(-k * 0.9, 0, -dir * k * 1.6);
-          m.scale.setScalar(1 - k * 0.35);
+          // hit obstacles are shoved to the road edge and stay there (they never vanish)
+          const k = obj.broken ? 1 : (obj.hitAnimTimer > 0 ? 1 - obj.hitAnimTimer / 0.32 : 0), e = 1 - (1 - k) * (1 - k), dir = obj.hitDir || 1;
+          const heavy = obj.type === 'brokentruck', restX = dir * (R3D_XS + (heavy ? 0.5 : 0.1));
+          const x0 = obj.x * R3D_XS;
+          m.position.set(x0 + (restX - x0) * e, Math.sin(k * Math.PI) * (heavy ? 0.15 : 0.5), -(obj.z + 0.9) * R3D_ZS - e * (heavy ? 5 : 3.2));
+          m.rotation.set(0, dir * e * (heavy ? -1.2 : 1.9), (heavy ? 0.06 : (obj.type === 'cone' || obj.type === 'barricade' ? 1.45 : 0.25)) * e * -dir);
+          m.scale.setScalar(1);
         }
       }
       for (const type in pools) { const pool = pools[type], n = used[type] || 0; for (let i = n; i < pool.length; i++) pool[i].visible = false; }

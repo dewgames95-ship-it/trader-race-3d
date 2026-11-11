@@ -20,7 +20,20 @@ R3D_END = "  // <<< R3D-END\n"
 LOADER_BEGIN = "<!-- R3D-LOADER-BEGIN -->\n"
 LOADER_END = "<!-- R3D-LOADER-END -->\n"
 
-LOADER = f"""<style>#centerStartCircle {{ scale: none; left: 50% !important; right: auto !important; margin: 0 !important; transform: translate(-50%, -50%) scale(0.6) !important; }} #leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn {{ zoom: 0.77; }}</style>
+LOADER = f"""<style>
+#centerStartCircle {{ scale: none; left: 50% !important; right: auto !important; margin: 0 !important; transform: translate(-50%, -50%) scale(0.66) !important; }}
+#leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn {{ zoom: 0.77; }}
+/* top bar: one compact card, 20% smaller */
+.status-strip {{ zoom: 0.8; gap: 0; padding: 4px 8px; background: #0984e3; }}
+.status-strip .status-card {{ border-radius: 0; border-width: 1px 0; border-color: rgba(255,255,255,0.15); padding: 3px 8px; }}
+.status-strip .status-card:first-child {{ border-radius: 12px 0 0 12px; border-left-width: 1px; }}
+.status-strip .status-card:last-child {{ border-radius: 0 12px 12px 0; border-right-width: 1px; }}
+.status-strip .status-card + .status-card {{ box-shadow: inset 1px 0 0 rgba(255,255,255,0.12); }}
+@media (max-width: 400px) {{
+  .left-hud-stack {{ zoom: 0.9; opacity: 0.88; }}
+  .right-hud-stack {{ zoom: 0.9; opacity: 0.9; }}
+}}
+</style>
 <script type="importmap">
 {{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/" }} }}
 </script>
@@ -60,7 +73,7 @@ def once(src, old, new, what):
 
 
 def main():
-    src = HTML.open(encoding="utf-8", newline="").read()
+    src = (ROOT / "tools" / "index.base.html").open(encoding="utf-8", newline="").read()  # pristine original, never edited
     src = strip(strip(src, R3D_BEGIN, R3D_END), LOADER_BEGIN, LOADER_END)
 
     # The old Canvas 2D renderer stays as the fallback under a new name, and its
@@ -108,10 +121,31 @@ def main():
         # livelier car-to-car contact
         ("victim.speed * (victimProtected ? 0.94 : 0.84))", "victim.speed * (victimProtected ? 0.94 : (aggressor.isPlayer ? 0.74 : 0.82)))", 1),
         ("sideSlamEventsTriggered < 2 && timeRemaining < 48", "sideSlamEventsTriggered < 5 && timeRemaining < 52", 1),
+        # ---- v5: spacing, ramps, softer hits, smooth boost, close racing ----
+        ("const obstacleTypes = ['barrier', 'cone', 'tyres', 'roadblock', 'oil', 'barricade', 'barrel'];", "const obstacleTypes = ['barrier', 'cone', 'oil', 'bump', 'crates', 'barricade'];", 1),
+        ("    for (let dist = 420; dist < FINISH_LINE_Z - 110; dist += 71) {\n      const used = new Set();",
+         "    let lastUsed = new Set();\n    for (let dist = 420; dist < FINISH_LINE_Z - 110; dist += 100) {\n      const prevRow = lastUsed; const used = new Set(); lastUsed = used;", 1),
+        ("        const l = Math.floor(rng() * 3);\n        if (used.has(l)) continue;",
+         "        let l = Math.floor(rng() * 3);\n        if (prevRow.has(l)) l = (l + 1) % 3; // keep a lane clear for ~40 m after an obstacle\n        if (used.has(l)) continue;", 1),
+        ("        if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20,",
+         "        if (type !== 'oil' && type !== 'bump' && !prevRow.has(l) && rng() < 0.4) trackObjects.push({ id: nextId++, z: dist - 88 - rng() * 14,", 1),
+        ("car.jumpTimer = 0.8; car.speed = Math.min(BOOST_TOP_SPEED, car.speed + 14);", "car.jumpTimer = 1.25; car.jumpDur = 1.25;", 1),
+        ("(obj.hw || 0.20)", "(obj.hw || 0.36)", 1),
+        ("car.speed = Math.max(152, car.speed * 0.74);", "car.speed = Math.max(150, car.speed * 0.85);", 1),
+        ("car.speed = Math.max(142, car.speed * 0.68);", "car.speed = Math.max(150, car.speed * 0.85);", 1),
+        ("car.speed = Math.max(126, car.speed * 0.58);", "car.speed = Math.max(150, car.speed * 0.85); ", 1),
+        ("car.speed = Math.max(134, car.speed * 0.63);", "car.speed = Math.max(150, car.speed * 0.85);  ", 1),
+        ("          car.hitSlowTimer = 0.85;", "          car.hitSlowTimer = 0.5;", 1),
+        ("maxSpd = Math.min(maxSpd, 162 + (1 - car.hitSlowTimer / 0.9) * 65);", "maxSpd = Math.min(maxSpd, EQUAL_TOP_SPEED * (0.85 + 0.15 * (1 - car.hitSlowTimer / 0.5)));", 1),
+        ("car.speed = Math.min(BOOST_TOP_SPEED, car.speed + 48);", "/* speed now builds smoothly through the boost acceleration below */", 1),
+        ("const accel = car.boostTimer > 0 ? 185 : EQUAL_ACCEL_RATE;", "const accel = car.boostTimer > 0 ? 112 : EQUAL_ACCEL_RATE;", 2),
+        ("const accel = car.boostTimer > 0 ? 180 : EQUAL_ACCEL_RATE;", "const accel = car.boostTimer > 0 ? 112 : EQUAL_ACCEL_RATE; ", 1),
+        ("        let targetSpeed = maxSpd;\n        const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];",
+         "        let targetSpeed = maxSpd;\n        // first 40%: the leader lifts slightly so the pack stays together and trades places\n        if (raceProgress < 0.4 && car.boostTimer <= 0 && car.z - Math.min(...cars.map(c => c.z)) > 12) targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 9);\n        const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];", 1),
+        ("sideSlamEventsTriggered < 5 && timeRemaining < 52", "sideSlamEventsTriggered < 7 && timeRemaining < 57", 1),
+        ("                  sfxCarSlam();", "                  sfxCarSlam(); spawnShatterDebris((a.x + b.x) / 2, (a.z + b.z) / 2 + 6, 'spark');", 2),
     ]
     for old, new, count in SIM:
-        if old not in src:  # already applied on an earlier build
-            continue
         if src.count(old) != count:
             sys.exit(f"build: sim patch expected {count} of '{old[:40]}', found {src.count(old)}")
         src = src.replace(old, new)
