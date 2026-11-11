@@ -4873,6 +4873,7 @@ window.dispatchEvent(new Event('tr-three'));
         if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
         if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
         if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
+        if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
         trackObjects.push({
           id: nextId++,
           z: dist + (rng() * 6 - 3),
@@ -5217,10 +5218,17 @@ window.dispatchEvent(new Event('tr-three'));
       spawnShatterDebris(player.x + dir * 0.16, player.z + 6, 'spark');
       cameraShake = 7; sfxHitCone();
     }
+    if (nextLane === player.lane && !(player.scrapeTimer > 0)) {
+      // steered into the guard rail: sparks and a small speed loss
+      player.scrapeTimer = 0.45; player.scrapeDir = dir;
+      player.speed = Math.max(120, player.speed * 0.9); player.boostTimer = 0;
+      spawnShatterDebris(player.x + dir * 0.16, player.z + 6, 'spark');
+      cameraShake = 7; sfxHitCone();
+    }
     if (nextLane !== player.lane) {
       player.lane = nextLane;
       player.targetX = LANE_CENTERS[nextLane];
-      spawnTireSmoke(player.x, player.z);     
+      spawnTireSmoke(player.x, player.z);      
       sfxSteer();
       if (typeof window._trPushTelemetryNow === "function") window._trPushTelemetryNow();
     }
@@ -6561,7 +6569,8 @@ window.dispatchEvent(new Event('tr-three'));
       if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
       if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
       if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
-      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);     
+      if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
+      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);      
       else car.hitRoll = 0;
 
       // Equal top speed for all cars; slows down after hitting obstacle; pumps up on Blue Booster
@@ -6859,6 +6868,7 @@ window.dispatchEvent(new Event('tr-three'));
             scores[obj.lane] += 18 * u;
           } else {
             scores[obj.lane] -= pen * u;
+            if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
             if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
             if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
             if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
@@ -7961,7 +7971,7 @@ window.dispatchEvent(new Event('tr-three'));
 
     // ---------- assets (each one is optional: a built-in stand-in is used if it fails) ----------
     const ADD = window.__trThreeAddons || {};
-    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r17';
+    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r18';
     // Gentle road curves without touching the straight-line simulation: every vertex is pushed
     // sideways by (distance ahead)^2. The bend amount rides in an otherwise-zero projection
     // matrix cell so all built-in materials pick it up with no per-material uniforms.
@@ -7969,12 +7979,14 @@ window.dispatchEvent(new Event('tr-three'));
       T.ShaderChunk.project_vertex = T.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;',
         'float trBend = projectionMatrix[1][0];\n\tmat4 trProj = projectionMatrix; trProj[1][0] = 0.0;\n\tmvPosition.x += trBend * min(mvPosition.z * mvPosition.z, 160000.0);\n\tgl_Position = trProj * mvPosition;');
     }
+    // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
-    loadPill.style.cssText = 'position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:11;padding:7px 12px;border-radius:999px;background:rgba(8,13,24,0.88);border:1px solid rgba(40,224,102,0.45);color:#d1fae5;font:800 11px/1 system-ui,sans-serif;letter-spacing:.06em;display:flex;align-items:center;gap:8px;pointer-events:none;';
-    loadPill.innerHTML = 'LOADING 3D<span style="display:block;width:72px;height:5px;border-radius:3px;background:rgba(255,255,255,0.16);overflow:hidden"><i style="display:block;height:100%;width:8%;background:#28e066;border-radius:3px;transition:width .25s"></i></span>';
+    loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;letter-spacing:.14em;';
+    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div><div id="r3dLoadTxt" style="opacity:.8;font-size:11px">LOADING 0%</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .25s"></i></span>';
     canvas.parentNode.appendChild(loadPill);
     let loadedCount = 0;
-    const tick = (v) => { loadedCount++; loadPill.querySelector('i').style.width = Math.min(100, 8 + loadedCount * 14) + '%'; return v; };
+    const LOAD_TOTAL = 11;
+    const tick = (v) => { loadedCount++; const pc = Math.min(100, Math.round(loadedCount / LOAD_TOTAL * 100)); loadPill.querySelector('i').style.width = pc + '%'; loadPill.querySelector('#r3dLoadTxt').textContent = 'LOADING ' + pc + '%'; return v; };
     const within = (pr, ms) => Promise.race([pr, new Promise((r) => setTimeout(() => r(null), ms))]).then(tick, () => tick(null));
     const loadTex = (file) => new Promise((res) => new T.TextureLoader().load(ASSET_BASE + file + ASSET_V, res, undefined, () => res(null)));
     const loadCar = () => new Promise((res) => {
@@ -7989,15 +8001,15 @@ window.dispatchEvent(new Event('tr-three'));
       if (ADD.DRACOLoader) loader.setDRACOLoader(new ADD.DRACOLoader().setDecoderPath(ADD.dracoPath));
       loader.load(ASSET_BASE + file + ASSET_V, (g) => res(g.scene), undefined, () => res(null));
     });
-    const treePacks = Promise.all([within(loadGlb('trees_maple.glb'), 20000), within(loadGlb('trees_pine.glb'), 20000)]);
+    const treePacks = Promise.all([within(loadGlb('trees_maple.glb'), 30000), within(loadGlb('trees_pine.glb'), 30000), within(loadGlb('city_a.glb'), 40000), within(loadGlb('city_b.glb'), 40000), within(loadGlb('tower.glb'), 30000), within(loadGlb('grass.glb'), 30000)]);
     const [carModel, carAoTex, floraTex, skyEq, skyFront] = await Promise.all([within(loadCar(), 15000), within(loadTex('car_ao.png'), 15000), within(loadTex('flora.webp'), 15000), within(loadTex('sky.jpg'), 15000), within(loadTex('sky_front.jpg'), 15000)]);
-    const [mapleScene, pineScene] = await treePacks;
+    const [mapleScene, pineScene, cityAScene, cityBScene, towerScene, grassScene] = await treePacks;
     loadPill.remove();
     if (R3D.status !== 'pending') return;
 
     const scene = new T.Scene();
-    const camera = new T.PerspectiveCamera(50, 1, 0.3, 1200);
-    scene.fog = new T.Fog(0xcfe9fb, 90, 1050);
+    const camera = new T.PerspectiveCamera(50, 1, 0.3, 2800);
+    scene.fog = new T.Fog(0xcfe9fb, 120, 1900);
 
     const hemi = new T.HemisphereLight(0xfff8ec, 0x6b8f5a, 1.35);
     const sun = new T.DirectionalLight(0xffe7c2, 2.5); // warm sunshine
@@ -8187,8 +8199,42 @@ window.dispatchEvent(new Event('tr-three'));
       g.setAttribute('normal', new T.Float32BufferAttribute(N, 3));
       g.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
       g.setAttribute('color', new T.Float32BufferAttribute(C, 3));
-      backdrop.add(new T.Mesh(g, cityMat));
+      if (!cityAScene && !cityBScene) backdrop.add(new T.Mesh(g, cityMat)); // built-in skyline only as a stand-in
     }
+    // Owner's city models: one photo-textured skyline on the horizon, plus city blocks and glass towers
+    // anchored in the world on both sides so they grow and pass by as you drive (recycled ahead).
+    const fitModel = (root, scale) => {
+      root.scale.setScalar(scale); root.updateMatrixWorld(true);
+      const bb = new T.Box3().setFromObject(root), c = bb.getCenter(new T.Vector3());
+      root.position.set(-c.x, -bb.min.y, -c.z);
+      root.traverse((o) => { if (o.isMesh && o.material) { o.material.envMapIntensity = 1.2; if (o.material.map) o.material.map.anisotropy = 4; } });
+      const g = new T.Group(); g.add(root);
+      return { group: g, size: bb.getSize(new T.Vector3()) };
+    };
+    const CITY_CHUNK = 560, cityChunks = [];
+    let cityBase = null;
+    if (cityAScene) { const a = fitModel(cityAScene, 0.016); a.group.position.set(0, -2, -1180); a.group.rotation.y = 0.5; backdrop.add(a.group); }
+    if (cityBScene) {
+      const b = fitModel(cityBScene, 80);
+      for (let i = 0; i < 6; i++) { const g = i ? b.group.clone(true) : b.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'block' }; scene.add(g); cityChunks.push(g); }
+    }
+    if (towerScene) {
+      const t = fitModel(towerScene, 0.55);
+      for (let i = 0; i < 4; i++) { const g = i ? t.group.clone(true) : t.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'tower' }; scene.add(g); cityChunks.push(g); }
+    }
+    const layoutCity = (base) => {
+      for (const g of cityChunks) {
+        const u = g.userData, row = base + u.row, n = row * 2 + (u.side > 0 ? 1 : 0);
+        if (u.kind === 'block') {
+          g.position.set(u.side * (330 + hash(n * 3.3) * 60), -1.2, -(row * CITY_CHUNK + 260));
+          g.rotation.y = Math.floor(hash(n * 5.7) * 4) * Math.PI / 2;
+        } else {
+          g.position.set(u.side * (62 + hash(n * 7.1) * 30), 0, -(row * CITY_CHUNK * 1.5 + 420 + hash(n * 9.9) * 200));
+          g.rotation.y = hash(n * 11.3) * Math.PI * 2;
+        }
+      }
+    };
+
     // Distant tree line hides where the towers meet the haze.
     const treeLineMat = new T.MeshBasicMaterial({ color: 0x2f8a3c, fog: true });
     {
@@ -8417,8 +8463,23 @@ window.dispatchEvent(new Event('tr-three'));
       kit.n++;
       return true;
     };
+    // Owner's grass pack: every patch/clump mesh becomes an instanced kit.
+    const grassKits = [], GRASS_CAP = 360;
+    if (grassScene) {
+      grassScene.updateMatrixWorld(true);
+      grassScene.traverse((o) => {
+        if (!o.isMesh) return;
+        const g = o.geometry.clone().applyMatrix4(o.matrixWorld); g.computeBoundingBox();
+        const bb = g.boundingBox, c = bb.getCenter(new T.Vector3()); g.translate(-c.x, -bb.min.y, -c.z);
+        const mat = o.material.clone(); mat.side = T.DoubleSide; mat.alphaTest = Math.max(mat.alphaTest || 0, 0.4); mat.transparent = false;
+        mat.color.set(/yellow/.test(o.material.name) ? '#cfe88a' : '#9fe070'); leafMats.push(mat); mat.userData.baseTint = mat.color.clone();
+        const im = new T.InstancedMesh(g, mat, GRASS_CAP); im.count = 0; im.frustumCulled = false; scene.add(im);
+        grassKits.push({ im, n: 0 });
+      });
+    }
     const layoutFloraPhoto = (base) => {
       let di = 0, si = 0, gi = 0;
+      for (const kit of grassKits) kit.n = 0;
       for (const k in species) species[k].n = 0;
       for (const kit of treeKits) kit.n = 0;
       const plant = (name, x, z, h, flip, shade) => {
@@ -8453,6 +8514,15 @@ window.dispatchEvent(new Event('tr-three'));
           for (let f = 0; f < 16 && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
+            if (grassKits.length) {
+              const kit = grassKits[Math.floor(hash(n * 41.3 + f) * grassKits.length)];
+              if (kit.n < GRASS_CAP) {
+                const gs = 1.1 + hash(n * 43.7 + f) * 1.1;
+                qy.setFromAxisAngle(upY, hash(n * 45.1 + f) * 6.283);
+                kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * 15), -0.02, z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
+              }
+              continue;
+            }
             put(tufts, gi, side * (RAIL_X + 0.5 + far * far * 16), 0, z - segLen * hash(n * 35.3 + f), sz * (kind < 0.25 ? 2.4 : 1.5), sz * tall, sz * 1.5);
             tufts.setColorAt(gi++, TUFT_TINTS[Math.floor(hash(n * 39.1 + f) * TUFT_TINTS.length)]);
           }
@@ -8467,6 +8537,7 @@ window.dispatchEvent(new Event('tr-three'));
       for (const k in species) { species[k].mesh.count = species[k].n; species[k].mesh.instanceMatrix.needsUpdate = true; }
       treeShade.count = si; treeShade.instanceMatrix.needsUpdate = true;
       for (const kit of treeKits) for (const im of kit.parts) { im.count = kit.n; im.instanceMatrix.needsUpdate = true; }
+      for (const kit of grassKits) { kit.im.count = kit.n; kit.im.instanceMatrix.needsUpdate = true; }
       tufts.count = gi; tufts.instanceMatrix.needsUpdate = true; if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
       trunks.count = blobs.count = cones.count = 0; dots.count = di;
       dots.instanceMatrix.needsUpdate = true; if (dots.instanceColor) dots.instanceColor.needsUpdate = true;
@@ -8893,7 +8964,7 @@ window.dispatchEvent(new Event('tr-three'));
       scene.background = skyTex(SKY[key] ? key : 'sunny');
       if (skyDome) skyDome.visible = photoSky;
       for (const c of cloudsGL) c.visible = !photoSky;
-      floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) m.color.set(w.leaf);
+      floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) { m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint); }
       scene.environmentIntensity = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
       scene.fog.color.set(w.fog);
       paintGrass(w.grass, w.grass2);
@@ -8990,6 +9061,8 @@ window.dispatchEvent(new Event('tr-three'));
         railLightPos[o + 3] = RAIL_X - 0.1; railLightPos[o + 4] = 0.5; railLightPos[o + 5] = z;
       }
       railLightGeo.attributes.position.needsUpdate = true;
+      const cBase = Math.floor(-cz / CITY_CHUNK);
+      if (cBase !== cityBase) { cityBase = cBase; layoutCity(cBase); }
       const fBase = Math.floor(camTrack / FLORA_SEG);
       if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
 
