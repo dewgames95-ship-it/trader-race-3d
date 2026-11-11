@@ -25,7 +25,8 @@
 
     const renderer = new T.WebGLRenderer({ canvas: glCanvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
     renderer.outputColorSpace = T.SRGBColorSpace;
-    renderer.toneMapping = T.NoToneMapping;
+    renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.18;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
     glCanvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); r3dFail('context lost'); });
 
     // ---------- assets (each one is optional: a built-in stand-in is used if it fails) ----------
@@ -73,7 +74,11 @@
     const hemi = new T.HemisphereLight(0xfff8ec, 0x6b8f5a, 1.35);
     const sun = new T.DirectionalLight(0xffe7c2, 2.5); // warm sunshine
     sun.position.set(0.553, 0.743, 0.376); // matches the sun in sky.jpg (behind-right of the camera)
-    scene.add(hemi, sun);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03; sun.shadow.radius = 3;
+    Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 26, bottom: -14, near: 1, far: 120 });
+    const SUN_DIR = new T.Vector3(0.553, 0.743, 0.376).normalize();
+    scene.add(hemi, sun, sun.target);
 
     // ---------- helpers ----------
     const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -350,6 +355,7 @@
     // slightly wet, glossy asphalt that picks up the sky
     const roadMat = new T.MeshStandardMaterial({ map: roadTex, roughness: 0.34, metalness: 0.05, envMapIntensity: 1.0 });
     const road = new T.Mesh(flatOnRoad(ROAD_W, ROAD_LEN), roadMat);
+    road.receiveShadow = true;
     scene.add(road);
 
     // Lane dashes: world-anchored instances re-used as the camera moves.
@@ -865,6 +871,7 @@
           else o.material = /brakes/.test(nodeName) ? rig.brakeGlow : lampGlow;
           o.renderOrder = 4;
         } else if (/glass/.test(mn || '')) o.material = carKit.glass;
+        if (mn !== 'Material.009' && !/glass/.test(mn || '')) o.castShadow = true;
       });
       rig.tilt.add(model);
       rig.flameMat = new T.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false });
@@ -1037,7 +1044,7 @@
     const pools = {};
     const acquire = (type, n) => {
       const pool = pools[type] || (pools[type] = []);
-      if (!pool[n]) { const m = (OBJ_MAKE[type] || OBJ_MAKE.barrier)(); scene.add(m); pool[n] = m; }
+      if (!pool[n]) { const m = (OBJ_MAKE[type] || OBJ_MAKE.barrier)(); if (type !== 'boost' && type !== 'oil') m.traverse((o) => { if (o.isMesh) o.castShadow = true; }); scene.add(m); pool[n] = m; }
       return pool[n];
     };
 
@@ -1091,7 +1098,7 @@
     };
 
     // ---------- sizing ----------
-    let pixelCap = Math.min(window.devicePixelRatio || 1, 1.75), viewW = 0, viewH = 0;
+    let pixelCap = Math.min(window.devicePixelRatio || 1, 2), viewW = 0, viewH = 0;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const w = Math.max(160, Math.round(rect.width)), h = Math.max(140, Math.round(rect.height));
@@ -1108,10 +1115,32 @@
     window.addEventListener('resize', resize);
     if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
+    // ---------- post-processing: bloom + SMAA + ACES (dropped automatically if the frame rate sags) ----------
+    let composer = null, quality = 3; // 3 = post + shadows, 2 = shadows only, 1 = plain
+    if (ADD.PP) {
+      try {
+        const PP = ADD.PP;
+        composer = new PP.EffectComposer(renderer, { frameBufferType: T.HalfFloatType });
+        composer.addPass(new PP.RenderPass(scene, camera));
+        const bloom = new PP.BloomEffect({ mipmapBlur: true, luminanceThreshold: 0.92, luminanceSmoothing: 0.12, intensity: 0.55, radius: 0.7 });
+        const smaa = new PP.SMAAEffect({ preset: PP.SMAAPreset.MEDIUM });
+        const tone = new PP.ToneMappingEffect({ mode: PP.ToneMappingMode.ACES_FILMIC });
+        composer.addPass(new PP.EffectPass(camera, bloom, smaa, tone));
+        renderer.toneMapping = T.NoToneMapping;
+      } catch (err) { composer = null; renderer.toneMapping = T.ACESFilmicToneMapping; }
+    }
+    if (!composer) quality = 2;
+    const setQuality = (q) => {
+      quality = q;
+      if (q < 3 && composer) { composer.dispose(); composer = null; renderer.toneMapping = T.ACESFilmicToneMapping; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); }); }
+      if (q < 2) { renderer.shadowMap.enabled = false; sun.castShadow = false; }
+    };
+    R3D.getQuality = () => quality;
+
     // ---------- per-frame ----------
     const CAM_H = 5.7, CAM_BACK = 11.8; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
-    let curveFor = null, curve = null, bendSm = 0;
+    let curveFor = null, curve = null, bendSm = 0, composerW = 0, composerH = 0, composerPR = 0;
     let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, slowFrames = 0, frameCount = 0;
     const tmpColor = new T.Color();
     R3D.render = () => {
@@ -1123,8 +1152,8 @@
       // adaptive resolution: step down once if the phone cannot hold the frame rate
       frameCount++;
       if (frameCount > 60 && pixelCap > 1) {
-        slowFrames = dt > 0.026 ? slowFrames + 1 : Math.max(0, slowFrames - 1);
-        if (slowFrames > 45) { pixelCap = Math.max(1, pixelCap - 0.35); slowFrames = 0; }
+        slowFrames = dt > 0.0222 ? slowFrames + 1 : Math.max(0, slowFrames - 1);
+        if (slowFrames > 45) { slowFrames = 0; if (quality > 1) setQuality(quality - 1); else pixelCap = Math.max(1, pixelCap - 0.35); }
       }
 
       const player = cars.find((c) => c.isPlayer) || cars[0];
@@ -1311,7 +1340,9 @@
         snowGeo.attributes.position.needsUpdate = true;
       }
 
-      renderer.render(scene, camera);
+      sun.target.position.set(camX, 0, pz - 6); sun.position.copy(sun.target.position).addScaledVector(SUN_DIR, 60);
+      if (composer) { if (composerW !== viewW || composerH !== viewH || composerPR !== pixelCap) { composerW = viewW; composerH = viewH; composerPR = pixelCap; composer.setSize(viewW, viewH); } composer.render(dt); }
+      else renderer.render(scene, camera);
 
       // The 2D canvas stays on top as a transparent layer for the position meter only.
       if (racing) { ctx.clearRect(0, 0, cw, ch); drawRightMiniMap(); R3D.overlayDirty = true; }

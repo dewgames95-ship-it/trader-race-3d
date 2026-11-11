@@ -35,13 +35,13 @@ LOADER = f"""<style>
 }}
 </style>
 <script type="importmap">
-{{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/" }} }}
+{{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/", "postprocessing": "./assets/vendor/postprocessing/postprocessing.js" }} }}
 </script>
 <script type="module">
 // Three.js for the race view: local copy first, pinned CDN second, 2D renderer if both fail.
 const CDN = 'https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}';
 const sources = [
-  {{ core: 'three', gltf: 'three/addons/loaders/GLTFLoader.js', draco: 'three/addons/loaders/DRACOLoader.js', dracoPath: './assets/vendor/three/addons/libs/draco/' }},
+  {{ core: 'three', gltf: 'three/addons/loaders/GLTFLoader.js', draco: 'three/addons/loaders/DRACOLoader.js', dracoPath: './assets/vendor/three/addons/libs/draco/', pp: 'postprocessing' }},
   {{ core: CDN + '/+esm', gltf: CDN + '/examples/jsm/loaders/GLTFLoader.js/+esm', draco: CDN + '/examples/jsm/loaders/DRACOLoader.js/+esm', dracoPath: CDN + '/examples/jsm/libs/draco/gltf/' }}
 ];
 let lastError = 'three.js unavailable';
@@ -49,6 +49,8 @@ for (const src of sources) {{
   try {{
     const [core, gltf, draco] = await Promise.all([import(src.core), import(src.gltf), import(src.draco)]);
     window.__trThreeAddons = {{ GLTFLoader: gltf.GLTFLoader, DRACOLoader: draco.DRACOLoader, dracoPath: src.dracoPath }};
+    // optional post-processing (bloom, SMAA, tone mapping); the game runs without it
+    if (src.pp) {{ try {{ window.__trThreeAddons.PP = await import(src.pp); }} catch (err) {{}} }}
     window.THREE = core;
     break;
   }} catch (err) {{ lastError = String(err && err.message || err); }}
