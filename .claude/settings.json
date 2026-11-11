@@ -1,0 +1,14 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "deny": [
+      "Read(./turbo_usdt_racer_3d.html)",
+      "Read(./index.html)",
+      "Read(./assets/ui/**)",
+      "Read(./assets/vendor/**)",
+      "Read(./**/*.png)", "Read(./**/*.jpg)", "Read(./**/*.webp)",
+      "Read(./**/*.glb)", "Read(./**/*.mp3)",
+      "WebSearch"
+    ]
+  }
+}
