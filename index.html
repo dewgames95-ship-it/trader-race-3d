@@ -4394,7 +4394,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 </div>
 
 <!-- R3D-LOADER-BEGIN -->
-<style>#centerStartCircle { scale: 0.6; left: 50% !important; } #leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn { zoom: 0.77; }</style>
+<style>#centerStartCircle { scale: 0.6; left: 50% !important; right: auto !important; margin: 0 !important; transform: translate(-50%, -50%) !important; } #leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn { zoom: 0.77; }</style>
 <script type="importmap">
 { "imports": { "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/" } }
 </script>
@@ -4869,6 +4869,7 @@ window.dispatchEvent(new Event('tr-three'));
         used.add(l);
         const type = obstacleTypes[(nextId + i) % obstacleTypes.length];
         if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
+        if (type !== 'oil' && rng() < 0.3) trackObjects.push({ id: nextId++, z: dist - 20, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
         trackObjects.push({
           id: nextId++,
           z: dist + (rng() * 6 - 3),
@@ -5185,10 +5186,17 @@ window.dispatchEvent(new Event('tr-three'));
       spawnShatterDebris(player.x + dir * 0.16, player.z + 6, 'spark');
       cameraShake = 7; sfxHitCone();
     }
+    if (nextLane === player.lane && !(player.scrapeTimer > 0)) {
+      // steered into the guard rail: sparks and a small speed loss
+      player.scrapeTimer = 0.45; player.scrapeDir = dir;
+      player.speed = Math.max(120, player.speed * 0.9); player.boostTimer = 0;
+      spawnShatterDebris(player.x + dir * 0.16, player.z + 6, 'spark');
+      cameraShake = 7; sfxHitCone();
+    }
     if (nextLane !== player.lane) {
       player.lane = nextLane;
       player.targetX = LANE_CENTERS[nextLane];
-      spawnTireSmoke(player.x, player.z); 
+      spawnTireSmoke(player.x, player.z);  
       sfxSteer();
       if (typeof window._trPushTelemetryNow === "function") window._trPushTelemetryNow();
     }
@@ -6525,7 +6533,8 @@ window.dispatchEvent(new Event('tr-three'));
       if (car.boostTimer > 0) car.boostTimer = Math.max(0, car.boostTimer - dt);
       if (car.hitSlowTimer > 0) car.hitSlowTimer = Math.max(0, car.hitSlowTimer - dt);
       if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
-      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt); 
+      if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
+      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);  
       else car.hitRoll = 0;
 
       // Equal top speed for all cars; slows down after hitting obstacle; pumps up on Blue Booster
@@ -6823,6 +6832,7 @@ window.dispatchEvent(new Event('tr-three'));
             scores[obj.lane] += 18 * u;
           } else {
             scores[obj.lane] -= pen * u;
+            if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
             if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
           }
         }

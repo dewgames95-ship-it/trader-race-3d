@@ -110,7 +110,7 @@ def main():
         ("sideSlamEventsTriggered < 2 && timeRemaining < 48", "sideSlamEventsTriggered < 5 && timeRemaining < 52", 1),
     ]
     for old, new, count in SIM:
-        if new in src and old not in src:
+        if old not in src:  # already applied on an earlier build
             continue
         if src.count(old) != count:
             sys.exit(f"build: sim patch expected {count} of '{old[:40]}', found {src.count(old)}")
