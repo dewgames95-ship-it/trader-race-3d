@@ -4654,7 +4654,7 @@ window.dispatchEvent(new Event('tr-three'));
   // 2. GAME STATE, PRE-RACE ONLY WEATHER & RACE PHYSICS ENGINE
   // =========================================================================
   const RACE_DURATION_SEC = 60.0;
-  const FINISH_LINE_Z = 4850;
+  const FINISH_LINE_Z = 3880; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
   const LANE_CENTERS = [-0.6667, 0, 0.6667];
 
   let balanceUsdt = 100.00;
@@ -4740,10 +4740,11 @@ window.dispatchEvent(new Event('tr-three'));
   ];
 
   // Equalized physics constants — ZERO unnatural bot speed cheats!
-  const EQUAL_TOP_SPEED = 258;
-  const BOOST_TOP_SPEED = 312;
-  const EQUAL_ACCEL_RATE = 104;
-  const EQUAL_BRAKE_RATE = 175;
+  const EQUAL_TOP_SPEED = 206;
+  const BOOST_TOP_SPEED = 250;
+  const EQUAL_ACCEL_RATE = 83;
+  const EQUAL_BRAKE_RATE = 140;
+  const JUMP_DUR = 0.7, JUMP_PEAK = 1.25, JUMP_LAND_BOOST = 12; // world-unit arc height; small speed kick on landing
   const WORLD_SPEED_SCALE = 0.375;
 
   const keys = { left: false, right: false, accel: false, brake: false };
@@ -4868,39 +4869,42 @@ window.dispatchEvent(new Event('tr-three'));
       { id: 4, z: 215, lane: 1, x: LANE_CENTERS[1], type: 'boost', broken: false, hitAnimTimer: 0, hitBy: new Set() }
     ];
     let nextId = 10;
-    const obstacleTypes = ['barrier', 'cone', 'oil', 'bump', 'crates', 'barricade'];
+    const obstacleTypes = ['barrier', 'cone', 'crates', 'barricade', 'barrel', 'brokentruck', 'brokencar'];
 
-    let lastUsed = new Set();
-    for (let dist = 420; dist < FINISH_LINE_Z - 110; dist += 100) {
-      const prevRow = lastUsed; const used = new Set(); lastUsed = used;
-      if (rng() < 0.14) {
-        const a = rng() < 0.5 ? 0 : 1;
-        trackObjects.push({ id: nextId++, z: dist, lane: a, lane2: a + 1, x: (LANE_CENTERS[a] + LANE_CENTERS[a + 1]) / 2, hw: 0.52, type: 'brokentruck', broken: false, hitAnimTimer: 0, hitDir: a === 0 ? 1 : -1, hitBy: new Set() });
-        used.add(a); used.add(a + 1);
-      }
-      const cnt = used.size ? 0 : (rng() < 0.64 ? 2 : 1);
+    // Obstacles: random, max 1 per lane per 40 m. ~40% get a jump ramp 25-35 m ahead in the same lane;
+    // a ramped lane stays clear (landing zone) for 100 m after the obstacle.
+    const blockedUntil = [0, 0, 0, 0];
+    for (let dist = 420, step = 0; dist < FINISH_LINE_Z - 110; dist += 52 + rng() * 40, step++) {
+      const used = new Set();
+      const cnt = rng() < 0.62 ? 2 : 1;
       for (let i = 0; i < cnt; i++) {
-        let l = Math.floor(rng() * 3);
-        if (prevRow.has(l)) l = (l + 1) % 3; // keep a lane clear for ~40 m after an obstacle
-        if (used.has(l)) continue;
+        const l = Math.floor(rng() * 3);
+        const oz = dist + (rng() * 8 - 4);
+        if (used.has(l) || oz < blockedUntil[l]) continue;
         used.add(l);
-        const type = obstacleTypes[(nextId + i) % obstacleTypes.length];
-        if (type !== 'oil' && type !== 'bump' && !prevRow.has(l) && rng() < 0.4) trackObjects.push({ id: nextId++, z: dist - 88 - rng() * 14, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set() });
+        const type = obstacleTypes[Math.floor(rng() * obstacleTypes.length)];
+        const rampDist = 25 + rng() * 10;
+        const ramped = rng() < 0.4 && oz - rampDist > 330 && oz - rampDist >= blockedUntil[l] - 25;
+        blockedUntil[l] = oz + (ramped ? 100 : 40);
         trackObjects.push({
           id: nextId++,
-          z: dist + (rng() * 6 - 3),
+          z: oz,
           lane: l,
           x: LANE_CENTERS[l],
           type,
           broken: false,
           hitAnimTimer: 0,
           hitDir: rng() < 0.5 ? 1 : -1,
-          hitBy: new Set()
+          hitBy: new Set(),
+          rampZ: ramped ? oz - rampDist : 0
         });
+        if (ramped) {
+          trackObjects.push({ id: nextId++, z: oz - rampDist, lane: l, x: LANE_CENTERS[l], type: 'jump', broken: false, hitAnimTimer: 0, hitBy: new Set(), forZ: oz });
+        }
       }
 
       if (rng() < 0.48) {
-        const freeLanes = [0, 1, 2].filter(l => !used.has(l));
+        const freeLanes = [0, 1, 2].filter(l => !used.has(l) && blockedUntil[l] < dist + 46 - 12 && !(blockedUntil[l] - 100 > dist - 60));
         if (freeLanes.length > 0) {
           const bl = freeLanes[Math.floor(rng() * freeLanes.length)];
           trackObjects.push({
@@ -5193,6 +5197,7 @@ window.dispatchEvent(new Event('tr-three'));
     if (gameState !== 'RACING') return;
     const player = cars.find(c => c.isPlayer);
     if (!player) return;
+    if (player.jumpTimer > 0) return; // no lane shift while airborne
     const nextLane = Math.max(0, Math.min(2, player.lane + dir));
     player.lastSteerDir = dir;
     if (nextLane === player.lane && !(player.scrapeTimer > 0)) {
@@ -6495,7 +6500,7 @@ window.dispatchEvent(new Event('tr-three'));
         standaloneCountdown.classList.remove('show');
         gameState = 'RACING';
         timeRemaining = RACE_DURATION_SEC;
-        for (const c of cars) c.speed = 160;
+        for (const c of cars) c.speed = 128;
         updateTopPositionBanner();
       }
       return;
@@ -6541,12 +6546,26 @@ window.dispatchEvent(new Event('tr-three'));
       if (car.bumpCooldown > 0) car.bumpCooldown = Math.max(0, car.bumpCooldown - dt);
       if (car.boostTimer > 0) car.boostTimer = Math.max(0, car.boostTimer - dt);
       if (car.hitSlowTimer > 0) car.hitSlowTimer = Math.max(0, car.hitSlowTimer - dt);
-      if (car.jumpTimer > 0) car.jumpTimer = Math.max(0, car.jumpTimer - dt);
-      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt); 
+      if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);
       else car.hitRoll = 0;
 
+      // Jump: real Y arc (no scaling), speed is kept in the air, small kick on landing, lane is locked
+      if (car.jumpTimer > 0) {
+        car.jumpTimer -= dt;
+        if (car.jumpTimer <= 0) {
+          car.jumpTimer = 0; car.jumpY = 0; car.landTimer = 0.9;
+          car.speed = Math.min(BOOST_TOP_SPEED, car.speed + JUMP_LAND_BOOST);
+          spawnTireSmoke(car.x, car.z);
+        } else {
+          const a = 1 - car.jumpTimer / JUMP_DUR;
+          car.jumpDur = JUMP_DUR;
+          car.jumpY = JUMP_PEAK * 4 * a * (1 - a);
+        }
+      } else car.jumpY = 0;
+      if (car.landTimer > 0) car.landTimer = Math.max(0, car.landTimer - dt);
+
       // Equal top speed for all cars; slows down after hitting obstacle; pumps up on Blue Booster
-      let maxSpd = car.boostTimer > 0 ? BOOST_TOP_SPEED : EQUAL_TOP_SPEED;
+      let maxSpd = car.boostTimer > 0 ? BOOST_TOP_SPEED : EQUAL_TOP_SPEED + (car.landTimer > 0 ? 10 : 0);
       if (car.hitSlowTimer > 0) {
         maxSpd = Math.min(maxSpd, EQUAL_TOP_SPEED * (0.85 + 0.15 * (1 - car.hitSlowTimer / 0.5)));
       }
@@ -6578,11 +6597,11 @@ window.dispatchEvent(new Event('tr-three'));
         }
         let targetSpeed = (typeof tel.speed === "number" && tel.speed > 40) ? Math.min(BOOST_TOP_SPEED, tel.speed) : maxSpd;
         if (!isDesignatedWinner && inFinalStretch && car.z > designatedCar.z + 4) {
-          targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 16);
+          targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 13);
         }
-        const accel = car.boostTimer > 0 ? 112 : EQUAL_ACCEL_RATE;
+        const accel = car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
-        else car.speed = Math.max(targetSpeed, car.speed - 70 * dt);
+        else car.speed = Math.max(targetSpeed, car.speed - 56 * dt);
 
         const dx = car.targetX - car.x;
         car.x += dx * Math.min(1, dt * 12.5);
@@ -6599,10 +6618,10 @@ window.dispatchEvent(new Event('tr-three'));
         }
       } else if (!isDrivenByAI) {
         // Manual Drive Mode for Player Car
-        const targetSpeed = keys.brake ? 110 : maxSpd;
-        const accel = car.boostTimer > 0 ? 112 : EQUAL_ACCEL_RATE;
+        const targetSpeed = (keys.brake && !(car.jumpTimer > 0)) ? 88 : maxSpd;
+        const accel = car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
-        else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 72) * dt);
+        else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 58) * dt);
 
         const dx = car.targetX - car.x;
         car.x += dx * Math.min(1, dt * 11.5);
@@ -6611,36 +6630,57 @@ window.dispatchEvent(new Event('tr-three'));
       } else {
         // AI-Driven Car (All 3 cars in Car Bet Mode, or Bots in Manual Mode)
         const isDesignatedWinner = (car.id === designatedWinnerId);
+        // each bot has its own driving personality (reaction time, line, nerve, pace), so no two move in sync
+        if (!car.pers) {
+          const r = Math.random;
+          car.pers = { react: 0.14 + r() * 0.26, thr: 1 + r() * 9, wob: 0.015 + r() * 0.06, wf: 0.35 + r() * 0.9, wp: r() * 6.283, off: (r() - 0.5) * 0.09,
+            aggr: r(), jumpy: 0.1 + r() * 0.4, pace: 0.008 + r() * 0.012, pf: 0.25 + r() * 0.5, pp: r() * 6.283, steer: 6 + r() * 5, calm: r() };
+          car.aiTimer = r() * 0.3;
+        }
+        const P = car.pers, tNow = performance.now() / 1000;
         car.aiTimer -= dt;
         if (car.aiTimer <= 0) {
-          car.aiTimer = isDesignatedWinner ? 0.08 : (0.11 + Math.random() * 0.06);
+          car.aiTimer = P.react * (0.7 + Math.random() * 0.6);
           runRealisticCasinoAI(car, inFinalStretch, isDesignatedWinner);
         }
+        // racing line: small, smooth, personal lateral wander + random micro-steering inside the lane
+        if (!(car.jumpTimer > 0)) {
+          if (!P.jit || (P.jitT -= dt) <= 0) { P.jit = (Math.random() - 0.5) * 0.04; P.jitT = 0.4 + Math.random() * 0.9; }
+          car.targetX = Math.max(-0.8, Math.min(0.8, LANE_CENTERS[car.lane] + P.off + Math.sin(tNow * P.wf + P.wp) * P.wob + P.jit));
+        } else car.targetX = LANE_CENTERS[car.lane];
 
-        // Natural throttle modulation (never exceeds maxSpd!)
+        // Natural throttle modulation: continuous (no steps), per-car pace wobble so cars swap places
         let targetSpeed = maxSpd;
-        // first 40%: the leader lifts slightly so the pack stays together and trades places
-        if (raceProgress < 0.4 && car.boostTimer <= 0 && car.z - Math.min(...cars.map(c => c.z)) > 12) targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 9);
         const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];
-        if (!isDesignatedWinner && inFinalStretch) {
-          // Non-winning car slightly eases throttle if it's ahead of the designated winner in the final seconds
-          if (car.z > designatedCar.z + 4 && car.boostTimer <= 0) {
-            targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 16);
+        if (car.hitSlowTimer <= 0 && car.boostTimer <= 0 && car.jumpTimer <= 0 && gameState === 'RACING') {
+          targetSpeed *= 1 + P.pace * Math.sin(tNow * P.pf + P.pp);
+          if (!inFinalStretch) {
+            // gentle pack cohesion, proportional to the gap: leader eases a touch, chasers draft up to ~3%
+            let aheadGap = 0, behindGap = 0;
+            for (const o of cars) {
+              if (o === car) continue;
+              const g = o.z - car.z;
+              if (g > 0) aheadGap = aheadGap ? Math.min(aheadGap, g) : g;
+              else behindGap = behindGap ? Math.min(behindGap, -g) : -g;
+            }
+            if (aheadGap > 6) targetSpeed *= 1 + Math.min(0.03, (aheadGap - 6) * 0.0009);
+            else if (!aheadGap && behindGap > 10) targetSpeed *= 1 - Math.min(0.045, (behindGap - 10) * 0.0016);
           }
-        } else if (isDesignatedWinner && car.z > leaderZ - 0.1 && !inFinalStretch) {
-          // Keep the pack close and exciting during the first 65% of the race!
-          const secondCar = [...cars].sort((a, b) => b.z - a.z)[1];
-          if (secondCar && car.z - secondCar.z > 18) {
-            targetSpeed = EQUAL_TOP_SPEED - 10;
+        }
+        if (!isDesignatedWinner && inFinalStretch) {
+          // Non-winning car smoothly eases off if it is ahead of the designated winner in the final seconds
+          if (car.boostTimer <= 0) {
+            const lead = Math.max(0, Math.min(1, (car.z - designatedCar.z - 4) / 22));
+            targetSpeed = Math.min(targetSpeed, maxSpd - lead * 13);
           }
         }
 
-        const accel = car.boostTimer > 0 ? 112 : EQUAL_ACCEL_RATE; 
+        const accel = car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
-        else car.speed = Math.max(targetSpeed, car.speed - 65 * dt);
+        else car.speed = Math.max(targetSpeed, car.speed - 52 * dt);
 
         const dx = car.targetX - car.x;
-        car.x += dx * Math.min(1, dt * 11.5);
+        car.x += dx * Math.min(1, dt * P.steer);
         // Clamp within asphalt bounds
         car.x = Math.max(-0.84, Math.min(0.84, car.x));
         car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
@@ -6651,19 +6691,24 @@ window.dispatchEvent(new Event('tr-three'));
     for (const obj of trackObjects) {
       if (obj.broken || obj.hitAnimTimer > 0) continue;
       for (const car of cars) {
-        const hitDepth = obj.type === 'boost' ? 7.2 : 4.1;
-        if (Math.abs(obj.z - car.z) < hitDepth && Math.abs(obj.x - car.x) < (obj.hw || 0.36)) {
-          if (car.jumpTimer > 0 && obj.type !== 'boost') continue; // airborne: sails over it
-          if (obj.type === 'jump') {
-            if (!obj.hitBy.has(car.id)) { obj.hitBy.add(car.id); car.jumpTimer = 1.25; car.jumpDur = 1.25; if (car.isPlayer || Math.abs(car.z - player.z) < 25) sfxBoost(); }
-            continue;
+        if (obj.type === 'jump') {
+          if (!(car.jumpTimer > 0) && !obj.hitBy.has(car.id) && Math.abs(obj.z - car.z) < 2.4 && Math.abs(obj.x - car.x) < 0.2) {
+            obj.hitBy.add(car.id);
+            car.jumpTimer = JUMP_DUR; car.jumpDur = JUMP_DUR; car.jumpY = 0;
+            car.targetX = LANE_CENTERS[car.lane]; // stays in its lane
+            if (car.isPlayer || Math.abs(car.z - player.z) < 25) cameraShake = Math.max(cameraShake, 3);
           }
+          continue;
+        }
+        if (obj.type !== 'boost' && car.jumpY > 0.4) continue; // flying over it
+        const hitDepth = obj.type === 'boost' ? 7.2 : 4.1;
+        if (Math.abs(obj.z - car.z) < hitDepth && Math.abs(obj.x - car.x) < 0.30) {
           if (obj.type === 'boost') {
             if (!obj.hitBy.has(car.id)) {
               obj.hitBy.add(car.id);
               car.boostTimer = 1.30;
               car.hitSlowTimer = 0;
-              /* speed now builds smoothly through the boost acceleration below */
+              /* speed builds smoothly through the boost acceleration */
               if (car.isPlayer || Math.abs(car.z - player.z) < 25) sfxBoost();
             }
             continue;
@@ -6681,16 +6726,16 @@ window.dispatchEvent(new Event('tr-three'));
 
           const nearCam = car.isPlayer || Math.abs(car.z - player.z) < 22;
           if (obj.type === 'cone') {
-            car.speed = Math.max(150, car.speed * 0.85);
+            car.speed = Math.max(120, car.speed * 0.85);
             if (nearCam) { cameraShake = 6; sfxHitCone(); }
           } else if (obj.type === 'barrel') {
-            car.speed = Math.max(150, car.speed * 0.85);
+            car.speed = Math.max(120, car.speed * 0.85);
             if (nearCam) { cameraShake = 9; sfxHitBarrel(); }
           } else if (obj.type === 'brokentruck' || obj.type === 'brokencar') {
-            car.speed = Math.max(150, car.speed * 0.85); 
+            car.speed = Math.max(120, car.speed * 0.85); 
             if (nearCam) { cameraShake = 13; sfxHitHeavyVehicle(); }
           } else {
-            car.speed = Math.max(150, car.speed * 0.85);  
+            car.speed = Math.max(120, car.speed * 0.85);  
             if (nearCam) { cameraShake = 11; sfxHitBarrier(); }
           }
           break;
@@ -6707,6 +6752,7 @@ window.dispatchEvent(new Event('tr-three'));
         for (let j = i + 1; j < cars.length; j++) {
           const a = cars[i];
           const b = cars[j];
+          if (a.jumpY > 0.5 || b.jumpY > 0.5) continue; // airborne cars pass over
           const dz = b.z - a.z;
           const absDz = Math.abs(dz);
           const dx = b.x - a.x;
@@ -6741,8 +6787,8 @@ window.dispatchEvent(new Event('tr-three'));
 
                 // Victim loses slightly more speed (~15%), aggressor loses ~7%
                 const victimProtected = (victim.id === designatedWinnerId && inFinalStretch);
-                victim.speed = Math.max(145, victim.speed * (victimProtected ? 0.94 : (aggressor.isPlayer ? 0.74 : 0.82)));
-                aggressor.speed = Math.max(155, aggressor.speed * 0.93);
+                victim.speed = Math.max(116, victim.speed * (victimProtected ? 0.94 : (aggressor.isPlayer ? 0.74 : 0.82)));
+                aggressor.speed = Math.max(124, aggressor.speed * 0.93);
                 if (!victimProtected) victim.hitSlowTimer = 0.45;
 
                 spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5, 'cone');
@@ -6764,8 +6810,8 @@ window.dispatchEvent(new Event('tr-three'));
                 rearCar.bumpCooldown = 0.38;
                 frontCar.bumpCooldown = 0.38;
                 // Rear car bumps front car forward slightly and slows down itself
-                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 14);
-                rearCar.speed = Math.max(138, frontCar.speed - 24);
+                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 11);
+                rearCar.speed = Math.max(110, frontCar.speed - 19);
                 rearCar.hitRoll = (Math.random() < 0.5 ? 1 : -1) * 0.14;
                 spawnTireSmoke(rearCar.x, rearCar.z + 2.0);
                 if (rearCar.isPlayer || frontCar.isPlayer) {
@@ -6804,7 +6850,9 @@ window.dispatchEvent(new Event('tr-three'));
 
   // Race AI Decision Maker (Dodges obstacles, hunts Blue Boosters, and performs sudden side-hits!)
   function runRealisticCasinoAI(bot, inFinalStretch, isDesignatedWinner) {
-    const lookAhead = isDesignatedWinner ? 128 : 92;
+    if (bot.jumpTimer > 0) return; // airborne: lane is locked
+    const P = bot.pers || { thr: 4, aggr: 0.5, jumpy: 0.25, calm: 0.5 };
+    const lookAhead = (isDesignatedWinner ? 128 : 92) * (0.8 + P.calm * 0.4);
     const scores = [0, 0, 0];
 
     for (let l = 0; l < 3; l++) {
@@ -6827,13 +6875,20 @@ window.dispatchEvent(new Event('tr-three'));
 
     for (const obj of trackObjects) {
       if (obj.broken || obj.hitAnimTimer > 0) continue;
+      if (obj.type === 'jump') continue; // ramps are never hazards
       const dz = obj.z - bot.z;
       if (dz > 0 && dz < lookAhead) {
         const u = (lookAhead - dz) / lookAhead;
-        if (obj.type === 'jump') {
-          scores[obj.lane] += 30 * u;
-        } else if (obj.type === 'boost') {
-          if (isDesignatedWinner) scores[obj.lane] += 95 * u; 
+        if (obj.type !== 'boost') {
+          // each bot decides once per obstacle: take the ramp, dodge it, or (rarely) not react at all
+          if (!obj.plan) obj.plan = {};
+          if (!obj.plan[bot.id]) obj.plan[bot.id] = (obj.rampZ && Math.random() < P.jumpy) ? 'jump' : (Math.random() < 0.06 * (1 - P.calm) ? 'ignore' : 'dodge');
+          const plan = obj.plan[bot.id];
+          if (plan === 'jump' && dz > 8) { scores[obj.lane] += 70 * u; continue; }
+          if (plan === 'ignore') continue;
+        }
+        if (obj.type === 'boost') {
+          if (isDesignatedWinner) scores[obj.lane] += 95 * u;
           else if (!shouldYieldLead) scores[obj.lane] += 55 * u;
         } else {
           const pen = (obj.type === 'brokentruck' || obj.type === 'barrier') ? 230 : 175;
@@ -6842,7 +6897,6 @@ window.dispatchEvent(new Event('tr-three'));
             scores[obj.lane] += 18 * u;
           } else {
             scores[obj.lane] -= pen * u;
-            if (obj.lane2 !== undefined) scores[obj.lane2] -= pen * u; 
           }
         }
       }
@@ -6862,10 +6916,18 @@ window.dispatchEvent(new Event('tr-three'));
       }
     }
 
+    // human nudges: now and then a bot leans on a neighbouring car (bumping/trading paint)
+    if (bot.pers && !(bot.hitSlowTimer > 0)) {
+      for (const other of cars) {
+        if (other === bot || other.jumpTimer > 0) continue;
+        if (Math.abs(other.z - bot.z) < 6 && Math.abs(other.lane - bot.lane) === 1 && Math.random() < 0.05 * P.aggr) scores[other.lane] += 40;
+      }
+    }
+    for (let l = 0; l < scores.length; l++) scores[l] += (Math.random() - 0.5) * 1.5;
     let bestL = bot.lane;
     let bestS = scores[bestL];
     for (let l = 0; l < 3; l++) {
-      if (scores[l] > bestS + 2.2) { bestS = scores[l]; bestL = l; }
+      if (scores[l] > bestS + P.thr) { bestS = scores[l]; bestL = l; }
     }
     if (bestL > bot.lane) { bot.lastSteerDir = 1; bot.lane++; }
     else if (bestL < bot.lane) { bot.lastSteerDir = -1; bot.lane--; }
@@ -8791,11 +8853,20 @@ window.dispatchEvent(new Event('tr-three'));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
       rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.75, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.tailSprites = [];
+      { // rear detail: diffuser, fins, exhaust tips, light bar
+        const dark = new T.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.5, metalness: 0.6 }), chrome = new T.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.25, metalness: 1 });
+        const dif = new T.Mesh(new T.BoxGeometry(1.2, 0.16, 0.12), dark); dif.position.set(0, 0.24, carKit.rearZ - 0.02); rig.tilt.add(dif);
+        for (const fx of [-0.3, 0, 0.3]) { const fin = new T.Mesh(new T.BoxGeometry(0.03, 0.14, 0.2), dark); fin.position.set(fx, 0.24, carKit.rearZ + 0.02); rig.tilt.add(fin); }
+        for (const sx of [-1, 1]) { const tip = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.18, 14, 1, true), chrome); tip.rotation.x = Math.PI / 2; tip.position.set(sx * 0.5, 0.33, carKit.rearZ + 0.05); rig.tilt.add(tip); }
+        rig.barMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.5, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+        const bar = new T.Sprite(rig.barMat); bar.scale.set(1.5, 0.16, 1); bar.position.set(0, carKit.lampY, carKit.rearZ + 0.05); rig.tilt.add(bar);
+      }
       for (const sx of [-1, 1]) {
-        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.55, 0.42, 1); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
+        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.55, 0.42, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
         for (const dx of [0.24, 0.42]) { const e = new T.Sprite(rig.exhMat); e.scale.set(0.3, 0.3, 1); e.position.set(sx * dx, 0.33, carKit.rearZ + 0.06); rig.tilt.add(e); }
       }
-      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; rig.tailMat.opacity = on ? 1 : 0.7; };
+      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; rig.tailMat.opacity = on ? 1 : 0.7; rig.barMat.opacity = on ? 0.95 : 0.45; const k = on ? 1.5 : 1; for (const t of rig.tailSprites) t.scale.set(0.55 * k, 0.42 * k, 1); };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -9085,7 +9156,7 @@ window.dispatchEvent(new Event('tr-three'));
       if (curveFor !== trackObjects) {
         curveFor = trackObjects;
         let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
-        curve = { bias: (hash(sd + 1) - 0.5) * 0.0005, a1: 0.00034 + hash(sd + 2) * 0.00022, f1: 380 + hash(sd + 3) * 260, p1: hash(sd + 4) * 6.283, a2: 0.00012 + hash(sd + 5) * 0.00016, f2: 150 + hash(sd + 6) * 110, p2: hash(sd + 7) * 6.283 };
+        curve = { bias: (hash(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hash(sd + 2) * 0.0005, f1: 210 + hash(sd + 3) * 190, p1: hash(sd + 4) * 6.283, a2: 0.0004 + hash(sd + 5) * 0.0004, f2: 85 + hash(sd + 6) * 75, p2: hash(sd + 7) * 6.283 };
       }
       const cEase = Math.min(1, Math.max(0, (player.z - 40) / 260)), cS = cEase * cEase * (3 - 2 * cEase);
       const bendNow = cS * (curve.bias + curve.a1 * Math.sin(player.z / curve.f1 + curve.p1) + curve.a2 * Math.sin(player.z / curve.f2 + curve.p2));
@@ -9157,13 +9228,13 @@ window.dispatchEvent(new Event('tr-three'));
         const label = car.floatLabel || car.name || '', tagKey = label + '|' + !!car.isPlayer + '|' + car.badgeColor;
         if (rig.tagKey !== tagKey) { rig.tagKey = tagKey; rig.tag.material.map = tagTex(label, !!car.isPlayer, car.badgeColor); rig.tag.material.needsUpdate = true; }
         const x = car.x * R3D_XS, z = pz - (car._vz || 0), steer = (car.targetX - car.x);
-        const moving = racing ? Math.min(1, car.speed / 258) : 0;
+        const moving = racing ? Math.min(1, car.speed / 206) : 0;
         if (car.scrapeTimer > 0) car.scrapeTimer = Math.max(0, car.scrapeTimer - dt);
         const scrape = car.scrapeTimer > 0 ? Math.sin((1 - car.scrapeTimer / 0.45) * Math.PI) : 0;
-        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 1.25) : 0, hop = 4 * air * (1 - air) * 1.45;
-        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop * 1.7, z);
-        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.3 : 0;
-        rig.shadow.position.y = 0.022 - hop * 1.7; rig.shadow.scale.setScalar(1 - hop * 0.25);
+        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 0.7) : 0, hop = car.jumpY || 0;
+        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop, z);
+        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.16 : 0;
+        rig.shadow.position.y = 0.022 - hop; rig.shadow.scale.setScalar(1 - hop * 0.08);
         const ease = Math.min(1, dt * 9);
         rig.yaw += ((racing ? Math.max(-0.14, Math.min(0.14, -steer * 0.5)) : 0) - rig.yaw) * ease;
         rig.group.rotation.y = rig.yaw;
@@ -9171,7 +9242,7 @@ window.dispatchEvent(new Event('tr-three'));
         rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving;
         const spin = -(car.speed || 0) * 0.11 * dt * (racing ? 1 : 0);
         for (const w of rig.wheels) w.rotation.x += spin;
-        const hot = racing && (car.boostTimer > 0 || car.speed > 195);
+        const hot = racing && (car.boostTimer > 0 || car.speed > 156);
         for (const f of rig.flames) { f.visible = hot; if (hot) f.scale.set(0.8, 0.8, (car.boostTimer > 0 ? 0.75 : 0.32) * (0.8 + Math.random() * 0.4)); }
         if (hot) rig.flameMat.color.set(car.boostTimer > 0 ? 0x22e5ff : 0xfb923c);
         if (rig.exhMat) rig.exhMat.opacity = hot ? 0.95 : (racing ? 0.55 : 0.35);

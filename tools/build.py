@@ -146,7 +146,25 @@ def main():
          "        let targetSpeed = maxSpd;\n        // first 40%: the leader lifts slightly so the pack stays together and trades places\n        if (raceProgress < 0.4 && car.boostTimer <= 0 && car.z - Math.min(...cars.map(c => c.z)) > 12) targetSpeed = Math.min(targetSpeed, EQUAL_TOP_SPEED - 9);\n        const designatedCar = cars.find(c => c.id === designatedWinnerId) || cars[0];", 1),
         ("sideSlamEventsTriggered < 5 && timeRemaining < 52", "sideSlamEventsTriggered < 7 && timeRemaining < 57", 1),
         ("                  sfxCarSlam();", "                  sfxCarSlam(); spawnShatterDebris((a.x + b.x) / 2, (a.z + b.z) / 2 + 6, 'spark');", 2),
+        # ---- v6: jump physics, ramps, bot AI and speeds now live in index.base.html; adapt only what is left ----
+        ("Math.abs(obj.x - car.x) < 0.20) {", "Math.abs(obj.x - car.x) < 0.30) {", 1),
+        ("['barrier', 'cone', 'oil', 'bump', 'crates', 'barricade']", "['barrier', 'cone', 'crates', 'barricade', 'barrel', 'brokentruck', 'brokencar']", 1),
+        ("car.speed = Math.max(122, car.speed * 0.74);", "car.speed = Math.max(120, car.speed * 0.85);", 1),
+        ("car.speed = Math.max(114, car.speed * 0.68);", "car.speed = Math.max(120, car.speed * 0.85);", 1),
+        ("car.speed = Math.max(101, car.speed * 0.58);", "car.speed = Math.max(120, car.speed * 0.85); ", 1),
+        ("car.speed = Math.max(107, car.speed * 0.63);", "car.speed = Math.max(120, car.speed * 0.85);  ", 1),
+        ("maxSpd = Math.min(maxSpd, 130 + (1 - car.hitSlowTimer / 0.9) * 52);", "maxSpd = Math.min(maxSpd, EQUAL_TOP_SPEED * (0.85 + 0.15 * (1 - car.hitSlowTimer / 0.5)));", 1),
+        ("car.speed = Math.min(BOOST_TOP_SPEED, car.speed + 38);", "/* speed builds smoothly through the boost acceleration */", 1),
+        ("car.boostTimer > 0 ? 148 : EQUAL_ACCEL_RATE", "car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE", 2),
+        ("car.boostTimer > 0 ? 144 : EQUAL_ACCEL_RATE", "car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE", 1),
     ]
+    OBSOLETE = ("dist < FINISH_LINE_Z - 110; dist += 84)", "dist < FINISH_LINE_Z - 110; dist += 64)", "      const cnt = rng() < 0.64", "        const type = obstacleTypes[(nextId + i)",
+                "Math.abs(obj.x - car.x) < 0.20) {\n", "      if (Math.abs(car.hitRoll)", "        if (obj.type === 'boost') {\n          if (isDesignatedWinner)",
+                "            scores[obj.lane] -= pen * u;", "    for (let dist = 420", "        const l = Math.floor(rng() * 3);\n", "        if (type !== 'oil' && rng() < 0.3)",
+                "car.jumpTimer = 0.8;", "(obj.hw || 0.20)", "car.speed = Math.max(152,", "car.speed = Math.max(142,", "car.speed = Math.max(126,", "car.speed = Math.max(134,",
+                "maxSpd = Math.min(maxSpd, 162", "car.speed = Math.min(BOOST_TOP_SPEED, car.speed + 48)", "const accel = car.boostTimer > 0 ? 185", "const accel = car.boostTimer > 0 ? 180",
+                "        let targetSpeed = maxSpd;\n")
+    SIM = [e for e in SIM if not e[0].startswith(OBSOLETE)]
     for old, new, count in SIM:
         if src.count(old) != count:
             sys.exit(f"build: sim patch expected {count} of '{old[:40]}', found {src.count(old)}")

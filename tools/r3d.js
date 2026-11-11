@@ -881,11 +881,20 @@
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
       rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.75, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.tailSprites = [];
+      { // rear detail: diffuser, fins, exhaust tips, light bar
+        const dark = new T.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.5, metalness: 0.6 }), chrome = new T.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.25, metalness: 1 });
+        const dif = new T.Mesh(new T.BoxGeometry(1.2, 0.16, 0.12), dark); dif.position.set(0, 0.24, carKit.rearZ - 0.02); rig.tilt.add(dif);
+        for (const fx of [-0.3, 0, 0.3]) { const fin = new T.Mesh(new T.BoxGeometry(0.03, 0.14, 0.2), dark); fin.position.set(fx, 0.24, carKit.rearZ + 0.02); rig.tilt.add(fin); }
+        for (const sx of [-1, 1]) { const tip = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.18, 14, 1, true), chrome); tip.rotation.x = Math.PI / 2; tip.position.set(sx * 0.5, 0.33, carKit.rearZ + 0.05); rig.tilt.add(tip); }
+        rig.barMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.5, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+        const bar = new T.Sprite(rig.barMat); bar.scale.set(1.5, 0.16, 1); bar.position.set(0, carKit.lampY, carKit.rearZ + 0.05); rig.tilt.add(bar);
+      }
       for (const sx of [-1, 1]) {
-        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.55, 0.42, 1); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
+        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.55, 0.42, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
         for (const dx of [0.24, 0.42]) { const e = new T.Sprite(rig.exhMat); e.scale.set(0.3, 0.3, 1); e.position.set(sx * dx, 0.33, carKit.rearZ + 0.06); rig.tilt.add(e); }
       }
-      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; rig.tailMat.opacity = on ? 1 : 0.7; };
+      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; rig.tailMat.opacity = on ? 1 : 0.7; rig.barMat.opacity = on ? 0.95 : 0.45; const k = on ? 1.5 : 1; for (const t of rig.tailSprites) t.scale.set(0.55 * k, 0.42 * k, 1); };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -1175,7 +1184,7 @@
       if (curveFor !== trackObjects) {
         curveFor = trackObjects;
         let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
-        curve = { bias: (hash(sd + 1) - 0.5) * 0.0005, a1: 0.00034 + hash(sd + 2) * 0.00022, f1: 380 + hash(sd + 3) * 260, p1: hash(sd + 4) * 6.283, a2: 0.00012 + hash(sd + 5) * 0.00016, f2: 150 + hash(sd + 6) * 110, p2: hash(sd + 7) * 6.283 };
+        curve = { bias: (hash(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hash(sd + 2) * 0.0005, f1: 210 + hash(sd + 3) * 190, p1: hash(sd + 4) * 6.283, a2: 0.0004 + hash(sd + 5) * 0.0004, f2: 85 + hash(sd + 6) * 75, p2: hash(sd + 7) * 6.283 };
       }
       const cEase = Math.min(1, Math.max(0, (player.z - 40) / 260)), cS = cEase * cEase * (3 - 2 * cEase);
       const bendNow = cS * (curve.bias + curve.a1 * Math.sin(player.z / curve.f1 + curve.p1) + curve.a2 * Math.sin(player.z / curve.f2 + curve.p2));
@@ -1247,13 +1256,13 @@
         const label = car.floatLabel || car.name || '', tagKey = label + '|' + !!car.isPlayer + '|' + car.badgeColor;
         if (rig.tagKey !== tagKey) { rig.tagKey = tagKey; rig.tag.material.map = tagTex(label, !!car.isPlayer, car.badgeColor); rig.tag.material.needsUpdate = true; }
         const x = car.x * R3D_XS, z = pz - (car._vz || 0), steer = (car.targetX - car.x);
-        const moving = racing ? Math.min(1, car.speed / 258) : 0;
+        const moving = racing ? Math.min(1, car.speed / 206) : 0;
         if (car.scrapeTimer > 0) car.scrapeTimer = Math.max(0, car.scrapeTimer - dt);
         const scrape = car.scrapeTimer > 0 ? Math.sin((1 - car.scrapeTimer / 0.45) * Math.PI) : 0;
-        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 1.25) : 0, hop = 4 * air * (1 - air) * 1.45;
-        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop * 1.7, z);
-        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.3 : 0;
-        rig.shadow.position.y = 0.022 - hop * 1.7; rig.shadow.scale.setScalar(1 - hop * 0.25);
+        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 0.7) : 0, hop = car.jumpY || 0;
+        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop, z);
+        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.16 : 0;
+        rig.shadow.position.y = 0.022 - hop; rig.shadow.scale.setScalar(1 - hop * 0.08);
         const ease = Math.min(1, dt * 9);
         rig.yaw += ((racing ? Math.max(-0.14, Math.min(0.14, -steer * 0.5)) : 0) - rig.yaw) * ease;
         rig.group.rotation.y = rig.yaw;
@@ -1261,7 +1270,7 @@
         rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving;
         const spin = -(car.speed || 0) * 0.11 * dt * (racing ? 1 : 0);
         for (const w of rig.wheels) w.rotation.x += spin;
-        const hot = racing && (car.boostTimer > 0 || car.speed > 195);
+        const hot = racing && (car.boostTimer > 0 || car.speed > 156);
         for (const f of rig.flames) { f.visible = hot; if (hot) f.scale.set(0.8, 0.8, (car.boostTimer > 0 ? 0.75 : 0.32) * (0.8 + Math.random() * 0.4)); }
         if (hot) rig.flameMat.color.set(car.boostTimer > 0 ? 0x22e5ff : 0xfb923c);
         if (rig.exhMat) rig.exhMat.opacity = hot ? 0.95 : (racing ? 0.55 : 0.35);
