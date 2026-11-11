@@ -126,7 +126,7 @@
 
     // ---------- sky ----------
     const SKY = {
-      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#39a542', grass2: '#33993c', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
+      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#6fcf54', grass2: '#5fbd48', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
       rain:   { stops: [[0, '#0f172a'], [0.2, '#1e293b'], [0.36, '#56657a'], [1, '#56657a']], fog: '#57667a', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#b8c7dc', '#3b4a45', 0.95], sun: ['#c9d6ea', 0.75], cloud: '#8693a8', city: '#7f8ea6', road: '#9aa3b2', leaf: '#b9c6c0', glow: 0 },
       snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#e6edf5', grass2: '#d8e1ec', hemi: ['#ffffff', '#c3cfdf', 1.2], sun: ['#ffffff', 1.5], cloud: '#ffffff', city: '#dbe7f5', road: '#e2e8f0', leaf: '#dfeee6', glow: 0.25 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
@@ -282,10 +282,21 @@
       const b = fitModel(cityBScene, 80);
       for (let i = 0; i < 6; i++) { const g = i ? b.group.clone(true) : b.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'block' }; scene.add(g); cityChunks.push(g); }
     }
+    // Glass towers: a ring recycled far ahead inside the haze, some close to the road so they sweep past.
+    const TW_GAP = 70, TW_N = 24, towerRing = []; let towerBase = null, towerH = 1;
     if (towerScene) {
-      const t = fitModel(towerScene, 0.55);
-      for (let i = 0; i < 4; i++) { const g = i ? t.group.clone(true) : t.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'tower' }; scene.add(g); cityChunks.push(g); }
+      const t = fitModel(towerScene, 0.55); towerH = t.size.y || 1;
+      for (let i = 0; i < TW_N; i++) { const g = i ? t.group.clone(true) : t.group; scene.add(g); towerRing.push(g); }
     }
+    const layoutTowers = (base) => {
+      towerRing.forEach((g, k) => {
+        const row = base + k - 2, n = row * 1.37, side = hash(n * 2.9) < 0.5 ? -1 : 1;
+        const near = hash(n * 4.1) < 0.45, h = 60 + hash(n * 6.3) * 55, s = h / towerH;
+        g.scale.setScalar(s);
+        g.position.set(side * (near ? 22 + hash(n * 7.1) * 12 : 38 + hash(n * 8.3) * 45), 0, -(row * TW_GAP + hash(n * 9.9) * 30));
+        g.rotation.y = Math.floor(hash(n * 11.3) * 4) * Math.PI / 2;
+      });
+    };
     const layoutCity = (base) => {
       for (const g of cityChunks) {
         const u = g.userData, row = base + u.row, n = row * 2 + (u.side > 0 ? 1 : 0);
@@ -325,7 +336,15 @@
         g.globalAlpha = 0.05 + hash(i * 5.9) * 0.06;
         for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) { g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.6, 0, 0, Math.PI * 2); g.fill(); }
       }
-      g.globalAlpha = 1; grassTex.needsUpdate = true;
+      g.globalAlpha = 1;
+      for (let i = 0; i < 26; i++) {                                           // bushes + pebbles baked into the turf
+        const x = hash(i * 7.7) * 256, y = hash(i * 8.9) * 256, r = 4 + hash(i * 9.1) * 7, rock = hash(i * 3.3) < 0.4;
+        for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) {
+          g.fillStyle = rock ? 'rgba(120,120,115,0.85)' : 'rgba(40,120,40,0.55)'; g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.7, 0, 0, 6.283); g.fill();
+          g.fillStyle = rock ? 'rgba(190,190,180,0.8)' : 'rgba(150,220,90,0.6)'; g.beginPath(); g.ellipse(x + ox - r * 0.2, y + oy - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
+        }
+      }
+      grassTex.needsUpdate = true;
     };
     const grass = new T.Mesh(flatOnRoad(GRASS_LEN, GRASS_LEN, 2), new T.MeshLambertMaterial({ map: grassTex }));
     grass.position.y = -0.03;
@@ -586,10 +605,10 @@
               plant(FIRS[Math.floor(r(2.1) * 3)], side * (EDGE + 0.6 + r(3.7) * 1.6), z, 7 + r(4.9) * 3, r(5.3) < 0.5, 1.6);
             if (dens > 0.6) leafy(side * (EDGE + 1.2 + r(7.9) * 3.4), z - segLen * 0.5, 4.2 + r(8.3) * 2.6);
           }
-          if (dens > 0.15) leafy(side * (EDGE + 6 + r(10.3) * 6), z - segLen * r(10.9), 6 + r(11.3) * 3);
-          if (r(12.1) < 0.7) plant(r(12.5) < 0.6 ? LEAFY[Math.floor(r(12.9) * 2)] : FIRS[Math.floor(r(12.9) * 3)], side * (EDGE + 15 + r(12.7) * 10), z - segLen * r(13.1), 8 + r(13.7) * 4, r(14.3) < 0.5, 0);
-          plant(r(15.1) < 0.5 ? 'pines' : 'leafy0', side * (EDGE + 30 + r(15.7) * 28), z - segLen * r(16.3), 11 + r(16.9) * 6, r(17.3) < 0.5, 0);
-          if (r(18.1) < 0.55) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
+          if (dens > 0.5) leafy(side * (EDGE + 6 + r(10.3) * 6), z - segLen * r(10.9), 6 + r(11.3) * 3);
+          if (r(12.1) < 0.3) plant(r(12.5) < 0.6 ? LEAFY[Math.floor(r(12.9) * 2)] : FIRS[Math.floor(r(12.9) * 3)], side * (EDGE + 15 + r(12.7) * 10), z - segLen * r(13.1), 8 + r(13.7) * 4, r(14.3) < 0.5, 0);
+          if (r(15.3) < 0.25) plant(r(15.1) < 0.5 ? 'pines' : 'leafy0', side * (EDGE + 30 + r(15.7) * 28), z - segLen * r(16.3), 11 + r(16.9) * 6, r(17.3) < 0.5, 0);
+          if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           for (let f = 0; f < 16 && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
@@ -1233,6 +1252,7 @@
       }
       const cBase = Math.floor(-cz / CITY_CHUNK);
       if (cBase !== cityBase) { cityBase = cBase; layoutCity(cBase); }
+      const tBase = Math.floor(-cz / TW_GAP); if (tBase !== towerBase) { towerBase = tBase; layoutTowers(tBase); }
       const fBase = Math.floor(camTrack / FLORA_SEG);
       if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
 

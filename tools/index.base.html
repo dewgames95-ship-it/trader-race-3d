@@ -324,6 +324,35 @@
     animation: urgentPulse 0.75s infinite alternate;
   }
 
+  /* ---- target-look polish (game screen) ---- */
+  .status-strip { padding: 3px 6px; gap: 4px; }
+  .status-card { padding: 2px 6px; gap: 4px; border-radius: 8px; min-height: 24px; }
+  .status-card > svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .status-text { flex-direction: row; align-items: center; gap: 4px; line-height: 1; }
+  .status-title { font-size: 6.4px; }
+  .status-highlight-green { font-size: 8.4px; }
+  .status-highlight-gold { font-size: 10.8px; }
+  .status-sub { display: none; }
+  .left-hud-stack { gap: 6px; top: 8px; left: 6px; }
+  .hud-pill { width: 78px; min-height: 42px; border-radius: 13px; padding: 5px 4px; gap: 3px;
+    background: linear-gradient(180deg, rgba(20,26,38,0.94), rgba(8,12,20,0.94)); border: 1.5px solid rgba(255,255,255,0.22); }
+  .hud-pill > svg { width: 21px; height: 21px; }
+  .hud-pill-label { font-size: 8.4px; font-weight: 900; letter-spacing: 0.1px; color: #fff; }
+  .speed-value-row { font-size: 15px; }
+  .speed-unit { font-size: 8.4px; }
+  .hud-players-card { width: 98px; border-radius: 12px; padding: 5px 6px; background: rgba(8,12,20,0.86); }
+  .hud-players-hdr { font-size: 8px; font-weight: 900; color: #fff; }
+  .hp-badge { height: 17px; min-width: 28px; font-size: 8.5px; border-radius: 6px; }
+  .hp-uid { font-size: 8.4px; }
+  .right-hud-stack { top: 8px; right: 6px; gap: 6px; }
+  .right-hud-stack .icon-toggle-btn { font-size: 11px; padding: 6px 12px; border-radius: 12px; border: 2px solid rgba(40,224,102,0.85);
+    background: linear-gradient(180deg, rgba(14,40,28,0.94), rgba(6,20,14,0.94)); box-shadow: 0 0 8px rgba(40,224,102,0.35); letter-spacing: 0.4px; color: #fff; }
+  .right-hud-stack .icon-toggle-btn svg { width: 14px; height: 14px; color: #28e066; }
+  .center-race-circle { top: 23%; left: 50%; width: 128px; height: 128px; border-width: 4px; }
+  .circle-top-txt { font-size: 11.5px; color: #fff; }
+  .circle-big-num { font-size: 38px; }
+  .circle-bot-txt { font-size: 11px; color: #fff; }
+
   @keyframes urgentPulse {
     from { transform: translateX(-50%) scale(1); }
     to { transform: translateX(-50%) scale(1.05); }
