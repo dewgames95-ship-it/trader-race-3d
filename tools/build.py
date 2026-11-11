@@ -20,7 +20,7 @@ R3D_END = "  // <<< R3D-END\n"
 LOADER_BEGIN = "<!-- R3D-LOADER-BEGIN -->\n"
 LOADER_END = "<!-- R3D-LOADER-END -->\n"
 
-LOADER = f"""<style>#centerStartCircle {{ scale: 0.72; }}</style>
+LOADER = f"""<style>#centerStartCircle {{ scale: 0.5; }} #leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn {{ zoom: 0.7; }}</style>
 <script type="importmap">
 {{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/" }} }}
 </script>
