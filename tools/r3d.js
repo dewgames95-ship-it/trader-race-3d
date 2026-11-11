@@ -30,7 +30,7 @@
 
     // ---------- assets (each one is optional: a built-in stand-in is used if it fails) ----------
     const ADD = window.__trThreeAddons || {};
-    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r15';
+    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r16';
     // Gentle road curves without touching the straight-line simulation: every vertex is pushed
     // sideways by (distance ahead)^2. The bend amount rides in an otherwise-zero projection
     // matrix cell so all built-in materials pick it up with no per-material uniforms.
@@ -218,6 +218,7 @@
         }
       };
       const palette = ['#3f86d8', '#58a4ee', '#2f6fbe', '#4b93e0', '#6fb4f6', '#2c63aa'];
+      const ALT = ['#35b3c4', '#8fa0b8', '#d5e3f3', '#2e9c8f', '#5b6f9e'];
       const paletteFar = ['#9cc6f0', '#a9cff4', '#8fbbe8'];
       let x = -560, i = 0;
       while (x < 560) { // far row: pale, tall
@@ -230,7 +231,16 @@
         const w = 20 + hash(i * 3.7) * 20, edge = Math.min(1, Math.abs(x + w / 2) / 300);
         const h = 34 + edge * 62 + hash(i * 4.9) * 46;
         const capR = hash(i * 8.3);
-        tower(x + w / 2, -400, w, 22, h, palette[i % palette.length], capR < 0.22 ? 2 : (capR < 0.5 ? 1 : 0));
+        const kind = hash(i * 12.7), cx = x + w / 2, tone = hash(i * 14.9) < 0.3 ? ALT[i % ALT.length] : palette[i % palette.length];
+        if (kind < 0.25) {            // stepped tower: three tiers
+          tower(cx, -400, w, 22, h * 0.62, tone, 0); tower(cx, -399.5, w * 0.72, 18, h * 0.9, tone, 0); tower(cx, -399, w * 0.42, 12, h * 1.12, tone, 2);
+        } else if (kind < 0.42) {     // slim needle
+          tower(cx, -400, w * 0.5, 14, h * 1.35, tone, 2);
+        } else if (kind < 0.58) {     // wide slab with a roof block
+          tower(cx, -400, w * 1.25, 24, h * 0.55, tone, 0); tower(cx - w * 0.25, -399.5, w * 0.4, 12, h * 0.68, tone, 0);
+        } else if (kind < 0.72) {     // twin towers
+          tower(cx - w * 0.27, -400, w * 0.42, 18, h, tone, 1); tower(cx + w * 0.27, -400, w * 0.42, 18, h * 0.86, tone, 1);
+        } else tower(cx, -400, w, 22, h, tone, capR < 0.22 ? 2 : (capR < 0.5 ? 1 : 0));
         x += w + 2 + hash(i * 1.9) * 9; i++;
       }
       const g = new T.BufferGeometry();
@@ -427,6 +437,7 @@
       tuftGeo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); tuftGeo.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
     }
     const TUFT_CAP = FLORA_ROWS * 2 * 16;
+    const TUFT_TINTS = ['#ffffff', '#d9f2b0', '#a8d68a', '#f0e6a0', '#7fbf6a', '#c8f0c0'].map((c) => col(c));
     const tuftMat = new T.MeshBasicMaterial({ map: canvasTex(tuftC), alphaTest: 0.4, side: T.DoubleSide });
     const tufts = new T.InstancedMesh(tuftGeo, tuftMat, TUFT_CAP);
     tufts.frustumCulled = false; tufts.count = 0; scene.add(tufts);
@@ -459,7 +470,9 @@
           if (r(18.1) < 0.55) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           for (let f = 0; f < 16 && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.3 + hash(n * 33.1 + f) * 0.4;
-            put(tufts, gi++, side * (RAIL_X + 0.5 + far * far * 16), 0, z - segLen * hash(n * 35.3 + f), sz * 1.5, sz, sz * 1.5);
+            const kind = hash(n * 37.9 + f), tall = kind > 0.8 ? 1.9 : (kind < 0.25 ? 0.55 : 1);
+            put(tufts, gi, side * (RAIL_X + 0.5 + far * far * 16), 0, z - segLen * hash(n * 35.3 + f), sz * (kind < 0.25 ? 2.4 : 1.5), sz * tall, sz * 1.5);
+            tufts.setColorAt(gi++, TUFT_TINTS[Math.floor(hash(n * 39.1 + f) * TUFT_TINTS.length)]);
           }
           // wildflower specks on the verge
           const fc = FLOWER[Math.floor(r(21.1) * FLOWER.length)];
@@ -471,7 +484,7 @@
       }
       for (const k in species) { species[k].mesh.count = species[k].n; species[k].mesh.instanceMatrix.needsUpdate = true; }
       treeShade.count = si; treeShade.instanceMatrix.needsUpdate = true;
-      tufts.count = gi; tufts.instanceMatrix.needsUpdate = true;
+      tufts.count = gi; tufts.instanceMatrix.needsUpdate = true; if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
       trunks.count = blobs.count = cones.count = 0; dots.count = di;
       dots.instanceMatrix.needsUpdate = true; if (dots.instanceColor) dots.instanceColor.needsUpdate = true;
     };
@@ -693,7 +706,7 @@
       const fb2 = new T.Box3().setFromObject(carModel), fc = fb2.getCenter(new T.Vector3());
       carModel.position.set(-fc.x, -fb2.min.y, -fc.z);
       const src = {};
-      carModel.traverse((o) => { if (o.isMesh && o.material) { src[o.material.name] = o.material; if (o.material.map) o.material.map.anisotropy = 4; } });
+      carModel.traverse((o) => { if (o.isMesh && o.material) { src[o.material.name] = o.material; if (o.material.map) o.material.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); } });
       const glass = new T.MeshStandardMaterial({ color: 0x05080c, metalness: 0.9, roughness: 0.06, envMapIntensity: 1.6, transparent: true, opacity: 0.86 });
       const glowMap = src['Material.009'] && src['Material.009'].map;
       const glow = (opacity) => new T.MeshBasicMaterial({ map: glowMap, transparent: true, opacity, blending: T.AdditiveBlending, depthWrite: false, fog: false });
@@ -705,10 +718,10 @@
     const makeRigGLB = () => {
       const rig = { group: new T.Group(), tilt: new T.Group(), wheels: [], themeKey: null, tagKey: null, yaw: 0 };
       // the paint texture is a white ambient-occlusion map, so the colour simply multiplies in
-      rig.paint = new T.MeshStandardMaterial({ color: 0xff0000, map: carKit.paintMap || null, metalness: 0.2, roughness: 0.22, envMapIntensity: 1.5 });
+      rig.paint = new T.MeshPhysicalMaterial({ color: 0xff0000, map: carKit.paintMap || null, metalness: 0.35, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.7 });
       rig.stripe = { color: { set() {} } };
-      rig.brakeGlow = carKit.glow(0.55);
-      const lampGlow = carKit.glow(0.5);
+      rig.brakeGlow = carKit.glow(0.9);
+      const lampGlow = carKit.glow(0.9);
       const model = carModel.clone(true);
       model.traverse((o) => {
         if (/^wheel(FL|FR|BL|BR)\d*$/.test(o.name)) rig.wheels.push(o);
@@ -727,7 +740,7 @@
       rig.shadow = new T.Mesh(aoGeo, aoMat); rig.shadow.position.y = 0.022; rig.shadow.renderOrder = 3;
       rig.tag = new T.Sprite(new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
-      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.4; };
+      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -830,7 +843,13 @@
       oil: () => { const m = new T.Mesh(flatOnRoad(2.2, 2.2), oilMat); m.position.y = 0.02; m.renderOrder = 2; const g = new T.Group(); g.add(m); return g; },
       barrel: () => new T.Mesh(OBJ_GEO.barrel, matVC),
       barrier: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.barrierBase, matVC), new T.Mesh(barrierTop, barrierMat)); return g; },
-      brokentruck: () => { const g = new T.Group(), m = new T.Mesh(OBJ_GEO.brokentruck, matVC); m.rotation.y = 0.5; m.scale.setScalar(0.82); g.add(m); return g; },
+      brokentruck: () => { const g = new T.Group(), m = new T.Mesh(OBJ_GEO.brokentruck, matVC); m.rotation.y = 1.28; m.rotation.z = 0.04; m.scale.setScalar(0.98); g.add(m, new T.Mesh(OBJ_GEO.cone, matVC)); g.children[1].position.set(0, 0, 3.2); return g; },
+      jump: () => {
+        const sh = new T.Shape([[0, 0], [3.4, 0], [3.4, 0.75]].map(([a, b2]) => new T.Vector2(a, b2)));
+        const geo = new T.ExtrudeGeometry(sh, { depth: 2.3, bevelEnabled: false }); geo.rotateY(Math.PI / 2); geo.translate(-1.15, 0, 1.7);
+        const g = new T.Group(); g.add(new T.Mesh(geo, new T.MeshLambertMaterial({ map: stripeTex })));
+        return g;
+      },
       brokencar: () => {
         const g = new T.Group(), body = new T.Mesh(carBodyGeo, wreckMats); body.rotation.set(0, 0.95, 0.07); body.position.y = -0.06;
         g.add(body);
@@ -1000,7 +1019,12 @@
         if (rig.tagKey !== tagKey) { rig.tagKey = tagKey; rig.tag.material.map = tagTex(label, !!car.isPlayer, car.badgeColor); rig.tag.material.needsUpdate = true; }
         const x = car.x * R3D_XS, z = pz - (car._vz || 0), steer = (car.targetX - car.x);
         const moving = racing ? Math.min(1, car.speed / 258) : 0;
-        rig.group.position.set(x, 0, z);
+        if (car.scrapeTimer > 0) car.scrapeTimer = Math.max(0, car.scrapeTimer - dt);
+        const scrape = car.scrapeTimer > 0 ? Math.sin((1 - car.scrapeTimer / 0.45) * Math.PI) : 0;
+        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / 0.8 : 0, hop = 4 * air * (1 - air);
+        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop * 1.7, z);
+        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.3 : 0;
+        rig.shadow.position.y = 0.022 - hop * 1.7; rig.shadow.scale.setScalar(1 - hop * 0.25);
         const ease = Math.min(1, dt * 9);
         rig.yaw += ((racing ? Math.max(-0.14, Math.min(0.14, -steer * 0.5)) : 0) - rig.yaw) * ease;
         rig.group.rotation.y = rig.yaw;
@@ -1016,7 +1040,7 @@
         const dist = Math.max(1, camera.position.distanceTo(rig.group.position));
         const ts = Math.max(1, dist / 13.5) * 1.3;
         rig.tag.scale.set(ts, ts / 3, 1);
-        rig.tag.position.set(x, 1.4, z);
+        rig.tag.position.set(x, 1.4 + rig.group.position.y, z);
       }
 
       // track objects
