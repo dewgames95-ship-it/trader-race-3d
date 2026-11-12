@@ -9,7 +9,7 @@
 //       wheel0-3  one node per wheel, pivot on the axle, so the game can spin them
 //       interior  full cabin, used by the driver's-seat (FPP) camera
 //       interiorLo  the same cabin at ~30% of the triangles, used when seen from outside
-//       steer     the steering wheel cut out of the cabin, pivot on its hub, z = column axis
+//       steer     the whole steering wheel (rim, carbon, grips, buttons, badge), pivot on its hub, z = column axis
 //   * metres, nose towards -z, wheels on y = 0, centred on x/z
 //   * original plate and badge artwork, near-lossless WebP textures, Draco geometry
 import { Document, NodeIO } from '@gltf-transform/core';
@@ -64,11 +64,13 @@ const bbox = (pos, idx) => { const a = [1e9, 1e9, 1e9], b = [-1e9, -1e9, -1e9]; 
 // ---- 3. wheels: one group per corner ----
 for (const t of tris) if (t.group === 'wheel') { const [a, b] = bbox(t.pos); t.group = 'wheel' + ((a[0] + b[0] > 0 ? 1 : 0) + (a[2] + b[2] > 0 ? 2 : 0)); }
 
-// ---- 4. steering wheel: connected pieces of the cabin that sit inside the wheel's box ----
+// ---- 4. steering wheel: every connected piece that belongs to the wheel, whatever mesh it came from ----
+// The rim sits in the cabin mesh, but its carbon sections, grips, buttons, shift lights and the badge on the
+// hub are spread over the exterior meshes. All of them go into one `steer` part so the whole wheel turns together.
 // Box in final car coordinates (metres); the model is left-hand drive.
 const STEER_BOX = { min: [-0.54, 0.59, -0.50], max: [-0.14, 0.89, -0.28] };
 let STEER_HUB = [-0.34, 0.74, -0.39], STEER_TILT = 0.4; // both are measured from the rim below
-const splitByBox = (t, box) => {
+const splitBy = (t, test) => { // test(positions, vertex ids of one connected piece) -> belongs to the wheel?
   const n = t.pos.length / 3, key = new Map(), canon = new Uint32Array(n);
   for (let i = 0; i < n; i++) { const k = Math.round(t.pos[i * 3] * 2000) + ',' + Math.round(t.pos[i * 3 + 1] * 2000) + ',' + Math.round(t.pos[i * 3 + 2] * 2000); if (!key.has(k)) key.set(k, i); canon[i] = key.get(k); }
   const par = Uint32Array.from({ length: n }, (_, i) => i);
@@ -79,11 +81,19 @@ const splitByBox = (t, box) => {
   const inIdx = [], outIdx = [];
   for (const list of comp.values()) {
     const ids = []; for (const i of list) ids.push(t.idx[i], t.idx[i + 1], t.idx[i + 2]);
-    const [a, b] = bbox(t.pos, ids);
-    const inside = [0, 1, 2].every((k) => a[k] >= box.min[k] && b[k] <= box.max[k]);
-    (inside ? inIdx : outIdx).push(...ids);
+    (test(t.pos, ids) ? inIdx : outIdx).push(...ids);
   }
   return [Uint32Array.from(inIdx), Uint32Array.from(outIdx)];
+};
+const inBox = (pos, ids) => { const [a, b] = bbox(pos, ids); return [0, 1, 2].every((k) => a[k] >= STEER_BOX.min[k] && b[k] <= STEER_BOX.max[k]); };
+// a short cylinder around the hub, along the column: the rim, spokes, paddles and hub pad, but not the dash behind
+const inWheel = (pos, ids) => {
+  const c = Math.cos(-STEER_TILT), s = Math.sin(-STEER_TILT);
+  for (const v of ids) {
+    const x = pos[v * 3] - STEER_HUB[0], y0 = pos[v * 3 + 1] - STEER_HUB[1], z0 = pos[v * 3 + 2] - STEER_HUB[2], y = y0 * c - z0 * s, z = y0 * s + z0 * c;
+    if (Math.hypot(x, y) > 0.21 || z < -0.11 || z > 0.17) return false;
+  }
+  return true;
 };
 const compact = (t, idx, group) => { // keep only the vertices an index list uses
   const map = new Map(), pos = [], nrm = [], uv = [], out = new Uint32Array(idx.length);
@@ -91,24 +101,24 @@ const compact = (t, idx, group) => { // keep only the vertices an index list use
   return { group, mat: t.mat, pos: Float32Array.from(pos), nrm: Float32Array.from(nrm), uv: Float32Array.from(uv), idx: out };
 };
 const parts = [];
+{ // measure the wheel from its rim (cabin mesh): hub = centre of the rim, tilt = lean of the rim plane
+  const cabin = tris.find((t) => t.group === 'interior'), [sIdx] = splitBy(cabin, inBox), st = compact(cabin, sIdx, 'steer');
+  const [a, b] = bbox(st.pos); STEER_HUB = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  let syy = 0, szz = 0, syz = 0; const n = st.pos.length / 3;
+  for (let i = 0; i < n; i++) { const y = st.pos[i * 3 + 1] - STEER_HUB[1], z = st.pos[i * 3 + 2] - STEER_HUB[2]; syy += y * y; szz += z * z; syz += y * z; }
+  STEER_TILT = -0.5 * Math.atan2(2 * syz, syy - szz); // angle of the rim's long axis from +y towards +z
+  console.log('steering wheel hub', STEER_HUB.map((v) => v.toFixed(3)).join(','), 'tilt', STEER_TILT.toFixed(3));
+}
 for (const t of tris) {
-  if (t.group !== 'interior') { parts.push(t); continue; }
-  const [sIdx, restIdx] = splitByBox(t, STEER_BOX);
-  if (sIdx.length) {
-    const st = compact(t, sIdx, 'steer'); parts.push(st);
-    // hub = centre of the rim; tilt = lean of the rim plane (smallest spread in the y/z plane)
-    const [a, b] = bbox(st.pos); STEER_HUB = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-    let syy = 0, szz = 0, syz = 0; const n = st.pos.length / 3;
-    for (let i = 0; i < n; i++) { const y = st.pos[i * 3 + 1] - STEER_HUB[1], z = st.pos[i * 3 + 2] - STEER_HUB[2]; syy += y * y; szz += z * z; syz += y * z; }
-    const major = 0.5 * Math.atan2(2 * syz, syy - szz); // angle of the rim's long axis from +y towards +z
-    STEER_TILT = -major;
-    console.log('steering wheel hub', STEER_HUB.map((v) => v.toFixed(3)).join(','), 'tilt', STEER_TILT.toFixed(3));
-  }
-  const rest = compact(t, restIdx, 'interior'); parts.push(rest);
+  if (/^wheel/.test(t.group)) { parts.push(t); continue; }
+  const [sIdx, restIdx] = splitBy(t, t.group === 'interior' ? (p, ids) => inBox(p, ids) || inWheel(p, ids) : inWheel);
+  if (sIdx.length) parts.push(compact(t, sIdx, 'steer'));
+  if (!restIdx.length) continue;
+  const rest = compact(t, restIdx, t.group); parts.push(rest);
+  if (t.group !== 'interior') continue;
   // low-detail copy of the cabin for the outside views
   const [lo] = MeshoptSimplifier.simplify(rest.idx, rest.pos, 3, Math.floor(rest.idx.length * 0.5 / 3) * 3, 0.02);
   parts.push(compact(rest, lo, 'interiorLo'));
-  if (sIdx.length) { const st = parts.find((p) => p.group === 'steer'); const [slo] = MeshoptSimplifier.simplify(st.idx, st.pos, 3, Math.floor(st.idx.length * 0.5 / 3) * 3, 0.02); parts.push(compact(st, slo, 'interiorLo')); }
 }
 
 // ---- 5. merge per (group, material) and write a clean document ----

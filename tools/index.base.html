@@ -4762,6 +4762,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // Car Bet (Auto): every car has the same chance (1/3 with three cars, 1/2 with two); the pick only steers the
   // AI so that car really crosses the line first. Everyone in one room gets the same pick.
   let raceFavId = null;
+  const ACCEL_BONUS = 1.10; // holding Accelerate gives +10% over cruise; AI cars drive as if it is held all race
+  let oncoming = null, oncomingPlan = []; // the wrong-way car on the road (one at a time) and when the next ones appear (race seconds)
   let packPlan = { early: 0, late: 0, flip: 0.5 };
   function pickRaceFavourite() {
     if (!isAutoBetMode) return null;
@@ -4793,20 +4795,23 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   function curveDriftV(car) {
     if (gameState !== 'RACING' || typeof trackBendAt !== 'function') return 0;
     const k = Math.min(1.15, car.speed / EQUAL_TOP_SPEED);
-    return -CURVE_DRIFT * (trackBendAt(car.z) / 0.001) * k * k;
+    return -CURVE_DRIFT * (Math.max(-0.003, Math.min(0.003, trackBendAt(car.z))) / 0.001) * k * k; // sweeps are tighter now: the push tops out
   }
   // Guard rail: the car never passes it. It bounces back, loses speed, and the rail throws sparks + spikes.
   function railContact(car) {
-    if (Math.abs(car.x) <= RAIL_LIMIT_X) return;
-    const side = car.x > 0 ? 1 : -1;
-    car.x = side * RAIL_LIMIT_X;
+    // side limits: the guard rail, or the barrier wall of a lane squeeze where one outer lane is closed
+    const lim = (typeof trackLimitsAt === 'function') ? trackLimitsAt(car.z, RAIL_LIMIT_X) : { lo: -RAIL_LIMIT_X, hi: RAIL_LIMIT_X, side: 0, w: 0 };
+    if (car.x <= lim.hi && car.x >= lim.lo) return;
+    const side = car.x > lim.hi ? 1 : -1;
+    const wall = lim.side === side && lim.w > 0.02;
+    car.x = side > 0 ? lim.hi : lim.lo;
     if (gameState !== 'RACING' || car.railCool > performance.now()) { car.steerV = Math.min(0, (car.steerV || 0) * side) * side; return; }
-    car.railCool = performance.now() + 550;
-    car.steerV = -side * 0.5; car.knockV = 0;
+    car.railCool = performance.now() + (wall ? 700 : 550);
+    car.steerV = -side * (wall ? 0.8 : 0.5); car.knockV = 0;
     car.scrapeTimer = 0.45; car.scrapeDir = side;
-    car.speed = Math.max(105, car.speed * 0.84); car.boostTimer = 0; car.hitRoll = -side * 0.14;
+    car.speed = Math.max(105, car.speed * (wall ? 0.92 : 0.84)); car.boostTimer = 0; car.hitRoll = -side * 0.14;
     spawnShatterDebris(car.x + side * 0.1, car.z + 6, 'spark');
-    if (typeof R3D_FX !== 'undefined' && R3D_FX.railHits.length < 6) R3D_FX.railHits.push({ side, z: car.z + (car._vz || 0) / 0.29 });
+    if (!wall && typeof R3D_FX !== 'undefined' && R3D_FX.railHits.length < 6) R3D_FX.railHits.push({ side, z: car.z + (car._vz || 0) / 0.29 });
     if (car.isPlayer || Math.abs(car.z - player0().z) < 25) { cameraShake = Math.max(cameraShake, 8); sfxHitCone(); triggerHaptic && triggerHaptic(35); }
   }
   const player0 = () => cars.find(c => c.isPlayer) || cars[0]; // world-unit arc height; small speed kick on landing
@@ -5054,6 +5059,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
     sideSlamEventsTriggered = 0;
+    oncoming = null; oncomingPlan = [];
     debrisParticles = [];
     tireSmokeParticles = [];
 
@@ -6607,6 +6613,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         { const r = Math.random, lead = 2 + r() * 6, chase = 1.5 + r() * 5.5, rev = r() < 0.3;
           packPlan = { early: rev ? chase : -lead, late: rev ? -lead : chase, flip: 0.3 + r() * 0.45 };
           packGangNext = performance.now() + 2500 + r() * 6500; packGangUntil = 0; }
+        planOncoming();
         updateTopPositionBanner();
       }
       return;
@@ -6725,7 +6732,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         }
       } else if (!isDrivenByAI) {
         // Manual Drive Mode for Player Car
-        const targetSpeed = (keys.brake && !(car.jumpTimer > 0)) ? 88 : maxSpd;
+        const targetSpeed = (keys.brake && !(car.jumpTimer > 0)) ? 88 : ((keys.accel && !(car.boostTimer > 0) && !(car.hitSlowTimer > 0)) ? maxSpd * ACCEL_BONUS : maxSpd);
         const accel = car.boostTimer > 0 ? 148 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 58) * dt);
@@ -6766,9 +6773,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           for (const o of trackObjects) { if (o.type !== 'boost' && o.type !== 'jump' && !o.broken && o.z - car.z > -12 && o.z - car.z < 45) { wander = 0.25; break; } }
           car.targetX = Math.max(-0.8, Math.min(0.8, LANE_CENTERS[car.lane] + (P.off + Math.sin(tNow * P.wf + P.wp) * P.wob + P.jit) * wander));
         } else car.targetX = LANE_CENTERS[car.lane];
+        { const lim = (typeof trackLimitsAt === 'function') ? trackLimitsAt(car.z + 25, RAIL_LIMIT_X) : null; if (lim && lim.w > 0) car.targetX = Math.max(lim.lo + 0.03, Math.min(lim.hi - 0.03, car.targetX)); }
 
         // Natural throttle modulation: continuous (no steps), per-car pace wobble so cars swap places
-        let targetSpeed = maxSpd;
+        const cruise = (car.boostTimer > 0 || car.hitSlowTimer > 0) ? maxSpd : maxSpd * ACCEL_BONUS;
+        let targetSpeed = cruise;
         const designatedCar = cars.find(c => c.id === raceFavId) || car;
         if (car.hitSlowTimer <= 0 && car.boostTimer <= 0 && car.jumpTimer <= 0 && gameState === 'RACING') {
           targetSpeed *= 1 + P.pace * Math.sin(tNow * P.pf + P.pp);
@@ -6800,11 +6809,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           const packSpeed = EQUAL_TOP_SPEED * (1 - Math.max(-0.16, Math.min(0.45, err * 0.018)));
           targetSpeed = car.hitSlowTimer > 0 ? Math.min(targetSpeed, packSpeed) : packSpeed;
         }
-        if (!isDesignatedWinner && inFinalStretch) {
+        if (raceFavId && !isDesignatedWinner && inFinalStretch) {
           // Non-winning car smoothly eases off if it is ahead of the designated winner in the final seconds
           if (car.boostTimer <= 0) {
             const lead = Math.max(0, Math.min(1, (car.z - designatedCar.z - 4) / 22));
-            targetSpeed = Math.min(targetSpeed, maxSpd - lead * 13);
+            targetSpeed = Math.min(targetSpeed, cruise - lead * 13);
             // last stretch of a Car Bet race: rivals lift so the drawn car is the one that really crosses first
             if (raceFavId && raceProgress > 0.84 && car.z > designatedCar.z - 3) targetSpeed = Math.min(targetSpeed, Math.max(120, designatedCar.speed - 9));
           }
@@ -6821,7 +6830,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const dx = car.targetX - car.x;
         const wantV = Math.max(-STEER_MAX_V, Math.min(STEER_MAX_V, dx * P.steer * 0.55));
         car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * 5.5);
-        car.x += (car.steerV + curveDriftV(car)) * dt;
+        car.x += (car.steerV + curveDriftV(car) * 0.3) * dt; // AI turns in with the road
         railContact(car);
         car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
       }
@@ -6898,6 +6907,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     // 4. STRICT NON-OVERLAPPING CAR-TO-CAR COLLISION SOLVER (GTA Vice City Side-Slam & Rear Bump)
     const MIN_DX = 0.34; // Minimum lateral separation between two cars
     const MIN_DZ = 5.35; // Minimum longitudinal separation in same lane
+    const CAR_GAP_X = MIN_DX + 0.06; // bodies are kept this far apart (the F8 is wider than the old car)
 
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < cars.length; i++) {
@@ -6910,16 +6920,22 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           const dx = b.x - a.x;
           const absDx = Math.abs(dx);
 
-          if (absDz < MIN_DZ && absDx < MIN_DX) {
+          if (absDz < MIN_DZ && absDx < CAR_GAP_X) {
             // Determine whether this is a Side-by-Side Slam or a Rear-End Bump
             if (absDz < 3.75) {
               // SIDE-BY-SIDE COLLISION: Immediately separate X so cars NEVER overlap!
-              const overlapX = (MIN_DX - absDx) + 0.015;
+              const overlapX = (CAR_GAP_X - absDx) + 0.015;
               const pushSign = dx >= 0 ? 1 : -1;
               a.x = Math.max(-0.84, Math.min(0.84, a.x - pushSign * overlapX * 0.52));
               b.x = Math.max(-0.84, Math.min(0.84, b.x + pushSign * overlapX * 0.52));
+              { // one of them was against the rail: the other takes the rest, so they still end up clear of each other
+                const rem = CAR_GAP_X - Math.abs(b.x - a.x);
+                if (rem > 0) { if (Math.abs(a.x) < Math.abs(b.x)) a.x -= pushSign * rem; else b.x += pushSign * rem; }
+              }
+              // a slam (speed loss, shove, sparks) needs a real hit: someone steering into the other, not two cars merely side by side
+              const closing = ((a.steerV || 0) + (a.knockV || 0) - (b.steerV || 0) - (b.knockV || 0)) * pushSign;
 
-              if (pass === 0 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0) {
+              if (pass === 0 && closing > 0.3 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0) {
                 a.bumpCooldown = 0.42;
                 b.bumpCooldown = 0.42;
 
@@ -6944,7 +6960,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
                 if (!victimProtected) victim.hitSlowTimer = 0.45;
                 if ((RACE_DURATION_SEC - timeRemaining) < PACK_SECONDS && !inFinalStretch) { victim.speed = Math.max(victim.speed, EQUAL_TOP_SPEED * 0.9); victim.hitSlowTimer = Math.min(victim.hitSlowTimer, 0.2); }
 
-                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5, 'cone');
+                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5 + 3, 'spark');
+                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5 - 2, 'spark');
                 spawnTireSmoke(a.x, a.z);
                 spawnTireSmoke(b.x, b.z);
 
@@ -6963,7 +6980,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
                 rearCar.bumpCooldown = 0.38;
                 frontCar.bumpCooldown = 0.38;
                 // Rear car bumps front car forward slightly and slows down itself
-                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 11);
+                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 13); frontCar.z += 0.7; // the car in front is punted forward a little
+                spawnShatterDebris((frontCar.x + rearCar.x) * 0.5, rearCar.z + 3, 'spark');
                 rearCar.speed = Math.max(110, frontCar.speed - 19);
                 rearCar.hitRoll = (Math.random() < 0.5 ? 1 : -1) * 0.14;
                 spawnTireSmoke(rearCar.x, rearCar.z + 2.0);
@@ -6984,6 +7002,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
     }
 
+    updateOncoming(dt, player, raceProgress);
+    { // one warning, well before the lane closes
+      const q = (typeof raceRoute === 'function') ? raceRoute().squeeze : null;
+      if (q && !q.warned && player.z > q.z0 - 520 && player.z < q.z0) {
+        q.warned = true;
+        if (!window._trFastForwarding) { showCrToast('⚠️ LANE CLOSED AHEAD — MERGE ' + (q.side > 0 ? 'LEFT' : 'RIGHT')); playTone(660, 660, 0.12, 'square', 0.07); }
+      }
+    }
+
     if (debrisParticles.length > 40) debrisParticles.length = 40;
     if (tireSmokeParticles.length > 25) tireSmokeParticles.length = 25;
     if (cameraShake > 0) cameraShake = Math.max(0, cameraShake - dt * 28);
@@ -6999,6 +7026,73 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
     updateTopPositionBanner();
     updateEngineSound(player.speed, true);
+  }
+
+  // Rare wrong-way traffic: a green F8 comes down one lane, headlights flashing. Whoever is still in its way
+  // takes a glancing hit (a little speed lost, a shove sideways); then it pulls over and is gone.
+  // None in some races, otherwise 2-5; never in the last fifth of the race and never inside a lane squeeze.
+  // It never tracks a human driver, so in Manual Drive it can always be dodged; in Car Bet the drawn car is left alone late on.
+  function planOncoming() {
+    oncoming = null; oncomingPlan = [];
+    const forced = !!(window._trRouteForce && window._trRouteForce.oncoming);
+    if (!forced && Math.random() < 0.28) return;
+    const n = forced ? 5 : 2 + Math.floor(Math.random() * 4);
+    let t = 5 + Math.random() * 7;
+    for (let i = 0; i < n && t < 46; i++) { oncomingPlan.push(t); t += 6.5 + Math.random() * 6; }
+  }
+  function sfxHorn() {
+    playTone(466, 466, 0.3, 'square', 0.08); playTone(370, 370, 0.3, 'square', 0.07);
+    setTimeout(() => { playTone(466, 466, 0.45, 'square', 0.08); playTone(370, 370, 0.45, 'square', 0.07); }, 400);
+    triggerHaptic([60, 60, 120]);
+  }
+  function updateOncoming(dt, player, raceProgress) {
+    const el = RACE_DURATION_SEC - timeRemaining;
+    if (!oncoming && oncomingPlan.length && el >= oncomingPlan[0]) {
+      const lead = Math.max(...cars.map(c => c.z)), q = (typeof raceRoute === 'function') ? raceRoute().squeeze : null;
+      if (raceProgress > 0.8) oncomingPlan = [];
+      else if (q && lead + 520 > q.z0 - 60 && lead - 60 < q.z1) oncomingPlan[0] = el + 1.5; // wait until the squeeze is behind
+      else {
+        oncomingPlan.shift();
+        const pool = cars.filter(c => !(raceFavId && c.id === raceFavId && raceProgress > 0.5));
+        const tgt = pool[Math.floor(Math.random() * pool.length)] || cars[0];
+        oncoming = { z: lead + 440, x: LANE_CENTERS[nearestLane(tgt.x)], speed: 44, vx: 0, roll: 0, state: 'coming', targetId: tgt.id, targetDodges: Math.random() < 0.4, t: 0 };
+        if (!window._trFastForwarding) { sfxHorn(); if (!isAutoBetMode) showCrToast('⚠️ WRONG-WAY CAR AHEAD!'); }
+        if (window._trRaceDbg) window._trRaceDbg.onc = (window._trRaceDbg.onc || 0) + 1;
+      }
+    }
+    const o = oncoming;
+    if (window._trRaceDbg) window._trRaceDbg.oncLive = !!o;
+    if (!o) return;
+    o.t += dt; o.z -= o.speed * dt;
+    o.roll *= Math.pow(0.05, dt);
+    const carM = (c) => (c._vz !== undefined ? player.z * 0.29 + c._vz : c.z * 0.29); // metres, as drawn
+    if (o.state === 'coming') {
+      const tgt = cars.find(c => c.id === o.targetId);
+      if (tgt && !o.targetDodges && (!tgt.isPlayer || isAutoBetMode) && o.z - tgt.z > 30) o.x += Math.max(-0.3 * dt, Math.min(0.3 * dt, tgt.x - o.x));
+      for (const c of cars) {
+        if (c.jumpY > 0.9) continue; // it passes under a car in the air
+        const dzm = o.z * 0.29 - carM(c);
+        if (Math.abs(dzm) < 4.3 && Math.abs(o.x - c.x) * 4.1 < 1.9) {
+          const dir = o.x >= c.x ? 1 : -1; // the side the wrong-way car glances off to
+          o.state = 'aside'; o.vx = dir * 1.7; o.speed = 30; o.roll = dir * 0.2;
+          if (window._trRaceDbg) (window._trRaceDbg.oncHits = window._trRaceDbg.oncHits || []).push(c.id);
+          c.speed = Math.max(125, c.speed * 0.87); c.boostTimer = 0; c.hitSlowTimer = Math.max(c.hitSlowTimer || 0, 0.4); c.hitRoll = -dir * 0.24;
+          if (c.isPlayer && !isAutoBetMode) c.knockV = -dir * 1.3; else c.steerV = -dir * 1.0;
+          spawnShatterDebris((o.x + c.x) * 0.5, c.z + 5, 'spark'); spawnShatterDebris((o.x + c.x) * 0.5, c.z + 8, 'spark');
+          spawnTireSmoke(c.x, c.z);
+          if (c.isPlayer || Math.abs(c.z - player.z) < 30) { cameraShake = Math.max(cameraShake, 13); sfxHitHeavyVehicle(); }
+          break;
+        }
+      }
+    } else {
+      o.x = Math.max(-0.84, Math.min(0.84, o.x + o.vx * dt)); o.vx *= Math.pow(0.12, dt);
+      // it has had its hit: from here it only squeezes past, easing cars aside with no speed loss
+      for (const c of cars) {
+        const dx = c.x - o.x;
+        if (Math.abs(o.z * 0.29 - carM(c)) < 4.6 && Math.abs(dx) < 0.5) c.x = Math.max(-0.84, Math.min(0.84, c.x + (dx >= 0 ? 1 : -1) * (0.5 - Math.abs(dx))));
+      }
+    }
+    if (o.z < player.z - 110 || o.t > 16) oncoming = null;
   }
 
   // Race AI Decision Maker (Dodges obstacles, hunts Blue Boosters, and performs sudden side-hits!)
@@ -7019,6 +7113,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           }
         }
       }
+    }
+
+    // lane squeeze ahead: the closed lane is out of bounds, so merge early
+    const closedLane = (typeof trackClosedLaneAhead === 'function') ? trackClosedLaneAhead(bot.z, 150 + P.calm * 90) : -1;
+    if (closedLane >= 0) scores[closedLane] -= 900;
+    // wrong-way car: everyone gets out of its lane, except a target that is not paying attention
+    if (oncoming && oncoming.state === 'coming') {
+      const dzo = oncoming.z - bot.z;
+      if (dzo > 0 && dzo < 300 && !(oncoming.targetId === bot.id && !oncoming.targetDodges)) scores[nearestLane(oncoming.x)] -= 420 * (1 - dzo / 330);
     }
 
     // If this car is NOT the designated winner and is leading in the final stretch,

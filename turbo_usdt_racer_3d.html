@@ -4802,6 +4802,8 @@ window.dispatchEvent(new Event('tr-three'));
   // Car Bet (Auto): every car has the same chance (1/3 with three cars, 1/2 with two); the pick only steers the
   // AI so that car really crosses the line first. Everyone in one room gets the same pick.
   let raceFavId = null;
+  const ACCEL_BONUS = 1.10; // holding Accelerate gives +10% over cruise; AI cars drive as if it is held all race
+  let oncoming = null, oncomingPlan = []; // the wrong-way car on the road (one at a time) and when the next ones appear (race seconds)
   let packPlan = { early: 0, late: 0, flip: 0.5 };
   function pickRaceFavourite() {
     if (!isAutoBetMode) return null;
@@ -4833,20 +4835,23 @@ window.dispatchEvent(new Event('tr-three'));
   function curveDriftV(car) {
     if (gameState !== 'RACING' || typeof trackBendAt !== 'function') return 0;
     const k = Math.min(1.15, car.speed / EQUAL_TOP_SPEED);
-    return -CURVE_DRIFT * (trackBendAt(car.z) / 0.001) * k * k;
+    return -CURVE_DRIFT * (Math.max(-0.003, Math.min(0.003, trackBendAt(car.z))) / 0.001) * k * k; // sweeps are tighter now: the push tops out
   }
   // Guard rail: the car never passes it. It bounces back, loses speed, and the rail throws sparks + spikes.
   function railContact(car) {
-    if (Math.abs(car.x) <= RAIL_LIMIT_X) return;
-    const side = car.x > 0 ? 1 : -1;
-    car.x = side * RAIL_LIMIT_X;
+    // side limits: the guard rail, or the barrier wall of a lane squeeze where one outer lane is closed
+    const lim = (typeof trackLimitsAt === 'function') ? trackLimitsAt(car.z, RAIL_LIMIT_X) : { lo: -RAIL_LIMIT_X, hi: RAIL_LIMIT_X, side: 0, w: 0 };
+    if (car.x <= lim.hi && car.x >= lim.lo) return;
+    const side = car.x > lim.hi ? 1 : -1;
+    const wall = lim.side === side && lim.w > 0.02;
+    car.x = side > 0 ? lim.hi : lim.lo;
     if (gameState !== 'RACING' || car.railCool > performance.now()) { car.steerV = Math.min(0, (car.steerV || 0) * side) * side; return; }
-    car.railCool = performance.now() + 550;
-    car.steerV = -side * 0.5; car.knockV = 0;
+    car.railCool = performance.now() + (wall ? 700 : 550);
+    car.steerV = -side * (wall ? 0.8 : 0.5); car.knockV = 0;
     car.scrapeTimer = 0.45; car.scrapeDir = side;
-    car.speed = Math.max(105, car.speed * 0.84); car.boostTimer = 0; car.hitRoll = -side * 0.14;
+    car.speed = Math.max(105, car.speed * (wall ? 0.92 : 0.84)); car.boostTimer = 0; car.hitRoll = -side * 0.14;
     spawnShatterDebris(car.x + side * 0.1, car.z + 6, 'spark');
-    if (typeof R3D_FX !== 'undefined' && R3D_FX.railHits.length < 6) R3D_FX.railHits.push({ side, z: car.z + (car._vz || 0) / 0.29 });
+    if (!wall && typeof R3D_FX !== 'undefined' && R3D_FX.railHits.length < 6) R3D_FX.railHits.push({ side, z: car.z + (car._vz || 0) / 0.29 });
     if (car.isPlayer || Math.abs(car.z - player0().z) < 25) { cameraShake = Math.max(cameraShake, 8); sfxHitCone(); triggerHaptic && triggerHaptic(35); }
   }
   const player0 = () => cars.find(c => c.isPlayer) || cars[0]; // world-unit arc height; small speed kick on landing
@@ -5094,6 +5099,7 @@ window.dispatchEvent(new Event('tr-three'));
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
     sideSlamEventsTriggered = 0;
+    oncoming = null; oncomingPlan = [];
     debrisParticles = [];
     tireSmokeParticles = [];
 
@@ -6654,6 +6660,7 @@ window.dispatchEvent(new Event('tr-three'));
         { const r = Math.random, lead = 2 + r() * 6, chase = 1.5 + r() * 5.5, rev = r() < 0.3;
           packPlan = { early: rev ? chase : -lead, late: rev ? -lead : chase, flip: 0.3 + r() * 0.45 };
           packGangNext = performance.now() + 2500 + r() * 6500; packGangUntil = 0; }
+        planOncoming();
         updateTopPositionBanner();
       }
       return;
@@ -6772,7 +6779,7 @@ window.dispatchEvent(new Event('tr-three'));
         }
       } else if (!isDrivenByAI) {
         // Manual Drive Mode for Player Car
-        const targetSpeed = (keys.brake && !(car.jumpTimer > 0)) ? 88 : maxSpd;
+        const targetSpeed = (keys.brake && !(car.jumpTimer > 0)) ? 88 : ((keys.accel && !(car.boostTimer > 0) && !(car.hitSlowTimer > 0)) ? maxSpd * ACCEL_BONUS : maxSpd);
         const accel = car.boostTimer > 0 ? 90 : EQUAL_ACCEL_RATE;
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 58) * dt);
@@ -6813,9 +6820,11 @@ window.dispatchEvent(new Event('tr-three'));
           for (const o of trackObjects) { if (o.type !== 'boost' && o.type !== 'jump' && !o.broken && o.z - car.z > -12 && o.z - car.z < 45) { wander = 0.25; break; } }
           car.targetX = Math.max(-0.8, Math.min(0.8, LANE_CENTERS[car.lane] + (P.off + Math.sin(tNow * P.wf + P.wp) * P.wob + P.jit) * wander));
         } else car.targetX = LANE_CENTERS[car.lane];
+        { const lim = (typeof trackLimitsAt === 'function') ? trackLimitsAt(car.z + 25, RAIL_LIMIT_X) : null; if (lim && lim.w > 0) car.targetX = Math.max(lim.lo + 0.03, Math.min(lim.hi - 0.03, car.targetX)); }
 
         // Natural throttle modulation: continuous (no steps), per-car pace wobble so cars swap places
-        let targetSpeed = maxSpd;
+        const cruise = (car.boostTimer > 0 || car.hitSlowTimer > 0) ? maxSpd : maxSpd * ACCEL_BONUS;
+        let targetSpeed = cruise;
         const designatedCar = cars.find(c => c.id === raceFavId) || car;
         if (car.hitSlowTimer <= 0 && car.boostTimer <= 0 && car.jumpTimer <= 0 && gameState === 'RACING') {
           targetSpeed *= 1 + P.pace * Math.sin(tNow * P.pf + P.pp);
@@ -6847,11 +6856,11 @@ window.dispatchEvent(new Event('tr-three'));
           const packSpeed = EQUAL_TOP_SPEED * (1 - Math.max(-0.16, Math.min(0.45, err * 0.018)));
           targetSpeed = car.hitSlowTimer > 0 ? Math.min(targetSpeed, packSpeed) : packSpeed;
         }
-        if (!isDesignatedWinner && inFinalStretch) {
+        if (raceFavId && !isDesignatedWinner && inFinalStretch) {
           // Non-winning car smoothly eases off if it is ahead of the designated winner in the final seconds
           if (car.boostTimer <= 0) {
             const lead = Math.max(0, Math.min(1, (car.z - designatedCar.z - 4) / 22));
-            targetSpeed = Math.min(targetSpeed, maxSpd - lead * 13);
+            targetSpeed = Math.min(targetSpeed, cruise - lead * 13);
             // last stretch of a Car Bet race: rivals lift so the drawn car is the one that really crosses first
             if (raceFavId && raceProgress > 0.84 && car.z > designatedCar.z - 3) targetSpeed = Math.min(targetSpeed, Math.max(120, designatedCar.speed - 9));
           }
@@ -6868,7 +6877,7 @@ window.dispatchEvent(new Event('tr-three'));
         const dx = car.targetX - car.x;
         const wantV = Math.max(-STEER_MAX_V, Math.min(STEER_MAX_V, dx * P.steer * 0.55));
         car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * 5.5);
-        car.x += (car.steerV + curveDriftV(car)) * dt;
+        car.x += (car.steerV + curveDriftV(car) * 0.3) * dt; // AI turns in with the road
         railContact(car);
         car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
       }
@@ -6945,6 +6954,7 @@ window.dispatchEvent(new Event('tr-three'));
     // 4. STRICT NON-OVERLAPPING CAR-TO-CAR COLLISION SOLVER (GTA Vice City Side-Slam & Rear Bump)
     const MIN_DX = 0.44; // Minimum lateral separation between two cars
     const MIN_DZ = 5.35; // Minimum longitudinal separation in same lane
+    const CAR_GAP_X = MIN_DX + 0.06; // bodies are kept this far apart (the F8 is wider than the old car)
 
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < cars.length; i++) {
@@ -6957,16 +6967,22 @@ window.dispatchEvent(new Event('tr-three'));
           const dx = b.x - a.x;
           const absDx = Math.abs(dx);
 
-          if (absDz < MIN_DZ && absDx < MIN_DX) {
+          if (absDz < MIN_DZ && absDx < CAR_GAP_X) {
             // Determine whether this is a Side-by-Side Slam or a Rear-End Bump
             if (absDz < 3.75) {
               // SIDE-BY-SIDE COLLISION: Immediately separate X so cars NEVER overlap!
-              const overlapX = (MIN_DX - absDx) + 0.015;
+              const overlapX = (CAR_GAP_X - absDx) + 0.015;
               const pushSign = dx >= 0 ? 1 : -1;
               a.x = Math.max(-0.84, Math.min(0.84, a.x - pushSign * overlapX * 0.52));
               b.x = Math.max(-0.84, Math.min(0.84, b.x + pushSign * overlapX * 0.52));
+              { // one of them was against the rail: the other takes the rest, so they still end up clear of each other
+                const rem = CAR_GAP_X - Math.abs(b.x - a.x);
+                if (rem > 0) { if (Math.abs(a.x) < Math.abs(b.x)) a.x -= pushSign * rem; else b.x += pushSign * rem; }
+              }
+              // a slam (speed loss, shove, sparks) needs a real hit: someone steering into the other, not two cars merely side by side
+              const closing = ((a.steerV || 0) + (a.knockV || 0) - (b.steerV || 0) - (b.knockV || 0)) * pushSign;
 
-              if (pass === 0 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0) {
+              if (pass === 0 && closing > 0.3 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0) {
                 a.bumpCooldown = 0.42;
                 b.bumpCooldown = 0.42;
 
@@ -6991,7 +7007,8 @@ window.dispatchEvent(new Event('tr-three'));
                 if (!victimProtected) victim.hitSlowTimer = 0.45;
                 if ((RACE_DURATION_SEC - timeRemaining) < PACK_SECONDS && !inFinalStretch) { victim.speed = Math.max(victim.speed, EQUAL_TOP_SPEED * 0.9); victim.hitSlowTimer = Math.min(victim.hitSlowTimer, 0.2); }
 
-                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5, 'cone');
+                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5 + 3, 'spark');
+                spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5 - 2, 'spark');
                 spawnTireSmoke(a.x, a.z);
                 spawnTireSmoke(b.x, b.z);
 
@@ -7010,7 +7027,8 @@ window.dispatchEvent(new Event('tr-three'));
                 rearCar.bumpCooldown = 0.38;
                 frontCar.bumpCooldown = 0.38;
                 // Rear car bumps front car forward slightly and slows down itself
-                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 11);
+                frontCar.speed = Math.min(BOOST_TOP_SPEED, frontCar.speed + 13); frontCar.z += 0.7; // the car in front is punted forward a little
+                spawnShatterDebris((frontCar.x + rearCar.x) * 0.5, rearCar.z + 3, 'spark');
                 rearCar.speed = Math.max(110, frontCar.speed - 19);
                 rearCar.hitRoll = (Math.random() < 0.5 ? 1 : -1) * 0.14;
                 spawnTireSmoke(rearCar.x, rearCar.z + 2.0);
@@ -7031,6 +7049,15 @@ window.dispatchEvent(new Event('tr-three'));
       }
     }
 
+    updateOncoming(dt, player, raceProgress);
+    { // one warning, well before the lane closes
+      const q = (typeof raceRoute === 'function') ? raceRoute().squeeze : null;
+      if (q && !q.warned && player.z > q.z0 - 520 && player.z < q.z0) {
+        q.warned = true;
+        if (!window._trFastForwarding) { showCrToast('⚠️ LANE CLOSED AHEAD — MERGE ' + (q.side > 0 ? 'LEFT' : 'RIGHT')); playTone(660, 660, 0.12, 'square', 0.07); }
+      }
+    }
+
     if (debrisParticles.length > 40) debrisParticles.length = 40;
     if (tireSmokeParticles.length > 25) tireSmokeParticles.length = 25;
     if (cameraShake > 0) cameraShake = Math.max(0, cameraShake - dt * 28);
@@ -7046,6 +7073,73 @@ window.dispatchEvent(new Event('tr-three'));
     }
     updateTopPositionBanner();
     updateEngineSound(player.speed, true);
+  }
+
+  // Rare wrong-way traffic: a green F8 comes down one lane, headlights flashing. Whoever is still in its way
+  // takes a glancing hit (a little speed lost, a shove sideways); then it pulls over and is gone.
+  // None in some races, otherwise 2-5; never in the last fifth of the race and never inside a lane squeeze.
+  // It never tracks a human driver, so in Manual Drive it can always be dodged; in Car Bet the drawn car is left alone late on.
+  function planOncoming() {
+    oncoming = null; oncomingPlan = [];
+    const forced = !!(window._trRouteForce && window._trRouteForce.oncoming);
+    if (!forced && Math.random() < 0.28) return;
+    const n = forced ? 5 : 2 + Math.floor(Math.random() * 4);
+    let t = 5 + Math.random() * 7;
+    for (let i = 0; i < n && t < 46; i++) { oncomingPlan.push(t); t += 6.5 + Math.random() * 6; }
+  }
+  function sfxHorn() {
+    playTone(466, 466, 0.3, 'square', 0.08); playTone(370, 370, 0.3, 'square', 0.07);
+    setTimeout(() => { playTone(466, 466, 0.45, 'square', 0.08); playTone(370, 370, 0.45, 'square', 0.07); }, 400);
+    triggerHaptic([60, 60, 120]);
+  }
+  function updateOncoming(dt, player, raceProgress) {
+    const el = RACE_DURATION_SEC - timeRemaining;
+    if (!oncoming && oncomingPlan.length && el >= oncomingPlan[0]) {
+      const lead = Math.max(...cars.map(c => c.z)), q = (typeof raceRoute === 'function') ? raceRoute().squeeze : null;
+      if (raceProgress > 0.8) oncomingPlan = [];
+      else if (q && lead + 520 > q.z0 - 60 && lead - 60 < q.z1) oncomingPlan[0] = el + 1.5; // wait until the squeeze is behind
+      else {
+        oncomingPlan.shift();
+        const pool = cars.filter(c => !(raceFavId && c.id === raceFavId && raceProgress > 0.5));
+        const tgt = pool[Math.floor(Math.random() * pool.length)] || cars[0];
+        oncoming = { z: lead + 440, x: LANE_CENTERS[nearestLane(tgt.x)], speed: 44, vx: 0, roll: 0, state: 'coming', targetId: tgt.id, targetDodges: Math.random() < 0.4, t: 0 };
+        if (!window._trFastForwarding) { sfxHorn(); if (!isAutoBetMode) showCrToast('⚠️ WRONG-WAY CAR AHEAD!'); }
+        if (window._trRaceDbg) window._trRaceDbg.onc = (window._trRaceDbg.onc || 0) + 1;
+      }
+    }
+    const o = oncoming;
+    if (window._trRaceDbg) window._trRaceDbg.oncLive = !!o;
+    if (!o) return;
+    o.t += dt; o.z -= o.speed * dt;
+    o.roll *= Math.pow(0.05, dt);
+    const carM = (c) => (c._vz !== undefined ? player.z * 0.29 + c._vz : c.z * 0.29); // metres, as drawn
+    if (o.state === 'coming') {
+      const tgt = cars.find(c => c.id === o.targetId);
+      if (tgt && !o.targetDodges && (!tgt.isPlayer || isAutoBetMode) && o.z - tgt.z > 30) o.x += Math.max(-0.3 * dt, Math.min(0.3 * dt, tgt.x - o.x));
+      for (const c of cars) {
+        if (c.jumpY > 0.9) continue; // it passes under a car in the air
+        const dzm = o.z * 0.29 - carM(c);
+        if (Math.abs(dzm) < 4.3 && Math.abs(o.x - c.x) * 4.1 < 1.9) {
+          const dir = o.x >= c.x ? 1 : -1; // the side the wrong-way car glances off to
+          o.state = 'aside'; o.vx = dir * 1.7; o.speed = 30; o.roll = dir * 0.2;
+          if (window._trRaceDbg) (window._trRaceDbg.oncHits = window._trRaceDbg.oncHits || []).push(c.id);
+          c.speed = Math.max(125, c.speed * 0.87); c.boostTimer = 0; c.hitSlowTimer = Math.max(c.hitSlowTimer || 0, 0.4); c.hitRoll = -dir * 0.24;
+          if (c.isPlayer && !isAutoBetMode) c.knockV = -dir * 1.3; else c.steerV = -dir * 1.0;
+          spawnShatterDebris((o.x + c.x) * 0.5, c.z + 5, 'spark'); spawnShatterDebris((o.x + c.x) * 0.5, c.z + 8, 'spark');
+          spawnTireSmoke(c.x, c.z);
+          if (c.isPlayer || Math.abs(c.z - player.z) < 30) { cameraShake = Math.max(cameraShake, 13); sfxHitHeavyVehicle(); }
+          break;
+        }
+      }
+    } else {
+      o.x = Math.max(-0.84, Math.min(0.84, o.x + o.vx * dt)); o.vx *= Math.pow(0.12, dt);
+      // it has had its hit: from here it only squeezes past, easing cars aside with no speed loss
+      for (const c of cars) {
+        const dx = c.x - o.x;
+        if (Math.abs(o.z * 0.29 - carM(c)) < 4.6 && Math.abs(dx) < 0.5) c.x = Math.max(-0.84, Math.min(0.84, c.x + (dx >= 0 ? 1 : -1) * (0.5 - Math.abs(dx))));
+      }
+    }
+    if (o.z < player.z - 110 || o.t > 16) oncoming = null;
   }
 
   // Race AI Decision Maker (Dodges obstacles, hunts Blue Boosters, and performs sudden side-hits!)
@@ -7066,6 +7160,15 @@ window.dispatchEvent(new Event('tr-three'));
           }
         }
       }
+    }
+
+    // lane squeeze ahead: the closed lane is out of bounds, so merge early
+    const closedLane = (typeof trackClosedLaneAhead === 'function') ? trackClosedLaneAhead(bot.z, 150 + P.calm * 90) : -1;
+    if (closedLane >= 0) scores[closedLane] -= 900;
+    // wrong-way car: everyone gets out of its lane, except a target that is not paying attention
+    if (oncoming && oncoming.state === 'coming') {
+      const dzo = oncoming.z - bot.z;
+      if (dzo > 0 && dzo < 300 && !(oncoming.targetId === bot.id && !oncoming.targetDodges)) scores[nearestLane(oncoming.x)] -= 420 * (1 - dzo / 330);
     }
 
     // If this car is NOT the designated winner and is leading in the final stretch,
@@ -8171,22 +8274,86 @@ window.dispatchEvent(new Event('tr-three'));
   };
   const R3D_CAR = { hl: 2.3, hw: 0.95 };
   const R3D_FX = { railHits: [] }; // { side, z, t } pushed by the simulation when a car hits the guard rail
-  // Road shape for this race: re-rolled from the obstacle layout (same for everyone in a room).
-  // A left/right bias plus two S-bend waves, eased in after the start grid.
-  let r3dCurveFor = null, r3dCurve = null, r3dPathCache = null;
-  function trackBendAt(z) {
-    if (r3dCurveFor !== trackObjects) {
-      r3dCurveFor = trackObjects; r3dPathCache = null;
-      const hs = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
-      let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
-      r3dCurve = { bias: (hs(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hs(sd + 2) * 0.0005, f1: 210 + hs(sd + 3) * 190, p1: hs(sd + 4) * 6.283, a2: 0.0004 + hs(sd + 5) * 0.0004, f2: 85 + hs(sd + 6) * 75, p2: hs(sd + 7) * 6.283 };
+  // Route for this race, re-rolled from the obstacle layout (so it is the same for everyone in a room):
+  //   bends    gentle S-waves in every race; most races add full left / right sweeps and S-curve sections
+  //   hills    some races have slow rises and falls
+  //   squeeze  some races close one outer lane for about five seconds (3 -> 2 -> 3 lanes, long tapers)
+  // The simulation stays a straight strip; bends and hills are drawn by the vertex shader, cars feel a bend as drift.
+  let r3dRouteFor = null, r3dRoute = null, r3dPathCache = null;
+  const SQ_TAPER = 230, SQ_HOLD = 440, SQ_SHIFT = 0.75; // track units; how far the wall moves the car limit inwards
+  function raceRoute() {
+    if (r3dRouteFor === trackObjects && r3dRoute) return r3dRoute;
+    r3dRouteFor = trackObjects; r3dPathCache = null;
+    const hs = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+    let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
+    let k = 0; const rnd = () => hs(sd * 0.731 + (++k) * 19.19);
+    const F = window._trRouteForce || {}; // test switch: { twisty, hills, squeeze, oncoming } force a feature on
+    const R = { base: { bias: (hs(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hs(sd + 2) * 0.0005, f1: 210 + hs(sd + 3) * 190, p1: hs(sd + 4) * 6.283, a2: 0.0004 + hs(sd + 5) * 0.0004, f2: 85 + hs(sd + 6) * 75, p2: hs(sd + 7) * 6.283 }, events: [], hills: null, squeeze: null, style: 'gentle' };
+    const endZ = (typeof FINISH_LINE_Z === 'number' ? FINISH_LINE_Z : 4000);
+    if (rnd() < 0.75 || F.twisty) { // sweeps and S-curves, spaced out, never the same twice
+      R.style = 'twisty';
+      let z = 420 + rnd() * 380;
+      while (z < endZ - 650) {
+        const dir = rnd() < 0.5 ? -1 : 1;
+        if (rnd() < 0.55) { const len = 620 + rnd() * 520; R.events.push({ type: 'sweep', z0: z, len, amp: dir * (0.0019 + rnd() * 0.0009) }); z += len; }
+        else { const len = 880 + rnd() * 520; R.events.push({ type: 's', z0: z, len, amp: dir * (0.0018 + rnd() * 0.0008), waves: rnd() < 0.5 ? 1 : 1.5 }); z += len; }
+        z += 180 + rnd() * 620;
+      }
     }
-    const c = r3dCurve, e = Math.min(1, Math.max(0, (z - 40) / 260)), cS = e * e * (3 - 2 * e);
-    return cS * (c.bias + c.a1 * Math.sin(z / c.f1 + c.p1) + c.a2 * Math.sin(z / c.f2 + c.p2));
+    if (rnd() < 0.45 || F.hills) R.hills = { a1: 0.00020 + rnd() * 0.00016, f1: 250 + rnd() * 210, p1: rnd() * 6.283, a2: 0.00008 + rnd() * 0.0001, f2: 110 + rnd() * 90, p2: rnd() * 6.283 };
+    if ((rnd() < 0.5 || F.squeeze) && typeof LANE_CENTERS !== 'undefined' && LANE_CENTERS.length === 3 && endZ > 2600) {
+      const z0 = 850 + rnd() * (endZ - 850 - 1500);
+      R.squeeze = { z0, zA: z0 + SQ_TAPER, zB: z0 + SQ_TAPER + SQ_HOLD, z1: z0 + SQ_TAPER * 2 + SQ_HOLD, side: rnd() < 0.5 ? -1 : 1 };
+      // the stretch is hard enough on its own: no obstacles or ramps inside it, and no pads in the closed lane
+      const closed = R.squeeze.side > 0 ? 2 : 0;
+      for (let i = trackObjects.length - 1; i >= 0; i--) {
+        const o = trackObjects[i];
+        if (o.z > z0 - 110 && o.z < R.squeeze.z1 + 60 && (o.type !== 'boost' || o.lane === closed || o.lane2 === closed)) trackObjects.splice(i, 1);
+      }
+    }
+    return (r3dRoute = R);
+  }
+  function trackBendAt(z) {
+    const R = raceRoute(), c = R.base, e = Math.min(1, Math.max(0, (z - 40) / 260)), cS = e * e * (3 - 2 * e);
+    let b = cS * (c.bias + c.a1 * Math.sin(z / c.f1 + c.p1) + c.a2 * Math.sin(z / c.f2 + c.p2)) * (R.events.length ? 0.6 : 1);
+    for (const ev of R.events) {
+      const u = (z - ev.z0) / ev.len;
+      if (u <= 0 || u >= 1) continue;
+      if (ev.type === 'sweep') { const w = Math.sin(Math.PI * u); b += ev.amp * w * w; }
+      else { const edge = Math.min(1, u / 0.14, (1 - u) / 0.14), w = edge * edge * (3 - 2 * edge); b += ev.amp * Math.sin(Math.PI * 2 * ev.waves * u) * w; }
+    }
+    return b;
+  }
+  // Vertical bend of the road ahead (rise > 0, crest < 0); 0 in races without hills.
+  function trackHillAt(z) {
+    const h = raceRoute().hills;
+    if (!h) return 0;
+    const e = Math.min(1, Math.max(0, (z - 120) / 320)), cS = e * e * (3 - 2 * e);
+    const v = cS * (h.a1 * Math.sin(z / h.f1 + h.p1) + h.a2 * Math.sin(z / h.f2 + h.p2));
+    return v < 0 ? v * 0.7 : v;
+  }
+  // Lane squeeze at track position z: { w: 0..1 how far the wall has moved in, side: -1 left / +1 right lane closed }.
+  const R3D_NOSQ = { w: 0, side: 0 };
+  function trackSqueezeAt(z) {
+    const q = raceRoute().squeeze;
+    if (!q || z <= q.z0 || z >= q.z1) return R3D_NOSQ;
+    const u = z < q.zA ? (z - q.z0) / SQ_TAPER : (z > q.zB ? (q.z1 - z) / SQ_TAPER : 1);
+    return { w: u * u * (3 - 2 * u), side: q.side };
+  }
+  // Side limits for a car centre at z (lane-space units), guard rail or squeeze wall.
+  function trackLimitsAt(z, railX) {
+    const q = trackSqueezeAt(z);
+    return { lo: -railX + (q.side < 0 ? SQ_SHIFT * q.w : 0), hi: railX - (q.side > 0 ? SQ_SHIFT * q.w : 0), side: q.side, w: q.w };
+  }
+  // Index of the lane that is (about to be) closed for a car at z looking `look` units ahead, or -1.
+  function trackClosedLaneAhead(z, look) {
+    const q = raceRoute().squeeze;
+    if (!q || z + look < q.z0 + 30 || z > q.zB + 30) return -1;
+    return q.side > 0 ? 2 : 0;
   }
   // Top-down centre line of the real route (metres), for the mini-map: heading turns by 2 * bend per metre.
   function trackPath() {
-    trackBendAt(0);
+    raceRoute();
     if (r3dPathCache) return r3dPathCache;
     const pts = [], STEP = 12; let x = 0, y = 0, th = 0, minX = 0, maxX = 0;
     for (let z = 0; z <= FINISH_LINE_Z + STEP; z += STEP) {
@@ -8267,9 +8434,9 @@ window.dispatchEvent(new Event('tr-three'));
     // Gentle road curves without touching the straight-line simulation: every vertex is pushed
     // sideways by (distance ahead)^2. The bend amount rides in an otherwise-zero projection
     // matrix cell so all built-in materials pick it up with no per-material uniforms.
-    if (!T.ShaderChunk.project_vertex.includes('trBend')) {
+    if (!T.ShaderChunk.project_vertex.includes('trHill')) {
       T.ShaderChunk.project_vertex = T.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;',
-        'float trBend = projectionMatrix[1][0];\n\tmat4 trProj = projectionMatrix; trProj[1][0] = 0.0;\n\tmvPosition.x += trBend * min(mvPosition.z * mvPosition.z, 160000.0);\n\tgl_Position = trProj * mvPosition;');
+        'float trBend = projectionMatrix[1][0];\n\tfloat trHill = projectionMatrix[0][1];\n\tmat4 trProj = projectionMatrix; trProj[1][0] = 0.0; trProj[0][1] = 0.0;\n\tfloat trD2 = min(mvPosition.z * mvPosition.z, 160000.0);\n\tmvPosition.x += trBend * trD2;\n\tmvPosition.y += trHill * trD2;\n\tgl_Position = trProj * mvPosition;');
     }
     // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
@@ -8495,12 +8662,14 @@ window.dispatchEvent(new Event('tr-three'));
     };
     // The whole city is a fixed distant skyline: it rides with the camera (never comes closer, never
     // rushes past) and is left out of the curved-road bend, so it cannot swing, stretch or pop in turns.
-    const noBend = (mat) => {
+    const noBend = (mat, k = 0) => { // k: share of the road's bend / hill this material still follows (0 = steady)
       if (!mat || mat.userData.trNoBend) return;
       mat.userData.trNoBend = true;
-      mat.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', T.ShaderChunk.project_vertex.replace('float trBend = projectionMatrix[1][0];', 'float trBend = 0.0;')); };
-      mat.customProgramCacheKey = () => 'trNoBend';
+      const f = k.toFixed(3);
+      mat.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', T.ShaderChunk.project_vertex.replace('float trBend = projectionMatrix[1][0];', 'float trBend = projectionMatrix[1][0] * ' + f + ';').replace('float trHill = projectionMatrix[0][1];', 'float trHill = projectionMatrix[0][1] * ' + f + ';')); };
+      mat.customProgramCacheKey = () => 'trNoBend' + f;
     };
+    if (skyDome) noBend(skyDome.material); // the sky never swings with the road
     const skylinePiece = (group, crisp) => group.traverse((o) => { if (o.isMesh) [].concat(o.material).forEach((m) => { noBend(m); if (crisp) { m.fog = false; m.envMapIntensity = 1.5; } }); });
     // Bake a whole model into one mesh per material (a city is ~100 separate meshes otherwise), centred
     // on x/z with its base at y = 0. Materials become simple sun-lit ones that keep the facade textures.
@@ -8535,7 +8704,7 @@ window.dispatchEvent(new Event('tr-three'));
       const g = new T.Group();
       for (const pt of baked.parts) {
         const m = new T.MeshLambertMaterial({ map: pt.map, color: pt.color.clone().multiplyScalar(far ? 0.8 : 0.86), fog: !far }); // a touch deeper so facades and windows read in full sun
-        if (far) noBend(m);
+        noBend(m, far ? 0 : 0.12); // skyline: steady. passing blocks: only a slow drift with the bend, never a swing
         cityMats.push({ m, base: m.color.clone() });
         const mesh = new T.Mesh(pt.geo, m); mesh.frustumCulled = false; g.add(mesh);
       }
@@ -9172,7 +9341,10 @@ window.dispatchEvent(new Event('tr-three'));
           o.material = plain[n];
         }
       });
-      return { K, glass, glassIn, lens, rearZ: fs.z * K / 2, lampY: 0.73 * K, lampX: 0.71 * K, eye: new T.Vector3(-0.355 * K, 0.985 * K, 0.3 * K) };
+      // rear-view mirror face: a polished plate that reflects the sky and horizon (no second scene render)
+      const mirrorMat = new T.MeshStandardMaterial({ color: 0xdfe8f0, metalness: 1, roughness: 0.04, envMapIntensity: 1.25 });
+      const mirrorGeo = new T.PlaneGeometry(0.2 * K, 0.05 * K);
+      return { K, glass, glassIn, lens, mirrorMat, mirrorGeo, mirrorPos: new T.Vector3(-0.014 * K, 1.041 * K, -0.295 * K), rearZ: fs.z * K / 2, lampY: 0.73 * K, lampX: 0.71 * K, eye: new T.Vector3(-0.335 * K, 0.975 * K, 0.1 * K) };
     })() : null;
     const aoGeo = flatOnRoad(2.9, 5.9);
     const aoMat = carAoTex ? new T.MeshBasicMaterial({ map: carAoTex, blending: T.MultiplyBlending, toneMapped: false, transparent: true, premultipliedAlpha: true, depthWrite: false }) : shadowMat;
@@ -9184,7 +9356,7 @@ window.dispatchEvent(new Event('tr-three'));
       const model = carModel.clone(true);
       model.traverse((o) => {
         if (/^wheel\d$/.test(o.name)) rig.wheels.push(o);
-        if (o.name === 'interior') rig.cabin = o; else if (o.name === 'interiorLo') rig.cabinLo = o; else if (o.name === 'steer') rig.steer = o;
+        if (o.name === 'interior') rig.cabin = o; else if (o.name === 'interiorLo') rig.cabinLo = o; else if (o.name === 'steer') rig.steer = o; // steer: the whole wheel, one part
         if (!o.isMesh) return;
         const mn = o.material.name;
         if (mn === 'Paint') { o.material = rig.paint; o.castShadow = true; }
@@ -9196,35 +9368,90 @@ window.dispatchEvent(new Event('tr-three'));
         if (rig.inside === inside) return;
         rig.inside = inside;
         if (rig.cabin) rig.cabin.visible = inside;
-        if (rig.steer) rig.steer.visible = inside;
         if (rig.cabinLo) rig.cabinLo.visible = !inside;
+        if (rig.mirror) rig.mirror.visible = inside;
         for (const p of rig.panes) p.material = inside ? carKit.glassIn : carKit.glass;
       };
       rig.setView(false);
       rig.tilt.add(model);
       // driver's eye and the point it looks at ride with the body, so jumps, roll and yaw move the view with the cabin
       rig.eyeNode = new T.Object3D(); rig.eyeNode.position.copy(carKit.eye);
-      rig.aimNode = new T.Object3D(); rig.aimNode.position.set(carKit.eye.x + 0.12, carKit.eye.y - 0.1, carKit.eye.z - 10);
+      rig.aimNode = new T.Object3D(); rig.aimNode.position.set(carKit.eye.x + 0.3, carKit.eye.y - 1.15, carKit.eye.z - 10);
       rig.tilt.add(rig.eyeNode, rig.aimNode);
+      rig.mirror = new T.Mesh(carKit.mirrorGeo, carKit.mirrorMat); rig.mirror.position.copy(carKit.mirrorPos); rig.mirror.rotation.set(-0.13, -0.28, 0); rig.mirror.visible = false; rig.tilt.add(rig.mirror);
       rig.flameMat = new T.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false });
       rig.flames = [-0.31, 0.31].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x * carKit.K, 0.3, carKit.rearZ - 0.05); f.visible = false; rig.tilt.add(f); return f; });
       rig.shadow = new T.Mesh(aoGeo, aoMat); rig.shadow.position.y = 0.022; rig.shadow.renderOrder = 3;
       rig.tag = new T.Sprite(new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
-      rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.4, depthWrite: false, blending: T.AdditiveBlending, fog: false });
-      rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.16, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.2, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.08, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.tailSprites = [];
       for (const sx of [-1, 1]) {
-        for (const dx of [0, -0.2]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.34, 0.28, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.02); rig.tilt.add(t); }
-        const e = new T.Sprite(rig.exhMat); e.scale.set(0.22, 0.22, 1); e.position.set(sx * 0.31 * carKit.K, 0.3, carKit.rearZ + 0.04); rig.tilt.add(e);
+        for (const dx of [0, -0.2]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.24, 0.2, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.02); rig.tilt.add(t); }
+        const e = new T.Sprite(rig.exhMat); e.scale.set(0.15, 0.15, 1); e.position.set(sx * 0.31 * carKit.K, 0.3, carKit.rearZ + 0.04); rig.tilt.add(e);
       }
-      rig.setBrake = (on) => { rig.tailMat.opacity = on ? 0.95 : 0.4; const k = on ? 1.6 : 1; for (const t of rig.tailSprites) t.scale.set(0.34 * k, 0.28 * k, 1); };
+      // small, dim lamps unless braking: a wide red glow over blue paint read as a pink sheen
+      rig.setBrake = (on) => { rig.tailMat.opacity = on ? 0.8 : 0.2; const k = on ? 1.7 : 1; for (const t of rig.tailSprites) t.scale.set(0.24 * k, 0.2 * k, 1); };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
     };
     const newRig = carKit ? makeRigGLB : makeRig;
     const rigs = [newRig(), newRig(), newRig()];
+    const oncRig = newRig();
+    oncRig.paint.color.set('#12b84a'); oncRig.tag.visible = false; oncRig.group.visible = false; oncRig.group.rotation.y = Math.PI;
+    oncRig.beamMat = new T.SpriteMaterial({ map: glowTex, color: 0xfff6d8, transparent: true, opacity: 0.9, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+    for (const sx of [-0.72, 0.72]) { const b = new T.Sprite(oncRig.beamMat); b.scale.set(1.5, 1.1, 1); b.position.set(sx, 0.66, -2.3); oncRig.tilt.add(b); }
+    for (const f of oncRig.flames) f.visible = false;
+
+    // ---------- lane squeeze: barrier wall + hatched closed lane + warning boards (built for "right lane closed") ----------
+    const SQ_M = (SQ_TAPER * 2 + SQ_HOLD) * R3D_ZS, SQ_WALL_IN = R3D_XS / 3 + 0.28;
+    const sqWallX = (m) => { // wall centre line, metres along the stretch -> x
+      const t = SQ_TAPER * R3D_ZS, u = m < t ? m / t : (m > SQ_M - t ? (SQ_M - m) / t : 1), w = Math.max(0, Math.min(1, u)), e = w * w * (3 - 2 * w);
+      return RAIL_X - (RAIL_X - SQ_WALL_IN) * e;
+    };
+    const squeezeGroup = new T.Group(); squeezeGroup.visible = false; scene.add(squeezeGroup);
+    {
+      const side = new T.Group(); squeezeGroup.add(side); squeezeGroup.userData.side = side;
+      const boxes = [];
+      for (let m = 1.2, i = 0; m < SQ_M - 1; m += 2.3, i++) {
+        const x = sqWallX(m), yaw = Math.atan2(sqWallX(m + 1) - sqWallX(m - 1), 2);
+        boxes.push(part(new T.BoxGeometry(0.5, 0.82, 2.1), i % 2 ? '#f4f4f5' : '#e11d24', x, 0.41, -m, 0, yaw, 0));
+        boxes.push(part(new T.BoxGeometry(0.62, 0.16, 2.1), '#2b2f36', x, 0.08, -m, 0, yaw, 0));
+        if (i % 4 === 0) boxes.push(part(new T.SphereGeometry(0.13, 8, 6), '#ffb020', x, 0.95, -m));
+      }
+      side.add(new T.Mesh(merge(boxes), matVC));
+      // closed lane behind the wall: dark surface with yellow hatching
+      const hc = makeCanvas(128, 128), hg = hc.getContext('2d');
+      hg.fillStyle = '#2a2d33'; hg.fillRect(0, 0, 128, 128); hg.strokeStyle = '#f5c518'; hg.lineWidth = 16;
+      for (let i = -128; i < 256; i += 64) { hg.beginPath(); hg.moveTo(i, 128); hg.lineTo(i + 128, 0); hg.stroke(); }
+      const hatchTex = canvasTex(hc, { wrapS: T.RepeatWrapping, wrapT: T.RepeatWrapping });
+      const P = [], U = [], I = [], N = [];
+      let n = 0;
+      for (let m = 0; m <= SQ_M; m += 2.3, n++) { const x = sqWallX(m) + 0.3; P.push(x, 0.035, -m, RAIL_X, 0.035, -m); N.push(0, 1, 0, 0, 1, 0); U.push(x / 2.4, m / 2.4, RAIL_X / 2.4, m / 2.4); }
+      for (let i = 0; i < n - 1; i++) { const a = i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      const hgeo = new T.BufferGeometry(); hgeo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); hgeo.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); hgeo.setAttribute('uv', new T.Float32BufferAttribute(U, 2)); hgeo.setIndex(I);
+      const hatch = new T.Mesh(hgeo, new T.MeshLambertMaterial({ map: hatchTex, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+      side.add(hatch);
+      // warning boards (text is redrawn for the side, so it is never mirrored)
+      const boardTex = (dir) => {
+        const c = makeCanvas(512, 256), g = c.getContext('2d');
+        g.fillStyle = '#f5c518'; rr(g, 4, 4, 504, 248, 22); g.fill(); g.strokeStyle = '#111418'; g.lineWidth = 12; rr(g, 12, 12, 488, 232, 16); g.stroke();
+        g.fillStyle = '#111418'; g.font = '900 60px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText('LANE CLOSED', 256, 78); g.font = '900 54px "Segoe UI", system-ui, Arial, sans-serif';
+        g.fillText(dir < 0 ? '◀ MERGE LEFT' : 'MERGE RIGHT ▶', 256, 172);
+        return canvasTex(c);
+      };
+      const texL = boardTex(-1), texR = boardTex(1);
+      const boardMat = new T.MeshBasicMaterial({ map: texL });
+      const boards = new T.Group(); squeezeGroup.add(boards);
+      for (const m of [34, 4]) {
+        const b = new T.Mesh(new T.PlaneGeometry(4.4, 2.2, 4, 2), boardMat); b.position.set(0, 3.6, m); boards.add(b);
+        const post = new T.Mesh(new T.BoxGeometry(0.16, 2.6, 0.16), railMat); post.position.set(0, 1.3, m - 0.05); boards.add(post);
+      }
+      squeezeGroup.userData.setSide = (sd) => { side.scale.x = sd; boards.position.x = sd * (RAIL_X + 2.6); boardMat.map = sd > 0 ? texL : texR; boardMat.needsUpdate = true; };
+    }
 
     // ---------- track objects (pooled) ----------
     const boostC = makeCanvas(128, 512);
@@ -9493,7 +9720,7 @@ window.dispatchEvent(new Event('tr-three'));
     // ---------- per-frame ----------
     const CAM_H = 5.7, CAM_BACK = 11.8; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
-    let curveFor = null, curve = null, bendSm = 0, composerW = 0, composerH = 0, composerPR = 0;
+    let curveFor = null, curve = null, bendSm = 0, hillSm = 0, sqFor = null, composerW = 0, composerH = 0, composerPR = 0;
     let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, frameCount = 0, emaDt = 1 / 60, slowT = 0, fastT = 0, restores = 0;
     const tmpColor = new T.Color();
     R3D.render = () => {
@@ -9528,27 +9755,28 @@ window.dispatchEvent(new Event('tr-three'));
       camX += (player.x * R3D_XS * 0.12 - camX) * Math.min(1, dt * 6);
       const boosting = racing && player.boostTimer > 0;
       fovKick += ((boosting ? 1 : 0) - fovKick) * Math.min(1, dt * 4);
-      const shake = (racing && cameraShake > 0) ? cameraShake * 0.012 : 0;
+      const shake = (racing && cameraShake > 0) ? cameraShake * 0.0096 : 0; // hit shake, 20% softer than before
       const fppOn = !!R3D.fpp && !!carKit, pRig = rigs[cars.indexOf(player)];
       if (fppOn && pRig) {
         // driver's seat of the player's own car (rough pose here; locked to the cabin once the cars have moved, below)
         const e = carKit.eye;
         camera.position.set(player.x * R3D_XS + e.x, e.y, pz + e.z);
-        camera.lookAt(player.x * R3D_XS + e.x, e.y - 1.55, pz + e.z - 10);
+        camera.lookAt(player.x * R3D_XS + e.x, e.y - 1.15, pz + e.z - 10);
         camera.fov = fppFov; camera.near = 0.07;
       } else {
         camera.up.set(0, 1, 0);
         camera.position.set(camX + (Math.random() - 0.5) * shake, CAM_H + (Math.random() - 0.5) * shake, pz + CAM_BACK + fovKick * 0.5);
-        camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
+        camera.lookAt(camX * 0.92 + bendSm * 520, CAM_H - 20 * camPitch, pz + CAM_BACK - 20); // a slow, slight look into the bend
         camera.fov = tppFov; camera.near = 0.3;
       }
       camera.zoom = 1 - fovKick * 0.03; camera.updateProjectionMatrix();
-      // sweeping left/right bends that change slowly along the track
-      // Track shape is re-rolled for every race from its obstacle layout (same for everyone in a room):
-      // a left/right bias plus two S-bend waves, eased in after the start grid.
-      const bendNow = trackBendAt(player.z);
-      bendSm += (bendNow - bendSm) * Math.min(1, dt * 3);
+      // Bends and hills: one smoothed value each, taken a little ahead of the player so a turn is seen coming.
+      // They ride in two otherwise-zero projection cells; the camera itself never yaws with the road, so the
+      // sky and the skyline stay put while the road, rails and roadside swing.
+      bendSm += (trackBendAt(player.z + 30) - bendSm) * Math.min(1, dt * 2.2);
+      hillSm += (trackHillAt(player.z + 30) - hillSm) * Math.min(1, dt * 1.8);
       camera.projectionMatrix.elements[4] = bendSm;
+      camera.projectionMatrix.elements[1] = hillSm;
 
       const cz = camera.position.z;
       backdrop.position.set(camX * 0.4, 0, cz);
@@ -9636,21 +9864,31 @@ window.dispatchEvent(new Event('tr-three'));
           const dm = -z - o.z * R3D_ZS + 1.2; // metres from the ramp centre as drawn, measured at the front axle
           if (dm > -2.1 && dm < 3.6) { rampT = Math.min(1, (dm + 2.1) / 4.2); break; }
         }
-        const hop = car.jumpTimer > 0 ? (car.jumpY || 0) + 1.05 * (1 - air) * (1 - air) : rampT * 1.05;
+        const hopRaw = car.jumpTimer > 0 ? (car.jumpY || 0) + 1.05 * (1 - air) * (1 - air) : rampT * 1.05;
+        // landing: the body comes down on a damper (no snap to the ground), then the suspension dips and settles
+        rig.hopSm = hopRaw >= (rig.hopSm || 0) ? hopRaw : rig.hopSm + (hopRaw - rig.hopSm) * Math.min(1, dt * 13);
+        if (rig.hopSm < 0.004) rig.hopSm = 0;
+        const hop = rig.hopSm, inAir = car.jumpTimer > 0;
+        if (rig.wasAir && !inAir) rig.suspV = -1.5;
+        rig.wasAir = inAir;
+        rig.suspV = (rig.suspV || 0) + (-150 * (rig.suspY || 0) - 13 * (rig.suspV || 0)) * Math.min(dt, 0.033);
+        rig.suspY = Math.max(-0.14, Math.min(0.08, (rig.suspY || 0) + rig.suspV * Math.min(dt, 0.033)));
+        const pitchWant = inAir ? (air - 0.5) * 0.24 : (hop > 0.02 && !rampT ? 0.05 : -rampT * 0.2);
+        rig.pitchSm = (rig.pitchSm || 0) + (pitchWant - (rig.pitchSm || 0)) * Math.min(1, dt * 7);
         rig.group.position.set(x + (car.scrapeDir || 0) * scrape * 0.12, hop, z);
-        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.24 : -rampT * 0.2;
+        rig.tilt.rotation.x = rig.pitchSm - rig.suspY * 0.35;
         rig.shadow.position.y = 0.022 - hop; rig.shadow.scale.setScalar(1 - hop * 0.08);
         const ease = Math.min(1, dt * 9);
         rig.yaw += ((racing ? Math.max(-0.14, Math.min(0.14, -steer * 0.5)) : 0) - rig.yaw) * ease;
         rig.group.rotation.y = rig.yaw;
         rig.tilt.rotation.z += ((Math.max(-0.05, Math.min(0.05, -steer * 0.1)) - (car.hitRoll || 0) * 0.7) - rig.tilt.rotation.z) * ease;
-        rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving;
+        rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving + rig.suspY;
         const spin = -(car.speed || 0) * 0.11 * dt * (racing ? 1 : 0);
         for (const w of rig.wheels) w.rotation.x += spin;
         const hot = racing && (car.boostTimer > 0 || car.speed > 156);
         for (const f of rig.flames) { f.visible = hot; if (hot) f.scale.set(0.8, 0.8, (car.boostTimer > 0 ? 0.75 : 0.32) * (0.8 + Math.random() * 0.4)); }
         if (hot) rig.flameMat.color.set(car.boostTimer > 0 ? 0x22e5ff : 0xfb923c);
-        if (rig.exhMat) rig.exhMat.opacity = hot ? 0.95 : (racing ? 0.55 : 0.35);
+        if (rig.exhMat) rig.exhMat.opacity = hot ? 0.8 : (racing ? 0.22 : 0.06);
         const braking = !racing || car.hitSlowTimer > 0 || (car.isPlayer && keys.brake);
         rig.setBrake(braking);
         const dist = Math.max(1, camera.position.distanceTo(rig.group.position));
@@ -9667,6 +9905,31 @@ window.dispatchEvent(new Event('tr-three'));
         camera.up.setFromMatrixColumn(pRig.eyeNode.matrixWorld, 1).normalize();
         camera.lookAt(v3a.setFromMatrixPosition(pRig.aimNode.matrixWorld));
       }
+      // name tags are sprites, which the bend shader does not move: shift them the same way by hand
+      camera.updateMatrixWorld();
+      for (const rig of rigs) {
+        if (!rig.tag.visible) continue;
+        const v = rig.tag.position.applyMatrix4(camera.matrixWorldInverse), d2 = Math.min(v.z * v.z, 160000);
+        v.x += bendSm * d2; v.y += hillSm * d2; v.applyMatrix4(camera.matrixWorld);
+      }
+
+      // wrong-way car
+      const onc = (typeof oncoming !== 'undefined') ? oncoming : null;
+      oncRig.group.visible = !!onc;
+      if (onc) {
+        oncRig.group.position.set(onc.x * R3D_XS, 0, -onc.z * R3D_ZS);
+        oncRig.group.rotation.y = Math.PI + (onc.vx || 0) * -0.22;
+        oncRig.tilt.rotation.z = (onc.roll || 0);
+        for (const w of oncRig.wheels) w.rotation.x -= onc.speed * 0.11 * dt;
+        oncRig.beamMat.opacity = onc.state === 'coming' ? (Math.sin(tSec * 22) > -0.2 ? 0.95 : 0.25) : 0.5; // flashing headlights
+        oncRig.setBrake(onc.state !== 'coming');
+      }
+      // lane squeeze
+      const sq = raceRoute().squeeze;
+      if (sq && Math.abs(sq.z0 - player.z) < 1500) {
+        if (sqFor !== sq) { sqFor = sq; squeezeGroup.userData.setSide(sq.side); }
+        squeezeGroup.visible = true; squeezeGroup.position.z = -sq.z0 * R3D_ZS;
+      } else squeezeGroup.visible = false;
 
       // track objects
       const used = {};

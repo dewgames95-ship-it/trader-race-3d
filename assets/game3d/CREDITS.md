@@ -12,7 +12,7 @@
 ## Changes made to the car model (`tools/build-car.mjs`)
 
 - Shape, UVs, plate and badge artwork are unchanged.
-- The 544 loose meshes are merged into named parts: `body`, `wheel0`-`wheel3`, `interior`, a lighter `interiorLo` for outside views, and `steer` (the steering wheel, cut out so it can turn).
+- The 544 loose meshes are merged into named parts: `body`, `wheel0`-`wheel3`, `interior`, a lighter `interiorLo` for outside views, and `steer` (the whole steering wheel: rim, carbon sections, grips, buttons and hub badge, gathered into one part so it turns as one).
 - Rescaled to metres, nose towards -z, wheels on the ground; textures re-encoded as WebP; geometry Draco-compressed.
 - In the game only the body paint colour is set per car (gold, blue, red). Glass, wheels, carbon, lights and the cabin are shared and not tinted.
 
