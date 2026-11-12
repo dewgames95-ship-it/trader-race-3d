@@ -348,10 +348,14 @@
   .right-hud-stack .icon-toggle-btn { font-size: 11px; padding: 6px 12px; border-radius: 12px; border: 2px solid rgba(40,224,102,0.85);
     background: linear-gradient(180deg, rgba(14,40,28,0.94), rgba(6,20,14,0.94)); box-shadow: 0 0 8px rgba(40,224,102,0.35); letter-spacing: 0.4px; color: #fff; }
   .right-hud-stack .icon-toggle-btn svg { width: 14px; height: 14px; color: #28e066; }
-  .center-race-circle { top: 23%; left: 50%; width: 128px; height: 128px; border-width: 4px; }
-  .circle-top-txt { font-size: 11.5px; color: #fff; }
-  .circle-big-num { font-size: 38px; }
-  .circle-bot-txt { font-size: 11px; color: #fff; }
+  /* start circle: about a quarter of the view width (target look), sitting on the horizon above the road.
+     The id selector is needed so this wins over the older fixed-size rules for the same element. */
+  .center-race-circle#centerStartCircle { --tap-d: clamp(84px, 24.5vw, 106px); top: 23.5%; left: 50%; width: var(--tap-d); height: var(--tap-d);
+    padding: 6px; border-width: 3.5px; transform: translate(-50%, -50%) !important;
+    box-shadow: 0 0 22px rgba(40, 224, 102, 0.75), inset 0 0 14px rgba(255, 255, 255, 0.28); }
+  #centerStartCircle .circle-top-txt { font-size: calc(var(--tap-d) * 0.108); color: #fff; }
+  #centerStartCircle .circle-big-num { font-size: calc(var(--tap-d) * 0.36); line-height: 1; margin: 1px 0; }
+  #centerStartCircle .circle-bot-txt { font-size: calc(var(--tap-d) * 0.1); color: #fff; }
 
   @keyframes urgentPulse {
     from { transform: translateX(-50%) scale(1); }

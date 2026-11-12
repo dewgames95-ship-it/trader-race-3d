@@ -126,7 +126,7 @@
 
     // ---------- sky ----------
     const SKY = {
-      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#6fcf54', grass2: '#5fbd48', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
+      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#74d040', grass2: '#62c038', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
       rain:   { stops: [[0, '#0f172a'], [0.2, '#1e293b'], [0.36, '#56657a'], [1, '#56657a']], fog: '#57667a', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#b8c7dc', '#3b4a45', 0.95], sun: ['#c9d6ea', 0.75], cloud: '#8693a8', city: '#7f8ea6', road: '#9aa3b2', leaf: '#b9c6c0', glow: 0 },
       snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#e6edf5', grass2: '#d8e1ec', hemi: ['#ffffff', '#c3cfdf', 1.2], sun: ['#ffffff', 1.5], cloud: '#ffffff', city: '#dbe7f5', road: '#e2e8f0', leaf: '#dfeee6', glow: 0.25 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
@@ -282,18 +282,20 @@
       const b = fitModel(cityBScene, 80);
       for (let i = 0; i < 6; i++) { const g = i ? b.group.clone(true) : b.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'block' }; scene.add(g); cityChunks.push(g); }
     }
-    // Glass towers: a ring recycled far ahead inside the haze, some close to the road so they sweep past.
-    const TW_GAP = 70, TW_N = 24, towerRing = []; let towerBase = null, towerH = 1;
+    // Glass towers: a ring recycled far ahead inside the haze. They stand well back from the road
+    // (a distant skyline behind the trees), alternating sides, and never tower over the HUD.
+    const TW_GAP = 52, TW_N = 30, towerRing = []; let towerBase = null, towerH = 1;
     if (towerScene) {
       const t = fitModel(towerScene, 0.55); towerH = t.size.y || 1;
       for (let i = 0; i < TW_N; i++) { const g = i ? t.group.clone(true) : t.group; scene.add(g); towerRing.push(g); }
     }
     const layoutTowers = (base) => {
       towerRing.forEach((g, k) => {
-        const row = base + k - 2, n = row * 1.37, side = hash(n * 2.9) < 0.5 ? -1 : 1;
-        const near = hash(n * 4.1) < 0.45, h = 60 + hash(n * 6.3) * 55, s = h / towerH;
+        const row = base + k - 2, n = row * 1.37, side = (row & 1) ? 1 : -1;
+        // height grows with the set-back so every tower peaks at about the same modest height on screen
+        const off = 92 + hash(n * 7.1) * 120, h = off * (0.3 + hash(n * 6.3) * 0.16), s = h / towerH;
         g.scale.setScalar(s);
-        g.position.set(side * (near ? 22 + hash(n * 7.1) * 12 : 38 + hash(n * 8.3) * 45), 0, -(row * TW_GAP + hash(n * 9.9) * 30));
+        g.position.set(side * off, 0, -(row * TW_GAP + hash(n * 9.9) * 24));
         g.rotation.y = Math.floor(hash(n * 11.3) * 4) * Math.PI / 2;
       });
     };
@@ -323,25 +325,37 @@
     }
 
     // ---------- ground + road ----------
-    const grassC = makeCanvas(256, 256);
+    const grassC = makeCanvas(512, 512);
     const grassTex = canvasTex(grassC, { wrapS: T.RepeatWrapping, wrapT: T.RepeatWrapping });
-    const GRASS_LEN = 2600, GRASS_PERIOD = 16;
+    const GRASS_LEN = 2600, GRASS_PERIOD = 20;
     grassTex.repeat.set(GRASS_LEN / GRASS_PERIOD, GRASS_LEN / GRASS_PERIOD);
     const paintGrass = (a, b) => {
       const g = grassC.getContext('2d'), ca = col(a), cb = col(b);
-      g.fillStyle = a; g.fillRect(0, 0, 256, 256);
-      for (let i = 0; i < 900; i++) {                                          // mottled turf, tiles seamlessly
-        const x = hash(i * 1.37) * 256, y = hash(i * 2.11) * 256, r = 5 + hash(i * 3.3) * 16, k = hash(i * 4.7);
-        g.fillStyle = k < 0.5 ? b : (k < 0.8 ? '#' + ca.clone().multiplyScalar(0.84).getHexString() : '#' + ca.clone().multiplyScalar(1.12).getHexString());
+      const S = 512, hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString(), wrap = [-S, 0, S];
+      g.fillStyle = a; g.fillRect(0, 0, S, S);
+      for (let i = 0; i < 1100; i++) {                                         // mottled turf, tiles seamlessly
+        const x = hash(i * 1.37) * S, y = hash(i * 2.11) * S, r = 9 + hash(i * 3.3) * 30, k = hash(i * 4.7);
+        g.fillStyle = k < 0.5 ? b : (k < 0.78 ? hx(ca, 0.88) : hx(ca, 1.1));
         g.globalAlpha = 0.05 + hash(i * 5.9) * 0.06;
-        for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) { g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.6, 0, 0, Math.PI * 2); g.fill(); }
+        for (const ox of wrap) for (const oy of wrap) { g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.6, 0, 0, Math.PI * 2); g.fill(); }
+      }
+      g.lineCap = 'round';
+      for (let i = 0; i < 5200; i++) {                                         // fine blades: mown-lawn grain
+        const x = hash(i * 1.93 + 7) * S, y = hash(i * 2.57 + 3) * S, k = hash(i * 3.71), len = 2.5 + hash(i * 4.9) * 4.5, lean = (hash(i * 6.1) - 0.5) * 3;
+        g.strokeStyle = k < 0.42 ? hx(cb, 0.8) : (k < 0.8 ? hx(ca, 1.14) : '#d4e77a');
+        g.globalAlpha = 0.2 + hash(i * 7.3) * 0.22; g.lineWidth = 1 + hash(i * 8.7) * 0.9;
+        for (const ox of wrap) for (const oy of wrap) {
+          if (x + ox < -8 || x + ox > S + 8 || y + oy < -8 || y + oy > S + 8) continue;
+          g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + lean, y + oy - len); g.stroke();
+        }
       }
       g.globalAlpha = 1;
-      for (let i = 0; i < 26; i++) {                                           // bushes + pebbles baked into the turf
-        const x = hash(i * 7.7) * 256, y = hash(i * 8.9) * 256, r = 4 + hash(i * 9.1) * 7, rock = hash(i * 3.3) < 0.4;
-        for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) {
-          g.fillStyle = rock ? 'rgba(120,120,115,0.85)' : 'rgba(40,120,40,0.55)'; g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.7, 0, 0, 6.283); g.fill();
-          g.fillStyle = rock ? 'rgba(190,190,180,0.8)' : 'rgba(150,220,90,0.6)'; g.beginPath(); g.ellipse(x + ox - r * 0.2, y + oy - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
+      for (let i = 0; i < 34; i++) {                                           // low bushes + pebbles baked into the turf
+        const x = hash(i * 7.7) * S, y = hash(i * 8.9) * S, rock = hash(i * 3.3) < 0.45, r = rock ? 3.5 + hash(i * 9.1) * 5 : 7 + hash(i * 9.1) * 9;
+        for (const ox of wrap) for (const oy of wrap) {
+          g.fillStyle = 'rgba(20,60,20,0.2)'; g.beginPath(); g.ellipse(x + ox + r * 0.35, y + oy + r * 0.3, r * 1.05, r * 0.7, 0, 0, 6.283); g.fill();
+          g.fillStyle = rock ? 'rgba(128,128,122,0.92)' : 'rgba(58,146,50,0.78)'; g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.72, 0, 0, 6.283); g.fill();
+          g.fillStyle = rock ? 'rgba(206,206,198,0.9)' : 'rgba(150,220,90,0.7)'; g.beginPath(); g.ellipse(x + ox - r * 0.2, y + oy - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
         }
       }
       grassTex.needsUpdate = true;
@@ -352,34 +366,53 @@
 
     const ROAD_W = 2.2 * R3D_XS; // asphalt + both shoulders
     const ROAD_LEN = 1400, ROAD_PERIOD = 14;
-    const roadC = makeCanvas(1024, 256);
+    const roadC = makeCanvas(1024, 1024);
     {
-      const g = roadC.getContext('2d'), W = 1024, Hh = 256, u = (x) => (x + 1.1) / 2.2 * W;
-      g.fillStyle = '#7f8896'; g.fillRect(0, 0, W, Hh);                        // shoulders
-      g.fillStyle = '#27292d'; g.fillRect(u(-1), 0, u(1) - u(-1), Hh);         // asphalt
-      for (let i = 0; i < 5200; i++) {                                         // aggregate speckle
-        const x = u(-1) + hash(i * 1.13) * (u(1) - u(-1)), y = hash(i * 2.71) * Hh, k = hash(i * 3.9);
-        g.fillStyle = k < 0.5 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.16)'; g.fillRect(x, y, 2, 2);
+      const g = roadC.getContext('2d'), W = 1024, Hh = 1024, u = (x) => (x + 1.1) / 2.2 * W, A0 = u(-1), AW = u(1) - u(-1);
+      g.fillStyle = '#868d98'; g.fillRect(0, 0, W, Hh);                        // concrete shoulders
+      for (let i = 0; i < 2600; i++) {
+        const sx = hash(i * 1.7 + 5) * (W - AW), x = sx < A0 ? sx : sx + AW, y = hash(i * 2.3 + 9) * Hh;
+        g.fillStyle = hash(i * 3.1) < 0.5 ? 'rgba(255,255,255,0.14)' : 'rgba(30,34,40,0.16)'; g.fillRect(x, y, 2, 2);
+      }
+      g.fillStyle = '#2d2e31'; g.fillRect(A0, 0, AW, Hh);                      // asphalt
+      for (let i = 0; i < 240; i++) {                                          // soft patches: uneven wear, repairs
+        const x = A0 + hash(i * 1.31 + 2) * AW, y = hash(i * 2.19 + 4) * Hh, r = 26 + hash(i * 3.7) * 70;
+        g.fillStyle = hash(i * 4.3) < 0.5 ? 'rgba(255,255,255,0.028)' : 'rgba(0,0,0,0.07)';
+        for (const oy of [-Hh, 0, Hh]) { g.beginPath(); g.ellipse(x, y + oy, r, r * (0.6 + hash(i * 5.9) * 1.4), 0, 0, 6.283); g.fill(); }
+      }
+      for (let i = 0; i < 7000; i++) {                                         // coarse grain that still reads further up the road
+        const x = A0 + hash(i * 1.57 + 1) * AW, y = hash(i * 2.33 + 6) * Hh, r = 3 + hash(i * 3.1) * 5;
+        g.fillStyle = hash(i * 4.9) < 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(200,204,212,0.07)';
+        g.beginPath(); g.ellipse(x, y, r, r * (0.7 + hash(i * 5.7) * 0.6), 0, 0, 6.283); g.fill();
+      }
+      for (let i = 0; i < 46000; i++) {                                        // aggregate grain: pale stones + dark pits
+        const x = A0 + hash(i * 1.13) * AW, y = hash(i * 2.71) * Hh, k = hash(i * 3.9), q = hash(i * 5.3), sz = q < 0.12 ? 4 : (q < 0.6 ? 3 : 2);
+        g.fillStyle = k < 0.5 ? 'rgba(0,0,0,' + (0.24 + hash(i * 6.7) * 0.24).toFixed(2) + ')' : 'rgba(196,200,208,' + (0.12 + hash(i * 7.9) * 0.18).toFixed(2) + ')';
+        g.fillRect(x, y, sz, sz - (hash(i * 9.1) < 0.4 ? 1 : 0));
       }
       for (const lc of LANE_CENTERS) {                                         // tyre-worn lane centres
         const gr = g.createLinearGradient(u(lc - 0.17), 0, u(lc + 0.17), 0);
-        gr.addColorStop(0, 'rgba(14,16,20,0)'); gr.addColorStop(0.5, 'rgba(14,16,20,0.26)'); gr.addColorStop(1, 'rgba(14,16,20,0)');
+        gr.addColorStop(0, 'rgba(14,16,20,0)'); gr.addColorStop(0.5, 'rgba(14,16,20,0.2)'); gr.addColorStop(1, 'rgba(14,16,20,0)');
         g.fillStyle = gr; g.fillRect(u(lc - 0.17), 0, u(lc + 0.17) - u(lc - 0.17), Hh);
       }
       g.fillStyle = '#f4f6f8';
-      g.fillRect(u(-1) - 2, 0, 16, Hh); g.fillRect(u(1) - 14, 0, 16, Hh);       // solid edge lines
+      g.fillRect(A0 - 2, 0, 21, Hh); g.fillRect(u(1) - 19, 0, 21, Hh);          // solid edge lines
+      for (let i = 0; i < 700; i++) {                                          // paint wear on the edge lines
+        const x = (i % 2 ? A0 - 2 : u(1) - 19) + hash(i * 1.9) * 20, y = hash(i * 2.9) * Hh;
+        g.fillStyle = 'rgba(60,62,68,0.3)'; g.fillRect(x, y, 2, 2 + hash(i * 3.3) * 5);
+      }
     }
     const roadTex = canvasTex(roadC, { wrapT: T.RepeatWrapping });
     roadTex.repeat.set(1, ROAD_LEN / ROAD_PERIOD);
-    // slightly wet, glossy asphalt that picks up the sky
-    const roadMat = new T.MeshStandardMaterial({ map: roadTex, roughness: 0.34, metalness: 0.05, envMapIntensity: 1.0 });
+    // dry sunny asphalt: mostly matte so the grain reads, with a faint sheen from the sky
+    const roadMat = new T.MeshStandardMaterial({ map: roadTex, roughness: 0.6, metalness: 0.03, envMapIntensity: 0.7 });
     const road = new T.Mesh(flatOnRoad(ROAD_W, ROAD_LEN), roadMat);
     road.receiveShadow = true;
     scene.add(road);
 
     // Lane dashes: world-anchored instances re-used as the camera moves.
     const DASH_PERIOD = 19, DASH_ROWS = 46;
-    const dashGeo = flatOnRoad(0.26, DASH_PERIOD * 0.5 * R3D_ZS);
+    const dashGeo = flatOnRoad(0.3, DASH_PERIOD * 0.5 * R3D_ZS);
     const dashes = new T.InstancedMesh(dashGeo, new T.MeshBasicMaterial({ color: 0xffffff }), DASH_ROWS * 3);
     dashes.frustumCulled = false; dashes.position.y = 0.012;
     {
@@ -444,7 +477,7 @@
     const cones = new T.InstancedMesh(coneGeo, leafMat, FLORA_ROWS * 12);
     const dots = new T.InstancedMesh(new T.SphereGeometry(1, 6, 4), new T.MeshBasicMaterial({ color: 0xffffff }), FLORA_ROWS * 10);
     for (const m of [trunks, blobs, cones, dots]) { m.frustumCulled = false; scene.add(m); }
-    const LEAF = { a: col('#23a845'), b: col('#4fd066'), c: col('#1b8f3a'), pine: col('#1f7d3c'), pine2: col('#2a9448'), bush: col('#2c9c44') };
+    const LEAF = { a: col('#23a845'), b: col('#4fd066'), c: col('#1b8f3a'), pine: col('#1f7d3c'), pine2: col('#2a9448'), bush: col('#2c9c44'), bush2: col('#256f2b'), bush3: col('#2f8a32') };
     const FLOWER = [col('#ffffff'), col('#ffd84a'), col('#ff6b6b'), col('#c59bff')];
     const m4 = new T.Matrix4(), q0 = new T.Quaternion(), v3a = new T.Vector3(), v3b = new T.Vector3();
     const put = (mesh, i, x, y, z, sx, sy, sz) => { mesh.setMatrixAt(i, m4.compose(v3a.set(x, y, z), q0, v3b.set(sx, sy, sz))); };
@@ -488,7 +521,7 @@
     const FLORA_META = {"fir0":{"u0":0.00098,"u1":0.17041,"v0":0.00293,"v1":0.99219,"aspect":0.3425},"fir1":{"u0":0.17139,"u1":0.33203,"v0":0.00293,"v1":0.71875,"aspect":0.4488},"fir2":{"u0":0.33301,"u1":0.48828,"v0":0.00293,"v1":0.72852,"aspect":0.428},"pines":{"u0":0.48926,"u1":0.79688,"v0":0.40918,"v1":0.99414,"aspect":1.0518},"leafy0":{"u0":0.79785,"u1":0.99609,"v0":0.40918,"v1":0.99414,"aspect":0.6778},"leafy1":{"u0":0.48926,"u1":0.75195,"v0":0.00293,"v1":0.40039,"aspect":1.3219},"leafy2":{"u0":0.75293,"u1":0.93799,"v0":0.00293,"v1":0.40039,"aspect":0.9312},"rock0":{"u0":0.93896,"u1":0.99561,"v0":0.00293,"v1":0.10449,"aspect":1.1154},"rock1":{"u0":0.93896,"u1":0.99561,"v0":0.10742,"v1":0.19727,"aspect":1.2609},"rock2":{"u0":0.93896,"u1":0.99561,"v0":0.2002,"v1":0.28125,"aspect":1.3976}};
     const floraMat = new T.MeshBasicMaterial({ map: floraTex, alphaTest: 0.42, side: T.DoubleSide });
     const species = {};
-    const treeShade = new T.InstancedMesh(new T.CircleGeometry(1, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: 0x0b2410, transparent: true, opacity: 0.22, depthWrite: false }), FLORA_ROWS * 10);
+    const treeShade = new T.InstancedMesh(new T.CircleGeometry(1, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: 0x0b2410, transparent: true, opacity: 0.16, depthWrite: false }), FLORA_ROWS * 10);
     treeShade.frustumCulled = false; treeShade.position.y = 0.01; treeShade.count = 0;
     if (floraTex) {
       floraTex.colorSpace = T.SRGBColorSpace; floraTex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
@@ -576,7 +609,7 @@
       });
     }
     const layoutFloraPhoto = (base) => {
-      let di = 0, si = 0, gi = 0;
+      let di = 0, si = 0, gi = 0, bi = 0;
       for (const kit of grassKits) kit.n = 0;
       for (const k in species) species[k].n = 0;
       for (const kit of treeKits) kit.n = 0;
@@ -587,7 +620,7 @@
         if (shade && si < FLORA_ROWS * 10) put(treeShade, si++, x + shade * 0.5, 0, z + shade * 0.2, shade * 1.5, 1, shade);
       };
       const FIRS = ['fir0', 'fir1', 'fir2'], LEAFY = ['leafy0', 'leafy2', 'leafy1'], ROCKS = ['rock0', 'rock1', 'rock2'];
-      const segLen = FLORA_SEG * R3D_ZS, EDGE = RAIL_X + 1.6;
+      const segLen = FLORA_SEG * R3D_ZS, EDGE = RAIL_X + 3.4; // open verge between the rail and the first trees
       for (let k = 0; k < FLORA_ROWS; k++) {
         const s = base + k - 2, z = -(s * FLORA_SEG) * R3D_ZS;
         for (const side of [-1, 1]) {
@@ -599,16 +632,27 @@
             if (near3d && plant3d('leafy', x, zz, h * 1.15, n * 3.3 + x)) { if (si < FLORA_ROWS * 10) put(treeShade, si++, x + 1, 0, zz + 0.4, h * 0.55, 1, h * 0.4); return; }
             plant(LEAFY[Math.floor(r(2.1 + x) * 3)], x, zz, h, r(5.3 + x) < 0.5, h * 0.36);
           };
-          if (dens > 0.28) {
-            if (r(1.3) < 0.75) leafy(side * (EDGE + r(3.7) * 1.8), z, 4.6 + r(4.9) * 2.4);
+          // front row: one tree every other segment (about 13 m apart), with whole stretches left open
+          if (dens > 0.34 && !(s & 1)) {
+            if (r(1.3) < 0.8) leafy(side * (EDGE + r(3.7) * 2.2), z, 4.8 + r(4.9) * 2.4);
             else if (!(near3d && plant3d('pine', side * (EDGE + 0.6 + r(3.7) * 1.6), z, 6.5 + r(4.9) * 3, n * 5.1)))
               plant(FIRS[Math.floor(r(2.1) * 3)], side * (EDGE + 0.6 + r(3.7) * 1.6), z, 7 + r(4.9) * 3, r(5.3) < 0.5, 1.6);
-            if (dens > 0.6) leafy(side * (EDGE + 1.2 + r(7.9) * 3.4), z - segLen * 0.5, 4.2 + r(8.3) * 2.6);
           }
-          if (dens > 0.5) leafy(side * (EDGE + 6 + r(10.3) * 6), z - segLen * r(10.9), 6 + r(11.3) * 3);
+          if (dens > 0.58 && (s & 1) && r(10.1) < 0.7) leafy(side * (EDGE + 7 + r(10.3) * 7), z - segLen * r(10.9), 6 + r(11.3) * 3);
+          // low round bushes on the open lawn
+          if (r(24.1) < 0.4 && bi + 5 <= FLORA_ROWS * 16) {
+            const bx = side * (RAIL_X + 1.6 + r(24.7) * 7.5), bz = z - segLen * r(25.3), bs = 0.42 + r(25.9) * 0.34;
+            for (let f = 0; f < 5; f++) {
+              const a = f * 1.257 + r(26.1) * 6, rad = f ? bs * 0.62 : 0, fs = bs * (f ? 0.5 + hash(n * 29.3 + f) * 0.28 : 0.9);
+              put(blobs, bi, bx + Math.cos(a) * rad, fs * (f ? 0.62 : 0.8), bz + Math.sin(a) * rad * 0.8, fs, fs * (f ? 0.82 : 0.95), fs);
+              blobs.setColorAt(bi++, f === 0 ? LEAF.bush3 : (f % 2 ? LEAF.bush2 : LEAF.bush));
+            }
+            if (si < FLORA_ROWS * 10) put(treeShade, si++, bx + 0.25, 0, bz + 0.1, bs * 1.5, 1, bs * 1.15);
+          }
           if (r(12.1) < 0.3) plant(r(12.5) < 0.6 ? LEAFY[Math.floor(r(12.9) * 2)] : FIRS[Math.floor(r(12.9) * 3)], side * (EDGE + 15 + r(12.7) * 10), z - segLen * r(13.1), 8 + r(13.7) * 4, r(14.3) < 0.5, 0);
           if (r(15.3) < 0.25) plant(r(15.1) < 0.5 ? 'pines' : 'leafy0', side * (EDGE + 30 + r(15.7) * 28), z - segLen * r(16.3), 11 + r(16.9) * 6, r(17.3) < 0.5, 0);
           if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
+          if (r(26.3) < 0.55) plant(ROCKS[Math.floor(r(26.9) * 3)], side * (RAIL_X + 4 + r(27.1) * 9), z - segLen * r(27.7), 0.5 + r(28.3) * 0.6, r(28.9) < 0.5, 0); // pebbles further out
           for (let f = 0; f < 16 && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
@@ -637,7 +681,8 @@
       for (const kit of treeKits) for (const im of kit.parts) { im.count = kit.n; im.instanceMatrix.needsUpdate = true; }
       for (const kit of grassKits) { kit.im.count = kit.n; kit.im.instanceMatrix.needsUpdate = true; }
       tufts.count = gi; tufts.instanceMatrix.needsUpdate = true; if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
-      trunks.count = blobs.count = cones.count = 0; dots.count = di;
+      trunks.count = cones.count = 0; dots.count = di; blobs.count = bi;
+      blobs.instanceMatrix.needsUpdate = true; if (blobs.instanceColor) blobs.instanceColor.needsUpdate = true;
       dots.instanceMatrix.needsUpdate = true; if (dots.instanceColor) dots.instanceColor.needsUpdate = true;
     };
     const layoutFlora = floraTex ? layoutFloraPhoto : layoutFloraBuiltIn;
@@ -1111,7 +1156,13 @@
       if (skyDome) skyDome.visible = photoSky;
       cloudsGL.forEach((c, i) => { c.visible = !photoSky || i < 3; });
       cloudMat.opacity = photoSky ? 0.55 : 1;
-      floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) { m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint); }
+      floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) {
+        m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint);
+        // sunny: lift the dark grass clumps and tree leaves so the roadside reads as sunlit
+        const clump = !!m.userData.baseTint;
+        if (key === 'sunny') m.color.multiplyScalar(clump ? 1.5 : 1.25);
+        if (m.emissive) { m.emissive.set(key === 'sunny' ? (clump ? '#4c9a2e' : '#33701f') : '#000000'); m.emissiveIntensity = clump ? 0.6 : 0.4; }
+      }
       scene.environmentIntensity = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
       scene.fog.color.set(w.fog);
       paintGrass(w.grass, w.grass2);
