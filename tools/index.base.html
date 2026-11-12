@@ -4647,7 +4647,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // 2. GAME STATE, PRE-RACE ONLY WEATHER & RACE PHYSICS ENGINE
   // =========================================================================
   const RACE_DURATION_SEC = 60.0;
-  const FINISH_LINE_Z = 3620; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
+  const FINISH_LINE_Z = 3980; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
   const LANE_CENTERS = [-0.75, -0.25, 0.25, 0.75];
 
   let balanceUsdt = 100.00;
@@ -4733,14 +4733,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   ];
 
   // Equalized physics constants — ZERO unnatural bot speed cheats!
-  const EQUAL_TOP_SPEED = 192;
+  const EQUAL_TOP_SPEED = 211;
   const BOOST_TOP_SPEED = 250;
   const EQUAL_ACCEL_RATE = 83;
   const EQUAL_BRAKE_RATE = 140;
   const JUMP_DUR = 0.9, JUMP_PEAK = 2.1, JUMP_LAND_BOOST = 14;
-  const STEER_MAX_V = 0.95, RAIL_LIMIT_X = 0.86, CURVE_DRIFT = 0.2; // lateral units/s, asphalt edge for the car centre, outward push per 0.001 of bend
+  const STEER_MAX_V = 1.25, STEER_PLAYER_V = 2.4, PACK_SECONDS = 35, RAIL_LIMIT_X = 0.86, CURVE_DRIFT = 0.2; // lateral units/s, asphalt edge for the car centre, outward push per 0.001 of bend
   const nearestLane = (x) => { let b = 0; for (let i = 1; i < LANE_CENTERS.length; i++) if (Math.abs(LANE_CENTERS[i] - x) < Math.abs(LANE_CENTERS[b] - x)) b = i; return b; };
   // A car that is not steered keeps going straight, so on a bend it slides toward the outside rail.
+  let packGangNext = 0, packGangUntil = 0;
   function curveDriftV(car) {
     if (gameState !== 'RACING' || typeof trackBendAt !== 'function') return 0;
     const k = Math.min(1.15, car.speed / EQUAL_TOP_SPEED);
@@ -6653,9 +6654,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         if (car._tx !== undefined && car.targetX !== car._tx) car.knockV = (car.targetX - car.x) * 3;
         const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
         car.steerHold = steerIn ? (car.steerHold || 0) + dt : 0;
-        // light tap = small nudge; the longer the hold, the faster the car moves across (up to ~1 lane in 0.8 s)
-        const wantV = steerIn * STEER_MAX_V * Math.min(1, 0.3 + car.steerHold * 1.7);
-        car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * (steerIn ? 8 : 6.5));
+        // light tap = small nudge; a hold builds up quickly: about one lane in 0.4 s
+        const wantV = steerIn * STEER_PLAYER_V * Math.min(1, 0.35 + car.steerHold * 5);
+        car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * (steerIn ? 14 : 10));
         car.knockV = (car.knockV || 0) * Math.pow(0.02, dt);
         car.x += (car.steerV + car.knockV + curveDriftV(car)) * dt;
         railContact(car);
@@ -6703,6 +6704,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             if (aheadGap > 6) targetSpeed *= 1 + Math.min(0.03, (aheadGap - 6) * 0.0009);
             else if (!aheadGap && behindGap > 10) targetSpeed *= 1 - Math.min(0.045, (behindGap - 10) * 0.0016);
           }
+        }
+        // Pack racing (first ~35 s): every AI car holds a slowly shifting slot a few metres ahead of or behind
+        // the player (the pack centre in Car Bet mode), so nobody drives off and places keep changing.
+        if (gameState === 'RACING' && !inFinalStretch && (RACE_DURATION_SEC - timeRemaining) < PACK_SECONDS && car.boostTimer <= 0) {
+          let refZ = 0, nRef = 0;
+          if (isAutoBetMode) { for (const o of cars) { refZ += o.z; nRef++; } refZ /= Math.max(1, nRef); }
+          else refZ = (cars.find(c => c.isPlayer) || car).z;
+          const slot = Math.sin(tNow * (0.22 + P.pf * 0.3) + P.pp) * 7 + (P.off * 40);
+          const err = (car.z - refZ) - slot;
+          const packSpeed = EQUAL_TOP_SPEED * (1 - Math.max(-0.16, Math.min(0.45, err * 0.018)));
+          targetSpeed = car.hitSlowTimer > 0 ? Math.min(targetSpeed, packSpeed) : packSpeed;
         }
         if (!isDesignatedWinner && inFinalStretch) {
           // Non-winning car smoothly eases off if it is ahead of the designated winner in the final seconds
@@ -6840,6 +6852,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
                 victim.speed = Math.max(116, victim.speed * (victimProtected ? 0.94 : 0.84));
                 aggressor.speed = Math.max(124, aggressor.speed * 0.93);
                 if (!victimProtected) victim.hitSlowTimer = 0.45;
+                if ((RACE_DURATION_SEC - timeRemaining) < PACK_SECONDS && !inFinalStretch) { victim.speed = Math.max(victim.speed, EQUAL_TOP_SPEED * 0.9); victim.hitSlowTimer = Math.min(victim.hitSlowTimer, 0.2); }
 
                 spawnShatterDebris((a.x + b.x) * 0.5, (a.z + b.z) * 0.5, 'cone');
                 spawnTireSmoke(a.x, a.z);
@@ -6971,6 +6984,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       for (const other of cars) {
         if (other === bot || other.jumpTimer > 0) continue;
         if (Math.abs(other.z - bot.z) < 6 && Math.abs(other.lane - bot.lane) === 1 && Math.random() < 0.05 * P.aggr) scores[other.lane] += 40;
+      }
+    }
+    // pack window: rivals lean on each other often, and every few seconds both bots go for the player together
+    if ((RACE_DURATION_SEC - timeRemaining) < PACK_SECONDS && !inFinalStretch && gameState === 'RACING' && !(bot.hitSlowTimer > 0)) {
+      const nowMs = performance.now(), target = cars.find(c => c.isPlayer);
+      if (nowMs > packGangNext) { packGangNext = nowMs + 6000 + Math.random() * 5000; packGangUntil = nowMs + 1500; }
+      for (const other of cars) {
+        if (other === bot || other.jumpTimer > 0 || Math.abs(other.z - bot.z) > 9) continue;
+        if (other === target && nowMs < packGangUntil) scores[other.lane] += 160;
+        else if (Math.abs(other.lane - bot.lane) === 1 && Math.random() < 0.1 + 0.12 * P.aggr) scores[other.lane] += 60;
       }
     }
     for (let l = 0; l < scores.length; l++) scores[l] += (Math.random() - 0.5) * 1.5;

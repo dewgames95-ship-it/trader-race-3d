@@ -182,16 +182,20 @@
       scene.environment = skyEnv;
     }
     // Sharp photo sky for the part of the sky the fixed chase camera can see (150° wide, -4°..66° high).
-    let skyDome = null;
+    let skyDome = null, tintSky = () => {};
     if (skyFront) {
       skyFront.colorSpace = T.SRGBColorSpace;
       const d2r = Math.PI / 180;
       const geo = new T.SphereGeometry(900, 40, 20, (90 - 75) * d2r, 150 * d2r, (90 - 66) * d2r, 70 * d2r);
-      { // vertex tint over the photo
-        const pos = geo.attributes.position, tint = new Float32Array(pos.count * 3), lo = col('#ffffff'), hi = col('#5f9bf0'), c = new T.Color();
-        for (let i = 0; i < pos.count; i++) { const e = Math.max(0, Math.min(1, pos.getY(i) / 900 / 0.75)); c.copy(lo).lerp(hi, Math.pow(e, 0.8)); tint[i * 3] = c.r * 1.04; tint[i * 3 + 1] = c.g * 1.04; tint[i * 3 + 2] = c.b * 1.06; }
-        geo.setAttribute('color', new T.BufferAttribute(tint, 3));
-      }
+      // vertex tint over the photo clouds: each climate gets its own horizon -> zenith gradient (linear RGB)
+      geo.setAttribute('color', new T.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+      const SKY_TINT = { sunny: [[1.04, 1.04, 1.06], [0.125, 0.345, 0.93]], rain: [[0.5, 0.54, 0.6], [0.2, 0.23, 0.3]], snow: [[1.1, 1.12, 1.15], [0.62, 0.78, 1.0]], sunset: [[2.5, 1.05, 0.38], [0.62, 0.3, 0.72]] };
+      tintSky = (key) => {
+        const [lo, hi] = SKY_TINT[key] || SKY_TINT.sunny, pos = geo.attributes.position, a = geo.attributes.color;
+        for (let i = 0; i < pos.count; i++) { const e = Math.pow(Math.max(0, Math.min(1, pos.getY(i) / 900 / 0.75)), 0.8); a.setXYZ(i, lo[0] + (hi[0] - lo[0]) * e, lo[1] + (hi[1] - lo[1]) * e, lo[2] + (hi[2] - lo[2]) * e); }
+        a.needsUpdate = true;
+      };
+      tintSky('sunny');
       skyDome = new T.Mesh(geo, new T.MeshBasicMaterial({ map: skyFront, vertexColors: true, side: T.DoubleSide, fog: false, depthWrite: false }));
       skyDome.scale.z = -1; skyDome.renderOrder = -10; skyDome.frustumCulled = false;
       SKY.sunny.fog = '#bccbe2';
@@ -351,11 +355,13 @@
       return { parts, size: box.getSize(new T.Vector3()) };
     };
     // one object from a baked model; `far` pieces belong to the fixed skyline (no bend, no haze wash-out)
+    const cityMats = [];
     const cityObject = (baked, far) => {
       const g = new T.Group();
       for (const pt of baked.parts) {
         const m = new T.MeshLambertMaterial({ map: pt.map, color: pt.color.clone().multiplyScalar(far ? 0.8 : 0.86), fog: !far }); // a touch deeper so facades and windows read in full sun
         if (far) noBend(m);
+        cityMats.push({ m, base: m.color.clone() });
         const mesh = new T.Mesh(pt.geo, m); mesh.frustumCulled = false; g.add(mesh);
       }
       return g;
@@ -1222,7 +1228,9 @@
     const applyWeather = (key) => {
       const w = SKY[key] || SKY.sunny;
       weatherApplied = key;
-      const photoSky = key === 'sunny' && !!skyDome;
+      const photoSky = !!skyDome; // every climate uses the same photo-cloud dome, recoloured
+      tintSky(key);
+      if (photoSky && key !== 'sunny') w.fog = { rain: '#5f6b7c', snow: '#dfe7f1', sunset: '#e9a070' }[key] || w.fog;
       scene.background = skyTex(SKY[key] ? key : 'sunny');
       if (skyDome) skyDome.visible = photoSky;
       cloudsGL.forEach((c, i) => { c.visible = !photoSky || i < 3; });
@@ -1240,8 +1248,10 @@
       hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); hemi.intensity = w.hemi[2];
       sun.color.set(w.sun[0]); sun.intensity = w.sun[1];
       cloudMat.color.set(w.cloud); cityMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
+      tmpColor.set(w.city); for (const c of cityMats) c.m.color.copy(c.base).multiply(tmpColor);
+      roadMat.roughness = key === 'rain' ? 0.1 : (key === 'snow' ? 0.75 : 0.34); roadMat.envMapIntensity = key === 'rain' ? 1.5 : 1.0; // wet / snowy / dry
       treeLineMat.color.set(key === 'snow' ? '#b9d4c4' : (key === 'sunset' ? '#5a6a22' : (key === 'rain' ? '#1f5a3a' : '#2f8a3c')));
-      sunGlow.material.opacity = w.glow; sunGlow.visible = w.glow > 0 && !photoSky;
+      sunGlow.material.opacity = w.glow; sunGlow.visible = w.glow > 0 && (key === 'sunset' || !photoSky);
       sunGlow.position.y = key === 'sunset' ? 60 : 190;
       sunGlow.material.color.set(key === 'sunset' ? '#ffd27a' : '#ffffff');
       rain.visible = key === 'rain'; snow.visible = key === 'snow';
