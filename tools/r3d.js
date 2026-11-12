@@ -41,10 +41,53 @@
     return (r3dPathCache = { pts, step: STEP, minX, maxX, len: y });
   }
 
+  // ---- HUD layout: race id + time as a see-through card on the sky, smaller right-hand buttons, camera toggle ----
+  (function r3dHud() {
+    const st = document.createElement('style');
+    st.textContent = `
+.viewport-wrap > .status-strip { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 60%; display: grid; grid-template-columns: auto auto; gap: 0; padding: 0; background: none; box-shadow: 0 3px 10px rgba(0,0,0,0.3); border-radius: 12px; z-index: 14; zoom: 0.8; pointer-events: none; }
+.viewport-wrap > .status-strip .status-card { background: rgba(8,13,24,0.66); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); padding: 3px 9px; }
+.viewport-wrap > .status-strip .status-card:nth-last-child(2) { border-radius: 0 12px 12px 0; border-right-width: 1px; }
+.viewport-wrap > .top-position-banner { top: 44px; left: 50%; background: rgba(8,13,24,0.7); }
+.right-hud-stack .icon-toggle-btn { zoom: 0.8; }
+#cameraToggleBtn { cursor: pointer; }
+.console-car-bet-grid { align-items: stretch; }
+.console-car-bet-grid .console-car-card { display: flex; flex-direction: column; justify-content: space-between; }
+`;
+    document.head.appendChild(st);
+    const strip = document.querySelector('.status-strip'), vp = document.querySelector('.viewport-wrap');
+    if (strip && vp) vp.insertBefore(strip, vp.firstChild);
+    // Car Bet and Manual Drive keep the same console height, so the 3D view is the Drive size in both.
+    const bet = document.getElementById('consoleCarBetGrid'), man = document.getElementById('manualControlsGrid');
+    const syncConsole = () => {
+      if (!bet || !man) return;
+      const bd = bet.style.display, md = man.style.display;
+      bet.style.minHeight = ''; bet.style.display = 'none'; man.style.display = 'grid';
+      const h = man.offsetHeight;
+      man.style.display = md; bet.style.display = bd;
+      if (h > 0) bet.style.minHeight = h + 'px';
+    };
+    syncConsole(); setTimeout(syncConsole, 400); setTimeout(syncConsole, 1500);
+    window.addEventListener('resize', syncConsole);
+    document.addEventListener('click', () => setTimeout(syncConsole, 0));
+    // camera: TPP (behind the car) / FPP (driver's seat); usable at any time, in both play modes
+    const camBtn = document.getElementById('cameraToggleBtn'), camTxt = document.getElementById('cameraBtnText');
+    try { R3D.fpp = localStorage.getItem('tr_cam') === 'fpp'; } catch (e) {}
+    const label = () => { if (camTxt) camTxt.textContent = R3D.fpp ? '🎥 FPP' : '🎥 TPP'; };
+    label();
+    if (camBtn) camBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      R3D.fpp = !R3D.fpp; label();
+      try { localStorage.setItem('tr_cam', R3D.fpp ? 'fpp' : 'tpp'); } catch (err) {}
+      if (typeof triggerHaptic === 'function') triggerHaptic(25);
+    });
+  })();
+
   function r3dFail(reason) {
     if (R3D.status === 'failed') return;
     R3D.status = 'failed';
     if (R3D.glCanvas) R3D.glCanvas.style.display = 'none';
+    const cb = document.getElementById('cameraToggleBtn'); if (cb) cb.style.display = 'none'; // the 2D fallback has one view
     try { console.warn('[race3d] using 2D renderer:', reason); } catch (e) {}
   }
 
@@ -65,7 +108,7 @@
 
     // ---------- assets (each one is optional: a built-in stand-in is used if it fails) ----------
     const ADD = window.__trThreeAddons || {};
-    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r18';
+    const ASSET_BASE = './assets/game3d/', ASSET_V = '?v=r19';
     // Gentle road curves without touching the straight-line simulation: every vertex is pushed
     // sideways by (distance ahead)^2. The bend amount rides in an otherwise-zero projection
     // matrix cell so all built-in materials pick it up with no per-material uniforms.
@@ -87,7 +130,7 @@
       if (!ADD.GLTFLoader) return res(null);
       const loader = new ADD.GLTFLoader();
       if (ADD.DRACOLoader) loader.setDRACOLoader(new ADD.DRACOLoader().setDecoderPath(ADD.dracoPath));
-      loader.load(ASSET_BASE + 'car.glb' + ASSET_V, (g) => res(g.scene), undefined, () => res(null));
+      loader.load(ASSET_BASE + 'car_f8.glb' + ASSET_V, (g) => res(g.scene), undefined, () => res(null));
     });
     const loadGlb = (file) => new Promise((res) => {
       if (!ADD.GLTFLoader) return res(null);
@@ -217,29 +260,6 @@
     sunGlow.scale.set(520, 520, 1); sunGlow.position.set(0, 190, -800); sunGlow.renderOrder = -9;
     backdrop.add(sunGlow);
 
-    const cloudC = makeCanvas(256, 128);
-    {
-      const g = cloudC.getContext('2d');
-      const puff = (dy, fill) => {
-        g.fillStyle = fill; g.beginPath();
-        for (const [x, y, r] of [[128, 62, 44], [84, 74, 32], [172, 70, 36], [208, 82, 24], [52, 86, 22]]) { g.moveTo(x + r, y + dy); g.arc(x, y + dy, r, 0, Math.PI * 2); }
-        g.fill();
-      };
-      puff(10, 'rgba(176,214,246,0.85)'); puff(0, '#ffffff');
-      g.globalCompositeOperation = 'destination-out'; g.fillRect(0, 106, 256, 22);
-    }
-    const cloudMat = new T.SpriteMaterial({ map: canvasTex(cloudC), transparent: true, depthWrite: false, fog: false });
-    const cloudsGL = [];
-    for (let i = 0; i < 7; i++) {
-      const s = new T.Sprite(cloudMat);
-      const sc = 150 + hash(i + 3) * 150;
-      s.scale.set(sc, sc * 0.5, 1);
-      s.userData = { x0: -640 + i * 205 + hash(i) * 60, y: 150 + hash(i + 11) * 190, spd: 2.2 + hash(i + 5) * 2.2 };
-      s.position.set(s.userData.x0, s.userData.y, -820 - hash(i + 7) * 60);
-      s.renderOrder = -8;
-      backdrop.add(s); cloudsGL.push(s);
-    }
-
     // ---------- skyline (one merged mesh, repeating window texture) ----------
     const winC = makeCanvas(128, 128);
     {
@@ -367,7 +387,7 @@
       return g;
     };
     // Skyline = the two varied city models (offices, mixed towers, different silhouettes).
-    const MID_GAP = 380, midBlocks = []; let midBase = null;
+    const MID_GAP = 380, WORLD_DRIFT = 0.8, midBlocks = []; let midBase = null;
     if (cityAScene) {
       const a = bakeModel(cityAScene, 0.0132), g = cityObject(a, true);
       g.position.set(0, -1.5, -(410 + a.size.z / 2)); backdrop.add(g);
@@ -382,7 +402,8 @@
       midBlocks.forEach((g, k) => {
         const row = base + k - 1, side = (row & 1) ? 1 : -1, sc = side < 0 ? 0.15 + hash(row * 3.1) * 0.03 : 0.19 + hash(row * 3.1) * 0.05;
         g.scale.setScalar(sc);
-        g.position.set(side * (165 + hash(row * 5.3) * 50), -0.2, -(row * MID_GAP + 120 + hash(row * 7.7) * 140));
+        g.userData.z0 = -(row * MID_GAP + 120 + hash(row * 7.7) * 140);
+        g.position.set(side * (165 + hash(row * 5.3) * 50), -0.2, g.userData.z0);
         g.rotation.y = Math.floor(hash(row * 9.1) * 4) * Math.PI / 2;
       });
     };
@@ -966,74 +987,83 @@
       scene.add(rig.group, rig.tag);
       return rig;
     };
-    // Sports car GLB supplied by the owner (assets/game3d/car.glb). Its own textures are kept;
-    // only the body paint colour changes per car. See assets/game3d/CREDITS.md.
+    // 2020 Ferrari F8 Tributo (assets/game3d/car_f8.glb, prepared by tools/build-car.mjs: metres, nose to -z,
+    // wheels on y = 0; parts: body, wheel0-3, interior, interiorLo, steer). There is one template: each car is a
+    // clone that shares the geometry, the textures and every material except its own body paint.
+    // See assets/game3d/CREDITS.md.
     const carKit = carModel ? (() => {
-      // Fit the template once: 4.9 m long, on the road, nose pointing down the road (-z).
-      carModel.rotation.set(0, Math.PI, 0);
-      carModel.updateMatrixWorld(true);
-      const fb = new T.Box3().setFromObject(carModel), fs = fb.getSize(new T.Vector3());
-      carModel.scale.setScalar(4.9 / Math.max(fs.x, fs.z));
-      carModel.updateMatrixWorld(true);
-      const fb2 = new T.Box3().setFromObject(carModel), fc = fb2.getCenter(new T.Vector3());
-      carModel.position.set(-fc.x, -fb2.min.y, -fc.z);
-      const src = {};
-      carModel.traverse((o) => { if (o.isMesh && o.material) { src[o.material.name] = o.material; if (o.material.map) o.material.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); } });
-      const glass = new T.MeshStandardMaterial({ color: 0x0a0f16, metalness: 0.9, roughness: 0.05, envMapIntensity: 1.8, transparent: true, opacity: 0.4, depthWrite: false });
-      const glowMap = src['Material.009'] && src['Material.009'].map;
-      const glow = (opacity) => new T.MeshBasicMaterial({ map: glowMap, transparent: true, opacity, blending: T.AdditiveBlending, depthWrite: false, fog: false });
-      for (const k in src) { if ('envMapIntensity' in src[k]) src[k].envMapIntensity = 1.0; }
-      // where the tail lamps and exhausts sit, for the glow sprites
-      carModel.updateMatrixWorld(true);
-      const lampBox = new T.Box3(); carModel.traverse((o) => { if (o.isMesh && /lights_brakes|lights_position_back/.test((o.parent && o.parent.name || '') + o.name)) lampBox.expandByObject(o); });
-      const fullBox = new T.Box3().setFromObject(carModel);
-      const rearZ = fullBox.max.z, lampY = lampBox.isEmpty() ? 0.78 : lampBox.getCenter(new T.Vector3()).y, lampX = lampBox.isEmpty() ? 0.68 : lampBox.max.x - 0.12;
-      return { src, glass, glow, paintMap: src['Material.001'] && src['Material.001'].map, rearZ, lampY, lampX };
+      const fs = new T.Box3().setFromObject(carModel).getSize(new T.Vector3());
+      const K = 4.9 / fs.z; // the same length on the road as the previous car, so the framing is unchanged
+      carModel.scale.setScalar(K);
+      const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      const glass = new T.MeshStandardMaterial({ name: 'Window', color: 0x0a0f16, metalness: 0.9, roughness: 0.05, envMapIntensity: 1.8, transparent: true, opacity: 0.4, depthWrite: false });
+      // from the driver's seat the same panes are almost clear
+      const glassIn = new T.MeshStandardMaterial({ name: 'Window', color: 0xbfd4e6, metalness: 0, roughness: 0.1, envMapIntensity: 0.25, transparent: true, opacity: 0.06, depthWrite: false, side: T.DoubleSide });
+      const lens = new T.MeshStandardMaterial({ name: 'bodyRED_GLASS', color: 0x8a0808, emissive: 0xff1a10, emissiveIntensity: 0.5, metalness: 0.2, roughness: 0.15, envMapIntensity: 1.2 });
+      const plain = {};
+      carModel.traverse((o) => {
+        if (!o.isMesh) return;
+        const m = o.material, n = m.name;
+        for (const k of ['map', 'normalMap', 'metalnessMap', 'roughnessMap']) if (m[k]) m[k].anisotropy = aniso;
+        if (n === 'Window') o.material = glass;
+        else if (n === 'bodyRED_GLASS') o.material = lens;
+        else if (n !== 'Paint') {
+          // the export marks everything as "physical"; plain standard materials look the same here and cost less on phones
+          if (!plain[n]) {
+            plain[n] = new T.MeshStandardMaterial({ name: n, color: m.color, map: m.map, normalMap: m.normalMap, metalness: m.metalness, roughness: m.roughness, metalnessMap: m.metalnessMap, roughnessMap: m.roughnessMap, envMapIntensity: 1.0 });
+            if (n === 'BadgeA') { plain[n].alphaTest = 0.35; plain[n].polygonOffset = true; plain[n].polygonOffsetFactor = -2; }
+            if (n === 'InteriorA') { plain[n].envMapIntensity = 0.7; plain[n].side = T.DoubleSide; }
+          }
+          o.material = plain[n];
+        }
+      });
+      return { K, glass, glassIn, lens, rearZ: fs.z * K / 2, lampY: 0.73 * K, lampX: 0.71 * K, eye: new T.Vector3(-0.355 * K, 0.985 * K, 0.3 * K) };
     })() : null;
     const aoGeo = flatOnRoad(2.9, 5.9);
     const aoMat = carAoTex ? new T.MeshBasicMaterial({ map: carAoTex, blending: T.MultiplyBlending, toneMapped: false, transparent: true, premultipliedAlpha: true, depthWrite: false }) : shadowMat;
     const makeRigGLB = () => {
-      const rig = { group: new T.Group(), tilt: new T.Group(), wheels: [], themeKey: null, tagKey: null, yaw: 0 };
-      // the paint texture is a white ambient-occlusion map, so the colour simply multiplies in
-      rig.paint = new T.MeshPhysicalMaterial({ color: 0xff0000, map: carKit.paintMap || null, metalness: 0.45, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 2.1 });
+      const rig = { group: new T.Group(), tilt: new T.Group(), wheels: [], panes: [], themeKey: null, tagKey: null, yaw: 0, inside: null, steerSm: 0 };
+      // only this material differs between the three cars; colour comes from the car's theme (same reds/blue/gold as before)
+      rig.paint = new T.MeshPhysicalMaterial({ color: 0xff0000, metalness: 0.45, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 2.1 });
       rig.stripe = { color: { set() {} } };
-      rig.brakeGlow = carKit.glow(0.9);
-      const lampGlow = carKit.glow(0.9);
       const model = carModel.clone(true);
       model.traverse((o) => {
-        if (/^wheel(FL|FR|BL|BR)\d*$/.test(o.name)) rig.wheels.push(o);
+        if (/^wheel\d$/.test(o.name)) rig.wheels.push(o);
+        if (o.name === 'interior') rig.cabin = o; else if (o.name === 'interiorLo') rig.cabinLo = o; else if (o.name === 'steer') rig.steer = o;
         if (!o.isMesh) return;
-        const mn = o.material && o.material.name, nodeName = (o.parent && o.parent.name || '') + o.name;
-        if (mn === 'Material.001') o.material = rig.paint;
-        else if (mn === 'Material.009') {
-          if (/reverse/.test(nodeName)) o.visible = false;
-          else o.material = /brakes/.test(nodeName) ? rig.brakeGlow : lampGlow;
-          o.renderOrder = 4;
-        } else if (/glass/.test(mn || '')) o.material = carKit.glass;
-        if (mn !== 'Material.009' && !/glass/.test(mn || '')) o.castShadow = true;
+        const mn = o.material.name;
+        if (mn === 'Paint') { o.material = rig.paint; o.castShadow = true; }
+        else if (mn === 'Window') { rig.panes.push(o); o.renderOrder = 5; }
+        else if (mn === 'Wheel') o.castShadow = true;
       });
+      // outside: light cabin behind tinted glass. inside (driver's seat): the full cabin, steering wheel and clear glass.
+      rig.setView = (inside) => {
+        if (rig.inside === inside) return;
+        rig.inside = inside;
+        if (rig.cabin) rig.cabin.visible = inside;
+        if (rig.steer) rig.steer.visible = inside;
+        if (rig.cabinLo) rig.cabinLo.visible = !inside;
+        for (const p of rig.panes) p.material = inside ? carKit.glassIn : carKit.glass;
+      };
+      rig.setView(false);
       rig.tilt.add(model);
+      // driver's eye and the point it looks at ride with the body, so jumps, roll and yaw move the view with the cabin
+      rig.eyeNode = new T.Object3D(); rig.eyeNode.position.copy(carKit.eye);
+      rig.aimNode = new T.Object3D(); rig.aimNode.position.set(carKit.eye.x + 0.12, carKit.eye.y - 0.1, carKit.eye.z - 10);
+      rig.tilt.add(rig.eyeNode, rig.aimNode);
       rig.flameMat = new T.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false });
-      rig.flames = [-0.42, 0.42].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x, 0.3, 2.4); f.visible = false; rig.tilt.add(f); return f; });
+      rig.flames = [-0.31, 0.31].map((x) => { const f = new T.Mesh(flameGeo, rig.flameMat); f.position.set(x * carKit.K, 0.3, carKit.rearZ - 0.05); f.visible = false; rig.tilt.add(f); return f; });
       rig.shadow = new T.Mesh(aoGeo, aoMat); rig.shadow.position.y = 0.022; rig.shadow.renderOrder = 3;
       rig.tag = new T.Sprite(new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
       rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.4, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.16, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.tailSprites = [];
-      { // rear detail: diffuser, fins, exhaust tips, light bar
-        const dark = new T.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.5, metalness: 0.6 }), chrome = new T.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.25, metalness: 1 });
-        const dif = new T.Mesh(new T.BoxGeometry(1.2, 0.16, 0.12), dark); dif.position.set(0, 0.24, carKit.rearZ - 0.02); rig.tilt.add(dif);
-        for (const fx of [-0.3, 0, 0.3]) { const fin = new T.Mesh(new T.BoxGeometry(0.03, 0.14, 0.2), dark); fin.position.set(fx, 0.24, carKit.rearZ + 0.02); rig.tilt.add(fin); }
-        for (const sx of [-1, 1]) { const tip = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.18, 14, 1, true), chrome); tip.rotation.x = Math.PI / 2; tip.position.set(sx * 0.5, 0.33, carKit.rearZ + 0.05); rig.tilt.add(tip); }
-        rig.barMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.22, depthWrite: false, blending: T.AdditiveBlending, fog: false });
-        const bar = new T.Sprite(rig.barMat); bar.scale.set(1.5, 0.16, 1); bar.position.set(0, carKit.lampY, carKit.rearZ + 0.05); rig.tilt.add(bar);
-      }
       for (const sx of [-1, 1]) {
-        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.36, 0.28, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
-        for (const dx of [0.24, 0.42]) { const e = new T.Sprite(rig.exhMat); e.scale.set(0.2, 0.2, 1); e.position.set(sx * dx, 0.33, carKit.rearZ + 0.06); rig.tilt.add(e); }
+        for (const dx of [0, -0.2]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.34, 0.28, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.02); rig.tilt.add(t); }
+        const e = new T.Sprite(rig.exhMat); e.scale.set(0.22, 0.22, 1); e.position.set(sx * 0.31 * carKit.K, 0.3, carKit.rearZ + 0.04); rig.tilt.add(e);
       }
-      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.75; rig.tailMat.opacity = on ? 0.95 : 0.4; rig.barMat.opacity = on ? 0.8 : 0.22; const k = on ? 1.6 : 1; for (const t of rig.tailSprites) t.scale.set(0.36 * k, 0.28 * k, 1); };
+      rig.setBrake = (on) => { rig.tailMat.opacity = on ? 0.95 : 0.4; const k = on ? 1.6 : 1; for (const t of rig.tailSprites) t.scale.set(0.34 * k, 0.28 * k, 1); };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -1233,8 +1263,6 @@
       if (photoSky && key !== 'sunny') w.fog = { rain: '#5f6b7c', snow: '#dfe7f1', sunset: '#e9a070' }[key] || w.fog;
       scene.background = skyTex(SKY[key] ? key : 'sunny');
       if (skyDome) skyDome.visible = photoSky;
-      cloudsGL.forEach((c, i) => { c.visible = !photoSky || i < 3; });
-      cloudMat.opacity = photoSky ? 0.55 : 1;
       floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) {
         m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint);
         // sunny: lift the dark grass clumps and tree leaves so the roadside reads as sunlit
@@ -1247,7 +1275,7 @@
       paintGrass(w.grass, w.grass2);
       hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); hemi.intensity = w.hemi[2];
       sun.color.set(w.sun[0]); sun.intensity = w.sun[1];
-      cloudMat.color.set(w.cloud); cityMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
+      cityMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
       tmpColor.set(w.city); for (const c of cityMats) c.m.color.copy(c.base).multiply(tmpColor);
       roadMat.roughness = key === 'rain' ? 0.1 : (key === 'snow' ? 0.75 : 0.34); roadMat.envMapIntensity = key === 'rain' ? 1.5 : 1.0; // wet / snowy / dry
       treeLineMat.color.set(key === 'snow' ? '#b9d4c4' : (key === 'sunset' ? '#5a6a22' : (key === 'rain' ? '#1f5a3a' : '#2f8a3c')));
@@ -1259,7 +1287,7 @@
 
     // ---------- sizing ----------
     const PR_MAX = Math.min(window.devicePixelRatio || 1, 2.5); // sharp on high-DPR phones
-    let pixelCap = PR_MAX, viewW = 0, viewH = 0;
+    let pixelCap = PR_MAX, viewW = 0, viewH = 0, tppFov = 50, fppFov = 70;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const w = Math.max(160, Math.round(rect.width)), h = Math.max(140, Math.round(rect.height));
@@ -1269,8 +1297,10 @@
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       // hold the horizontal view steady so the road fills the width on any phone shape
-      camera.fov = Math.max(36, Math.min(74, 2 * Math.atan(Math.tan(T.MathUtils.degToRad(26)) / camera.aspect) * 180 / Math.PI));
-      camPitch = 0.30 * Math.tan(T.MathUtils.degToRad(camera.fov / 2));
+      tppFov = Math.max(36, Math.min(74, 2 * Math.atan(Math.tan(T.MathUtils.degToRad(26)) / camera.aspect) * 180 / Math.PI));
+      fppFov = Math.max(50, Math.min(66, 2 * Math.atan(Math.tan(T.MathUtils.degToRad(34)) / camera.aspect) * 180 / Math.PI));
+      camera.fov = tppFov;
+      camPitch = 0.30 * Math.tan(T.MathUtils.degToRad(tppFov / 2));
       camera.updateProjectionMatrix();
     };
     window.addEventListener('resize', resize);
@@ -1344,8 +1374,19 @@
       const boosting = racing && player.boostTimer > 0;
       fovKick += ((boosting ? 1 : 0) - fovKick) * Math.min(1, dt * 4);
       const shake = (racing && cameraShake > 0) ? cameraShake * 0.012 : 0;
-      camera.position.set(camX + (Math.random() - 0.5) * shake, CAM_H + (Math.random() - 0.5) * shake, pz + CAM_BACK + fovKick * 0.5);
-      camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
+      const fppOn = !!R3D.fpp && !!carKit, pRig = rigs[cars.indexOf(player)];
+      if (fppOn && pRig) {
+        // driver's seat of the player's own car (rough pose here; locked to the cabin once the cars have moved, below)
+        const e = carKit.eye;
+        camera.position.set(player.x * R3D_XS + e.x, e.y, pz + e.z);
+        camera.lookAt(player.x * R3D_XS + e.x, e.y - 1.55, pz + e.z - 10);
+        camera.fov = fppFov; camera.near = 0.07;
+      } else {
+        camera.up.set(0, 1, 0);
+        camera.position.set(camX + (Math.random() - 0.5) * shake, CAM_H + (Math.random() - 0.5) * shake, pz + CAM_BACK + fovKick * 0.5);
+        camera.lookAt(camX * 0.92, CAM_H - 20 * camPitch, pz + CAM_BACK - 20);
+        camera.fov = tppFov; camera.near = 0.3;
+      }
       camera.zoom = 1 - fovKick * 0.03; camera.updateProjectionMatrix();
       // sweeping left/right bends that change slowly along the track
       // Track shape is re-rolled for every race from its obstacle layout (same for everyone in a room):
@@ -1360,7 +1401,6 @@
       grassTex.offset.y = -(grass.position.z / GRASS_PERIOD) % 1;
       road.position.z = cz - ROAD_LEN * 0.4; rails.position.z = road.position.z;
       roadTex.offset.y = -(road.position.z / ROAD_PERIOD) % 1;
-      for (const c of cloudsGL) c.position.x = ((c.userData.x0 + tSec * c.userData.spd * 0.25 + 720) % 1440) - 720;
 
       // lane dashes + rail posts (world-anchored, wrapped ahead of the camera)
       const camTrack = -cz / R3D_ZS;
@@ -1394,7 +1434,9 @@
         }
         lamps.instanceMatrix.needsUpdate = true;
       }
-      const mBase = Math.floor(-cz / MID_GAP); if (mBase !== midBase) { midBase = mBase; layoutMidBlocks(mBase); }
+      // the passing city blocks scroll at 80% of the road speed (they follow the camera by 20%)
+      const mBase = Math.floor(-cz * WORLD_DRIFT / MID_GAP); if (mBase !== midBase) { midBase = mBase; layoutMidBlocks(mBase); }
+      for (const g of midBlocks) g.position.z = g.userData.z0 + cz * (1 - WORLD_DRIFT);
       // flora is re-laid in 4-segment steps (about once a second at speed), never every segment
       const fBase = Math.floor(camTrack / (FLORA_SEG * 4)) * 4;
       if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
@@ -1411,7 +1453,16 @@
       for (let i = 0; i < rigs.length; i++) {
         const rig = rigs[i], car = cars[i];
         if (!car) { rig.group.visible = false; rig.tag.visible = false; continue; }
-        rig.group.visible = true; rig.tag.visible = true;
+        const seat = fppOn && car === player;
+        rig.group.visible = true; rig.tag.visible = !seat;
+        if (rig.setView) {
+          rig.setView(seat);
+          if (seat && rig.steer) { // the wheel follows Left/Right (or the AI's steering in Car Bet)
+            const want = Math.max(-1, Math.min(1, (racing ? (car.steerV || 0) : 0) / 2.2));
+            rig.steerSm += (want - rig.steerSm) * Math.min(1, dt * 9);
+            rig.steer.rotation.z = -rig.steerSm * 1.75;
+          }
+        }
         if (rig.themeKey !== car.themeKey) {
           rig.themeKey = car.themeKey;
           rig.paint.color.set(car.primaryColor); rig.stripe.color.set(car.stripeColor);
@@ -1451,6 +1502,15 @@
         const ts = Math.max(1, dist / 13.5) * 1.3;
         rig.tag.scale.set(ts, ts / 3, 1);
         rig.tag.position.set(x, 1.4 + rig.group.position.y, z);
+      }
+
+      if (fppOn && pRig && pRig.eyeNode) {
+        pRig.group.updateWorldMatrix(false, true);
+        const sh = shake * 0.35;
+        camera.position.setFromMatrixPosition(pRig.eyeNode.matrixWorld);
+        camera.position.x += (Math.random() - 0.5) * sh; camera.position.y += (Math.random() - 0.5) * sh;
+        camera.up.setFromMatrixColumn(pRig.eyeNode.matrixWorld, 1).normalize();
+        camera.lookAt(v3a.setFromMatrixPosition(pRig.aimNode.matrixWorld));
       }
 
       // track objects
