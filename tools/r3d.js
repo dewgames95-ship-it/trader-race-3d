@@ -7,6 +7,40 @@
   const R3D_XS = 4.1;   // metres per lane-space unit (road half-width = 1.0)
   const R3D_ZS = 0.29;  // metres per track-distance unit (kept low so the sense of speed matches the 2D view)
 
+  // ---- shared with the simulation (also used by the 2D fallback) ----
+  // Obstacle footprints in metres as drawn: half-width, half-depth, height a jumping car must clear.
+  const R3D_OBJ = {
+    cone: { hw: 1.05, hd: 0.55, h: 0.9 }, barrel: { hw: 0.95, hd: 0.5, h: 1.1 }, barrier: { hw: 1.35, hd: 0.4, h: 1.1 },
+    crates: { hw: 0.95, hd: 0.5, h: 1.5 }, barricade: { hw: 0.8, hd: 0.35, h: 1.0 }, tyres: { hw: 0.85, hd: 0.6, h: 0.9 },
+    roadblock: { hw: 1.3, hd: 0.4, h: 1.1 }, brokentruck: { hw: 1.12, hd: 2.45, h: 9 }, brokencar: { hw: 1.0, hd: 2.2, h: 9 }
+  };
+  const R3D_CAR = { hl: 2.3, hw: 0.95 };
+  const R3D_FX = { railHits: [] }; // { side, z, t } pushed by the simulation when a car hits the guard rail
+  // Road shape for this race: re-rolled from the obstacle layout (same for everyone in a room).
+  // A left/right bias plus two S-bend waves, eased in after the start grid.
+  let r3dCurveFor = null, r3dCurve = null, r3dPathCache = null;
+  function trackBendAt(z) {
+    if (r3dCurveFor !== trackObjects) {
+      r3dCurveFor = trackObjects; r3dPathCache = null;
+      const hs = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+      let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
+      r3dCurve = { bias: (hs(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hs(sd + 2) * 0.0005, f1: 210 + hs(sd + 3) * 190, p1: hs(sd + 4) * 6.283, a2: 0.0004 + hs(sd + 5) * 0.0004, f2: 85 + hs(sd + 6) * 75, p2: hs(sd + 7) * 6.283 };
+    }
+    const c = r3dCurve, e = Math.min(1, Math.max(0, (z - 40) / 260)), cS = e * e * (3 - 2 * e);
+    return cS * (c.bias + c.a1 * Math.sin(z / c.f1 + c.p1) + c.a2 * Math.sin(z / c.f2 + c.p2));
+  }
+  // Top-down centre line of the real route (metres), for the mini-map: heading turns by 2 * bend per metre.
+  function trackPath() {
+    trackBendAt(0);
+    if (r3dPathCache) return r3dPathCache;
+    const pts = [], STEP = 12; let x = 0, y = 0, th = 0, minX = 0, maxX = 0;
+    for (let z = 0; z <= FINISH_LINE_Z + STEP; z += STEP) {
+      pts.push([x, y]); if (x < minX) minX = x; if (x > maxX) maxX = x;
+      const dm = STEP * R3D_ZS; th += 2 * trackBendAt(z + STEP / 2) * dm; x += Math.sin(th) * dm; y += Math.cos(th) * dm;
+    }
+    return (r3dPathCache = { pts, step: STEP, minX, maxX, len: y });
+  }
+
   function r3dFail(reason) {
     if (R3D.status === 'failed') return;
     R3D.status = 'failed';
@@ -289,25 +323,68 @@
       mat.customProgramCacheKey = () => 'trNoBend';
     };
     const skylinePiece = (group, crisp) => group.traverse((o) => { if (o.isMesh) [].concat(o.material).forEach((m) => { noBend(m); if (crisp) { m.fog = false; m.envMapIntensity = 1.5; } }); });
-    if (cityAScene) { const a = fitModel(cityAScene, 0.016); skylinePiece(a.group, false); a.group.position.set(0, -2, -1180); a.group.rotation.y = 0.5; backdrop.add(a.group); }
-    if (cityBScene) {
-      const b = fitModel(cityBScene, 80); skylinePiece(b.group, false);
-      [[-430, -700, 0], [430, -700, 1], [-150, -980, 2], [170, -980, 3]].forEach(([x, z, r], i) => { const g = i ? b.group.clone(true) : b.group; g.position.set(x, -1.2, z); g.rotation.y = r * Math.PI / 2; backdrop.add(g); });
-    }
-    // Glass towers: two staggered rows 430-640 m out, right across the horizon (also beyond the end of
-    // the road). Heights stay modest, and lower toward the screen edges so nothing rises behind the HUD.
-    if (towerScene) {
-      const t = fitModel(towerScene, 0.55), towerH = t.size.y || 1, TW_N = 34;
-      skylinePiece(t.group, true);
-      for (let i = 0; i < TW_N; i++) {
-        const g = i ? t.group.clone(true) : t.group, back = i % 2;
-        const d = (back ? 560 : 440) + hash(i * 7.1) * 80, x = ((i + 0.5) / TW_N * 2 - 1) * 560 + (hash(i * 3.3) - 0.5) * 22;
-        const edge = Math.min(1, Math.abs(x) / d / 0.5), h = d * (0.1 + hash(i * 6.3) * 0.065) * (1 - 0.45 * edge * edge);
-        g.scale.setScalar(h / towerH);
-        g.position.set(x, 0, -d);
-        g.rotation.y = Math.floor(hash(i * 11.3) * 4) * Math.PI / 2;
-        backdrop.add(g);
+    // Bake a whole model into one mesh per material (a city is ~100 separate meshes otherwise), centred
+    // on x/z with its base at y = 0. Materials become simple sun-lit ones that keep the facade textures.
+    const bakeModel = (root, scale, skip) => {
+      root.scale.setScalar(scale); root.updateMatrixWorld(true);
+      const byMat = new Map(), v = new T.Vector3(), nm = new T.Matrix3(), box = new T.Box3();
+      root.traverse((o) => {
+        if (!o.isMesh || Array.isArray(o.material) || (skip && skip.test(o.material.name))) return;
+        const g = o.geometry, pa = g.attributes.position, na = g.attributes.normal, ua = g.attributes.uv, ix = g.index, cnt = ix ? ix.count : pa.count;
+        let e = byMat.get(o.material); if (!e) byMat.set(o.material, e = { P: [], N: [], U: [] });
+        nm.getNormalMatrix(o.matrixWorld);
+        for (let k = 0; k < cnt; k++) {
+          const q = ix ? ix.getX(k) : k;
+          v.fromBufferAttribute(pa, q).applyMatrix4(o.matrixWorld); e.P.push(v.x, v.y, v.z); box.expandByPoint(v);
+          if (na) { v.fromBufferAttribute(na, q).applyMatrix3(nm).normalize(); e.N.push(v.x, v.y, v.z); } else e.N.push(0, 1, 0);
+          if (ua) e.U.push(ua.getX(q), ua.getY(q)); else e.U.push(0, 0);
+        }
+      });
+      const c = box.getCenter(new T.Vector3()), parts = [];
+      for (const [src, e] of byMat) {
+        const g = new T.BufferGeometry();
+        g.setAttribute('position', new T.Float32BufferAttribute(e.P, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(e.N, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(e.U, 2));
+        g.translate(-c.x, -box.min.y, -c.z);
+        if (src.map) src.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        parts.push({ geo: g, map: src.map || null, color: src.color ? src.color.clone() : col('#ffffff') });
       }
+      return { parts, size: box.getSize(new T.Vector3()) };
+    };
+    // one object from a baked model; `far` pieces belong to the fixed skyline (no bend, no haze wash-out)
+    const cityObject = (baked, far) => {
+      const g = new T.Group();
+      for (const pt of baked.parts) {
+        const m = new T.MeshLambertMaterial({ map: pt.map, color: pt.color.clone().multiplyScalar(far ? 0.8 : 0.86), fog: !far }); // a touch deeper so facades and windows read in full sun
+        if (far) noBend(m);
+        const mesh = new T.Mesh(pt.geo, m); mesh.frustumCulled = false; g.add(mesh);
+      }
+      return g;
+    };
+    // Skyline = the two varied city models (offices, mixed towers, different silhouettes).
+    const MID_GAP = 380, midBlocks = []; let midBase = null;
+    if (cityAScene) {
+      const a = bakeModel(cityAScene, 0.0132), g = cityObject(a, true);
+      g.position.set(0, -1.5, -(410 + a.size.z / 2)); backdrop.add(g);
+    }
+    if (cityBScene) {
+      const b = bakeModel(cityBScene, 80, /^ground$/);
+      [[-265, -500, 0.4, 1], [280, -470, 0.5, 3], [-40, -640, 0.42, 2]].forEach(([x, z, sc, r]) => { const g = cityObject(b, true); g.scale.setScalar(sc); g.position.set(x, 0, z); g.rotation.y = r * Math.PI / 2; backdrop.add(g); });
+      // mid-ground: an occasional small city block standing on the grass, well back from the road
+      for (let i = 0; i < 4; i++) { const g = cityObject(b, false); scene.add(g); midBlocks.push(g); }
+    }
+    const layoutMidBlocks = (base) => {
+      midBlocks.forEach((g, k) => {
+        const row = base + k - 1, side = (row & 1) ? 1 : -1, sc = side < 0 ? 0.15 + hash(row * 3.1) * 0.03 : 0.19 + hash(row * 3.1) * 0.05;
+        g.scale.setScalar(sc);
+        g.position.set(side * (165 + hash(row * 5.3) * 50), -0.2, -(row * MID_GAP + 120 + hash(row * 7.7) * 140));
+        g.rotation.y = Math.floor(hash(row * 9.1) * 4) * Math.PI / 2;
+      });
+    };
+    // The glass tower appears once, as a landmark.
+    if (towerScene) {
+      const t = fitModel(towerScene, 0.55);
+      skylinePiece(t.group, true);
+      t.group.scale.setScalar(118 / (t.size.y || 1)); t.group.position.set(150, 0, -610); backdrop.add(t.group);
     }
     const treeLineMat = new T.MeshBasicMaterial({ color: 0x2f8a3c, fog: true }); // (no tree-line mound at the end of the road any more)
 
@@ -426,6 +503,14 @@
     railLights.frustumCulled = false; railLights.visible = false;
     scene.add(railLights);
 
+    // rail impact: a row of steel spikes snaps out of the guard rail on the side that was hit
+    const spikeGeo = merge([-1.25, -0.75, -0.25, 0.25, 0.75, 1.25].flatMap((z, i) => {
+      const c = new T.ConeGeometry(0.09, 1, 7); c.rotateZ(-Math.PI / 2); c.translate(0.5, 0, 0);
+      const b = new T.BoxGeometry(0.06, 0.22, 0.22);
+      return [part(c, i % 2 ? '#f8fafc' : '#ef4444', 0, 0, z), part(b, '#475569', 0, 0, z)];
+    }));
+    const railSpikes = [0, 1, 2, 3].map(() => { const m = new T.Mesh(spikeGeo, matVC); m.visible = false; m.userData.t = 9; scene.add(m); return m; });
+
     // street lights (one merged lamp post, instanced along both sides)
     const LAMP_GAP = 34, LAMP_ROWS = 16;
     const lampGeo = merge([
@@ -441,7 +526,7 @@
     let lampBase = null;
 
     // ---------- roadside flora (instanced, world-anchored by segment index) ----------
-    const FLORA_SEG = 22, FLORA_ROWS = 40;
+    const FLORA_SEG = 22, FLORA_ROWS = 48;
     const trunkGeo = new T.CylinderGeometry(0.15, 0.22, 1, 6); trunkGeo.translate(0, 0.5, 0);
     const trunks = new T.InstancedMesh(trunkGeo, new T.MeshLambertMaterial({ color: 0x7a4a26 }), FLORA_ROWS * 6);
     const leafMat = new T.MeshLambertMaterial({ color: 0xffffff });
@@ -525,14 +610,14 @@
       for (const q of [[[-1, 0, 0], [1, 0, 0], [1, 1, 0], [-1, 1, 0]], [[0, 0, -1], [0, 0, 1], [0, 1, 1], [0, 1, -1]]]) for (const i of [0, 1, 2, 0, 2, 3]) { P.push(...q[i]); U.push([0, 1, 1, 0][i], [0, 0, 1, 1][i]); }
       tuftGeo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); tuftGeo.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
     }
-    const TUFT_CAP = FLORA_ROWS * 2 * 16;
+    const TUFT_CAP = FLORA_ROWS * 2 * 30;
     const TUFT_TINTS = ['#ffffff', '#d9f2b0', '#a8d68a', '#f0e6a0', '#7fbf6a', '#c8f0c0'].map((c) => col(c));
     const tuftMat = new T.MeshBasicMaterial({ map: canvasTex(tuftC), alphaTest: 0.4, side: T.DoubleSide });
     const tufts = new T.InstancedMesh(tuftGeo, tuftMat, TUFT_CAP);
     tufts.frustumCulled = false; tufts.count = 0; scene.add(tufts);
     // Real 3D trees (maple + pine LOD2 meshes from the owner's packs) for the rows nearest the road.
     const treeKits = [], leafMats = [];
-    const TREE_CAP = 70, NEAR_ROWS = 20;
+    const TREE_CAP = 90;
     const makeKits = (root, prefix, kind) => {
       if (!root) return;
       root.updateMatrixWorld(true);
@@ -546,9 +631,11 @@
         const norm = new T.Matrix4().makeScale(1 / size.y, 1 / size.y, 1 / size.y).multiply(new T.Matrix4().makeTranslation(-c.x, -box.min.y, -c.z));
         const parts = meshes.map((m) => {
           const g = m.geometry.clone().applyMatrix4(new T.Matrix4().multiplyMatrices(norm, m.matrixWorld));
-          const mat = m.material.clone();
-          if (mat.transparent || mat.alphaTest > 0 || /Cluster/.test(mat.name)) { mat.transparent = false; mat.alphaTest = 0.45; mat.depthWrite = true; leafMats.push(mat); }
-          mat.side = T.DoubleSide;
+          const src = m.material, leaf = src.transparent || src.alphaTest > 0 || /Cluster/.test(src.name);
+          if (src.map) src.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          const mat = new T.MeshLambertMaterial({ map: src.map || null, color: 0xffffff, side: T.DoubleSide, alphaTest: leaf ? 0.5 : 0 });
+          mat.name = src.name;
+          if (leaf) leafMats.push(mat);
           const im = new T.InstancedMesh(g, mat, TREE_CAP); im.count = 0; im.frustumCulled = false; scene.add(im);
           return im;
         });
@@ -557,18 +644,21 @@
     };
     makeKits(mapleScene, 'Acer_', 'leafy');
     makeKits(pineScene, 'Pine_', 'pine');
-    const qy = new T.Quaternion(), upY = new T.Vector3(0, 1, 0);
+    const qy = new T.Quaternion(), upY = new T.Vector3(0, 1, 0), tmpTint = new T.Color();
     const plant3d = (kind, x, z, h, seed) => {
       const list = treeKits.filter((t) => t.kind === kind); if (!list.length) return false;
       const kit = list[Math.floor(hash(seed) * list.length)]; if (kit.n >= TREE_CAP) return false;
       qy.setFromAxisAngle(upY, hash(seed * 1.7) * Math.PI * 2);
       m4.compose(v3a.set(x, -0.05, z), qy, v3b.set(h, h, h));
-      for (const im of kit.parts) im.setMatrixAt(kit.n, m4);
+      // every tree gets its own leaf tone (fresh, deep, slightly yellow) so neighbours never look copied
+      const tk = hash(seed * 2.9), tb = 0.86 + hash(seed * 4.3) * 0.24;
+      tmpTint.setRGB((tk < 0.3 ? 0.84 : (tk < 0.6 ? 1.0 : 1.1)) * tb, tb, (tk < 0.3 ? 0.82 : (tk < 0.6 ? 0.9 : 0.72)) * tb);
+      for (const im of kit.parts) { im.setMatrixAt(kit.n, m4); im.setColorAt(kit.n, tmpTint); }
       kit.n++;
       return true;
     };
     // Owner's grass pack: every patch/clump mesh becomes an instanced kit.
-    const grassKits = [], GRASS_CAP = 360;
+    const grassKits = [], GRASS_CAP = 620;
     if (grassScene) {
       grassScene.updateMatrixWorld(true);
       grassScene.traverse((o) => {
@@ -600,21 +690,25 @@
           const n = s * 2 + (side > 0 ? 1 : 0), r = (q) => hash(n * q);
           // stretches of dense planting alternate with open gaps
           const dens = hash(Math.floor(s / 4) * 7.13 + (side > 0 ? 3.1 : 0));
-          const near3d = treeKits.length && k < NEAR_ROWS;
-          const leafy = (x, zz, h) => {
-            if (near3d && plant3d('leafy', x, zz, h * 1.15, n * 3.3 + x)) { if (si < FLORA_ROWS * 10) put(treeShade, si++, x + 1, 0, zz + 0.4, h * 0.55, 1, h * 0.4); return; }
-            plant(LEAFY[Math.floor(r(2.1 + x) * 3)], x, zz, h, r(5.3 + x) < 0.5, h * 0.36);
+          // real 3D trees everywhere (cut-out sprites only if the tree packs failed to load)
+          const pineZone = hash(Math.floor(s / 6) * 3.7 + (side > 0 ? 1.9 : 0)) < 0.32;
+          const tree = (x, zz, h, pineBias) => {
+            const kind = r(2.7 + x) < (pineZone ? 0.75 : pineBias) ? 'pine' : 'leafy';
+            if (plant3d(kind, x, zz, kind === 'pine' ? h * 1.2 : h * 1.15, n * 3.3 + x) || plant3d(kind === 'pine' ? 'leafy' : 'pine', x, zz, h * 1.15, n * 3.3 + x)) {
+              if (si < FLORA_ROWS * 10) put(treeShade, si++, x + h * 0.14, 0, zz + 0.4, h * (kind === 'pine' ? 0.34 : 0.52), 1, h * (kind === 'pine' ? 0.26 : 0.38));
+              return;
+            }
+            if (kind === 'pine') plant(FIRS[Math.floor(r(2.1 + x) * 3)], x, zz, h * 1.2, r(5.3 + x) < 0.5, h * 0.25);
+            else plant(LEAFY[Math.floor(r(2.1 + x) * 3)], x, zz, h, r(5.3 + x) < 0.5, h * 0.36);
           };
           // front row: one tree every other segment (about 13 m apart), with whole stretches left open
-          if (dens > 0.34 && !(s & 1)) {
-            if (r(1.3) < 0.8) leafy(side * (EDGE + r(3.7) * 2.2), z, 4.8 + r(4.9) * 2.4);
-            else if (!(near3d && plant3d('pine', side * (EDGE + 0.6 + r(3.7) * 1.6), z, 6.5 + r(4.9) * 3, n * 5.1)))
-              plant(FIRS[Math.floor(r(2.1) * 3)], side * (EDGE + 0.6 + r(3.7) * 1.6), z, 7 + r(4.9) * 3, r(5.3) < 0.5, 1.6);
-          }
-          if (dens > 0.58 && (s & 1) && r(10.1) < 0.7) leafy(side * (EDGE + 7 + r(10.3) * 7), z - segLen * r(10.9), 6 + r(11.3) * 3);
-          // saplings near the verge and tall trees further back, both with gaps
-          if (r(30.1) < 0.3) leafy(side * (EDGE - 1.2 + r(30.7) * 5), z - segLen * r(31.3), 2.4 + r(31.9) * 1.3);
-          if (r(32.3) < 0.26) leafy(side * (EDGE + 9 + r(32.9) * 10), z - segLen * r(33.1), 9.5 + r(33.7) * 3.5);
+          if (dens > 0.34 && !(s & 1)) tree(side * (EDGE + r(3.7) * 2.4), z, 5.2 + r(4.9) * 3.2, 0.2);
+          if (dens > 0.58 && (s & 1) && r(10.1) < 0.7) tree(side * (EDGE + 7 + r(10.3) * 7), z - segLen * r(10.9), 6 + r(11.3) * 3.4, 0.3);
+          // saplings near the verge, tall trees further back, a loose tree line beyond: all with gaps
+          if (r(30.1) < 0.3) tree(side * (EDGE - 1.2 + r(30.7) * 5), z - segLen * r(31.3), 2.5 + r(31.9) * 1.5, 0.25);
+          if (r(32.3) < 0.26) tree(side * (EDGE + 9 + r(32.9) * 10), z - segLen * r(33.1), 10 + r(33.7) * 4, 0.3);
+          if (r(12.1) < 0.3) tree(side * (EDGE + 16 + r(12.7) * 11), z - segLen * r(13.1), 8 + r(13.7) * 4.5, 0.4);
+          if (r(15.3) < 0.26) tree(side * (EDGE + 30 + r(15.7) * 30), z - segLen * r(16.3), 11 + r(16.9) * 6, 0.45);
           if (r(34.1) < 0.16) plant(ROCKS[Math.floor(r(34.7) * 3)], side * (RAIL_X + 2.2 + r(35.1) * 6), z - segLen * r(35.9), 1.4 + r(36.3) * 0.9, r(36.9) < 0.5, 0.7); // boulders
           // low round bushes on the open lawn
           if (r(24.1) < 0.4 && bi + 5 <= FLORA_ROWS * 16) {
@@ -626,19 +720,17 @@
             }
             if (si < FLORA_ROWS * 10) put(treeShade, si++, bx + 0.25, 0, bz + 0.1, bs * 1.5, 1, bs * 1.15);
           }
-          if (r(12.1) < 0.3) plant(r(12.5) < 0.6 ? LEAFY[Math.floor(r(12.9) * 2)] : FIRS[Math.floor(r(12.9) * 3)], side * (EDGE + 15 + r(12.7) * 10), z - segLen * r(13.1), 8 + r(13.7) * 4, r(14.3) < 0.5, 0);
-          if (r(15.3) < 0.25) plant(r(15.1) < 0.5 ? 'pines' : 'leafy0', side * (EDGE + 30 + r(15.7) * 28), z - segLen * r(16.3), 11 + r(16.9) * 6, r(17.3) < 0.5, 0);
           if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           if (r(26.3) < 0.55) plant(ROCKS[Math.floor(r(26.9) * 3)], side * (RAIL_X + 4 + r(27.1) * 9), z - segLen * r(27.7), 0.5 + r(28.3) * 0.6, r(28.9) < 0.5, 0); // pebbles further out
-          for (let f = 0; f < 16 && gi < TUFT_CAP; f++) {
+          for (let f = 0; f < 30 && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
             if (grassKits.length) {
               const kit = grassKits[Math.floor(hash(n * 41.3 + f) * grassKits.length)];
               if (kit.n < GRASS_CAP) {
-                const gs = 1.1 + hash(n * 43.7 + f) * 1.1;
+                const gs = (f % 5 === 0 ? 2.1 : 1.0) + hash(n * 43.7 + f) * 1.2; // every fifth one is a big patch
                 qy.setFromAxisAngle(upY, hash(n * 45.1 + f) * 6.283);
-                kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * 15), -0.02, z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
+                kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * (8 + far * 20)), -0.02, z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
               }
               continue;
             }
@@ -655,7 +747,7 @@
       }
       for (const k in species) { species[k].mesh.count = species[k].n; species[k].mesh.instanceMatrix.needsUpdate = true; }
       treeShade.count = si; treeShade.instanceMatrix.needsUpdate = true;
-      for (const kit of treeKits) for (const im of kit.parts) { im.count = kit.n; im.instanceMatrix.needsUpdate = true; }
+      for (const kit of treeKits) for (const im of kit.parts) { im.count = kit.n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
       for (const kit of grassKits) { kit.im.count = kit.n; kit.im.instanceMatrix.needsUpdate = true; }
       tufts.count = gi; tufts.instanceMatrix.needsUpdate = true; if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
       trunks.count = cones.count = 0; dots.count = di; blobs.count = bi;
@@ -1000,6 +1092,8 @@
         part(new T.BoxGeometry(2.2, 1.9, 3.3), '#f1f5f9', 0, 1.55, 0.5), part(new T.BoxGeometry(2.22, 0.3, 3.32), '#f97316', 0, 1.2, 0.5),
         part(new T.BoxGeometry(2.05, 1.35, 1.25), '#38bdf8', 0, 1.15, -1.85), part(new T.BoxGeometry(1.8, 0.5, 0.06), '#0f172a', 0, 1.45, -2.49),
         part(new T.BoxGeometry(2.1, 0.25, 4.6), '#1f2937', 0, 0.5, -0.1),
+        part(new T.BoxGeometry(2.0, 1.7, 0.05), '#cbd5e1', 0, 1.55, 2.16), part(new T.BoxGeometry(0.05, 1.7, 0.06), '#64748b', 0, 1.55, 2.19),   // rear doors
+        part(new T.BoxGeometry(2.24, 0.16, 0.1), '#facc15', 0, 0.52, 2.2), part(new T.BoxGeometry(0.34, 0.16, 0.06), '#ef4444', -0.86, 0.72, 2.2), part(new T.BoxGeometry(0.34, 0.16, 0.06), '#ef4444', 0.86, 0.72, 2.2), // bumper + tail lamps
         ...[[-1, 1.3], [1, 1.3], [-1, -1.7], [1, -1.7]].map(([sx, z]) => { const g = new T.CylinderGeometry(0.44, 0.44, 0.3, 12); g.rotateZ(Math.PI / 2); return part(g, '#111318', sx * 1.0, 0.44, z); })
       ])
     };
@@ -1069,7 +1163,7 @@
       oil: () => { const m = new T.Mesh(flatOnRoad(2.2, 2.2), oilMat); m.position.y = 0.02; m.renderOrder = 2; const g = new T.Group(); g.add(m); return g; },
       barrel: () => new T.Mesh(OBJ_GEO.barrel, matVC),
       barrier: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.barrierBase, matVC), new T.Mesh(barrierTop, barrierMat)); return g; },
-      brokentruck: () => { const g = new T.Group(), m = new T.Mesh(OBJ_GEO.brokentruck, matVC); m.rotation.y = 1.28; m.rotation.z = 0.04; m.scale.setScalar(0.98); g.add(m, new T.Mesh(OBJ_GEO.cone, matVC)); g.children[1].position.set(0, 0, 3.2); return g; },
+      brokentruck: () => { const g = new T.Group(); g.add(new T.Mesh(OBJ_GEO.brokentruck, matVC)); return g; }, // parked upright in its lane, tail toward the camera
       jump: () => {
         // sloped steel ramp: chevron deck with a JUMP marking, dark side plates, an arrow sign you can read from far
         const W = 2.3, L = 4.2, H = 1.05, slope = Math.hypot(L, H);
@@ -1154,7 +1248,8 @@
     };
 
     // ---------- sizing ----------
-    let pixelCap = Math.min(window.devicePixelRatio || 1, 2), viewW = 0, viewH = 0;
+    const PR_MAX = Math.min(window.devicePixelRatio || 1, 2.5); // sharp on high-DPR phones
+    let pixelCap = PR_MAX, viewW = 0, viewH = 0;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const w = Math.max(160, Math.round(rect.width)), h = Math.max(140, Math.round(rect.height));
@@ -1186,10 +1281,17 @@
       } catch (err) { composer = null; renderer.toneMapping = T.ACESFilmicToneMapping; }
     }
     if (!composer) quality = 2;
+    // Quality steps are reversible: the post-processing chain is parked, not destroyed.
+    const composerFull = composer, QUALITY_MAX = quality;
     const setQuality = (q) => {
       quality = q;
-      if (q < 3 && composer) { composer.dispose(); composer = null; renderer.toneMapping = T.ACESFilmicToneMapping; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); }); }
-      if (q < 2) { renderer.shadowMap.enabled = false; sun.castShadow = false; }
+      const wantPost = q >= 3 && !!composerFull, wantShadow = q >= 2;
+      if (wantPost !== !!composer || wantShadow !== renderer.shadowMap.enabled) {
+        composer = wantPost ? composerFull : null; composerW = 0;
+        renderer.toneMapping = wantPost ? T.NoToneMapping : T.ACESFilmicToneMapping;
+        renderer.shadowMap.enabled = wantShadow; sun.castShadow = wantShadow;
+        scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
+      }
     };
     R3D.getQuality = () => quality;
 
@@ -1197,7 +1299,7 @@
     const CAM_H = 5.7, CAM_BACK = 11.8; // higher chase cam: far obstacles and the road ahead are visible
     let camPitch = 0.22; // tan(angle below level); set from the FOV so the horizon sits ~35% down the view
     let curveFor = null, curve = null, bendSm = 0, composerW = 0, composerH = 0, composerPR = 0;
-    let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, slowFrames = 0, frameCount = 0;
+    let lastT = performance.now(), wheelSpin = 0, camX = 0, fovKick = 0, frameCount = 0, emaDt = 1 / 60, slowT = 0, fastT = 0, restores = 0;
     const tmpColor = new T.Color();
     R3D.render = () => {
       const now = performance.now(), dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
@@ -1207,9 +1309,19 @@
 
       // adaptive resolution: step down once if the phone cannot hold the frame rate
       frameCount++;
-      if (frameCount > 60 && pixelCap > 1) {
-        slowFrames = dt > 0.0222 ? slowFrames + 1 : Math.max(0, slowFrames - 1);
-        if (slowFrames > 45) { slowFrames = 0; if (quality > 1) setQuality(quality - 1); else pixelCap = Math.max(1, pixelCap - 0.35); }
+      // Works on a smoothed frame time, so a short hitch never costs quality. Sustained slowness first
+      // lowers the resolution (cheap, invisible to undo), then post-processing, then shadows; once the
+      // frame rate has been steady again for a few seconds each step is given back.
+      if (frameCount > 90) {
+        emaDt += (dt - emaDt) * 0.05;
+        if (emaDt > 0.024) { slowT += dt; fastT = 0; } else if (emaDt < 0.0185) { fastT += dt; slowT = Math.max(0, slowT - dt); } else { fastT = 0; slowT = Math.max(0, slowT - dt * 0.5); }
+        if (slowT > 2.5) {
+          slowT = 0; fastT = 0;
+          if (pixelCap > PR_MAX * 0.62) pixelCap = Math.max(PR_MAX * 0.6, pixelCap - PR_MAX * 0.2); else if (quality > 1) setQuality(quality - 1);
+        } else if (fastT > 5) {
+          fastT = 0;
+          if (quality < QUALITY_MAX && restores < 3) { restores++; setQuality(quality + 1); } else if (pixelCap < PR_MAX) pixelCap = Math.min(PR_MAX, pixelCap + PR_MAX * 0.2);
+        }
       }
 
       const player = cars.find((c) => c.isPlayer) || cars[0];
@@ -1228,13 +1340,7 @@
       // sweeping left/right bends that change slowly along the track
       // Track shape is re-rolled for every race from its obstacle layout (same for everyone in a room):
       // a left/right bias plus two S-bend waves, eased in after the start grid.
-      if (curveFor !== trackObjects) {
-        curveFor = trackObjects;
-        let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
-        curve = { bias: (hash(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hash(sd + 2) * 0.0005, f1: 210 + hash(sd + 3) * 190, p1: hash(sd + 4) * 6.283, a2: 0.0004 + hash(sd + 5) * 0.0004, f2: 85 + hash(sd + 6) * 75, p2: hash(sd + 7) * 6.283 };
-      }
-      const cEase = Math.min(1, Math.max(0, (player.z - 40) / 260)), cS = cEase * cEase * (3 - 2 * cEase);
-      const bendNow = cS * (curve.bias + curve.a1 * Math.sin(player.z / curve.f1 + curve.p1) + curve.a2 * Math.sin(player.z / curve.f2 + curve.p2));
+      const bendNow = trackBendAt(player.z);
       bendSm += (bendNow - bendSm) * Math.min(1, dt * 3);
       camera.projectionMatrix.elements[4] = bendSm;
 
@@ -1278,7 +1384,9 @@
         }
         lamps.instanceMatrix.needsUpdate = true;
       }
-      const fBase = Math.floor(camTrack / FLORA_SEG);
+      const mBase = Math.floor(-cz / MID_GAP); if (mBase !== midBase) { midBase = mBase; layoutMidBlocks(mBase); }
+      // flora is re-laid in 4-segment steps (about once a second at speed), never every segment
+      const fBase = Math.floor(camTrack / (FLORA_SEG * 4)) * 4;
       if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
 
       // cars
@@ -1313,7 +1421,7 @@
           if (dm > -2.1 && dm < 3.6) { rampT = Math.min(1, (dm + 2.1) / 4.2); break; }
         }
         const hop = car.jumpTimer > 0 ? (car.jumpY || 0) + 1.05 * (1 - air) * (1 - air) : rampT * 1.05;
-        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop, z);
+        rig.group.position.set(x + (car.scrapeDir || 0) * scrape * 0.12, hop, z);
         rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.24 : -rampT * 0.2;
         rig.shadow.position.y = 0.022 - hop; rig.shadow.scale.setScalar(1 - hop * 0.08);
         const ease = Math.min(1, dt * 9);
@@ -1350,14 +1458,22 @@
         } else {
           // hit obstacles are shoved to the road edge and stay there (they never vanish)
           const k = obj.broken ? 1 : (obj.hitAnimTimer > 0 ? 1 - obj.hitAnimTimer / 0.32 : 0), e = 1 - (1 - k) * (1 - k), dir = obj.hitDir || 1;
-          const heavy = obj.type === 'brokentruck', restX = dir * (R3D_XS + (heavy ? 0.5 : 0.1));
-          const x0 = obj.x * R3D_XS;
-          m.position.set(x0 + (restX - x0) * e, Math.sin(k * Math.PI) * (heavy ? 0.15 : 0.5), -(obj.z + 0.9) * R3D_ZS - e * (heavy ? 5 : 3.2));
-          m.rotation.set(0, dir * e * (heavy ? -1.2 : 1.9), (heavy ? 0.06 : (obj.type === 'cone' || obj.type === 'barricade' ? 1.45 : 0.25)) * e * -dir);
+          const heavy = obj.type === 'brokentruck', D = R3D_OBJ[obj.type] || R3D_OBJ.barrier, restX = dir * (RAIL_X + 1.2 + (heavy ? D.hd : D.hw));
+          const x0 = obj.x * R3D_XS, push = (obj.pushM || 6) + (heavy ? 3 : 1.5);
+          m.position.set(x0 + (restX - x0) * e, Math.sin(k * Math.PI) * (heavy ? 0.9 : 1.1), -(obj.z + 0.9) * R3D_ZS - e * push);
+          m.rotation.set(0, dir * e * (heavy ? -1.35 : 1.9), (heavy ? 0.05 : (obj.type === 'cone' || obj.type === 'barricade' ? 1.45 : 0.25)) * e * -dir);
           m.scale.setScalar(1);
         }
       }
       for (const type in pools) { const pool = pools[type], n = used[type] || 0; for (let i = n; i < pool.length; i++) pool[i].visible = false; }
+      while (R3D_FX.railHits.length) {
+        const h = R3D_FX.railHits.shift(), m = railSpikes.reduce((a, b) => (b.userData.t > a.userData.t ? b : a));
+        m.userData.t = 0; m.userData.side = h.side; m.position.set(h.side * (RAIL_X - 0.08), 0.62, -h.z * R3D_ZS - 1.2);
+      }
+      for (const m of railSpikes) {
+        const t = (m.userData.t += dt); m.visible = t < 0.8;
+        if (m.visible) { const k = t < 0.09 ? t / 0.09 : Math.max(0, 1 - (t - 0.09) / 0.71); m.rotation.y = m.userData.side > 0 ? Math.PI : 0; m.scale.set(0.15 + 0.95 * k * (2 - k), 1, 1); }
+      }
       chevTex.offset.y = -(tSec * 1.6) % 1;
       padGlowMat.opacity = 0.7 + Math.sin(tSec * 5) * 0.18;
 

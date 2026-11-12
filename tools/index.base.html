@@ -4647,7 +4647,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // 2. GAME STATE, PRE-RACE ONLY WEATHER & RACE PHYSICS ENGINE
   // =========================================================================
   const RACE_DURATION_SEC = 60.0;
-  const FINISH_LINE_Z = 3880; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
+  const FINISH_LINE_Z = 3620; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
   const LANE_CENTERS = [-0.75, -0.25, 0.25, 0.75];
 
   let balanceUsdt = 100.00;
@@ -4733,11 +4733,34 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   ];
 
   // Equalized physics constants — ZERO unnatural bot speed cheats!
-  const EQUAL_TOP_SPEED = 206;
+  const EQUAL_TOP_SPEED = 192;
   const BOOST_TOP_SPEED = 250;
   const EQUAL_ACCEL_RATE = 83;
   const EQUAL_BRAKE_RATE = 140;
-  const JUMP_DUR = 0.9, JUMP_PEAK = 2.1, JUMP_LAND_BOOST = 14; // world-unit arc height; small speed kick on landing
+  const JUMP_DUR = 0.9, JUMP_PEAK = 2.1, JUMP_LAND_BOOST = 14;
+  const STEER_MAX_V = 0.95, RAIL_LIMIT_X = 0.86, CURVE_DRIFT = 0.2; // lateral units/s, asphalt edge for the car centre, outward push per 0.001 of bend
+  const nearestLane = (x) => { let b = 0; for (let i = 1; i < LANE_CENTERS.length; i++) if (Math.abs(LANE_CENTERS[i] - x) < Math.abs(LANE_CENTERS[b] - x)) b = i; return b; };
+  // A car that is not steered keeps going straight, so on a bend it slides toward the outside rail.
+  function curveDriftV(car) {
+    if (gameState !== 'RACING' || typeof trackBendAt !== 'function') return 0;
+    const k = Math.min(1.15, car.speed / EQUAL_TOP_SPEED);
+    return -CURVE_DRIFT * (trackBendAt(car.z) / 0.001) * k * k;
+  }
+  // Guard rail: the car never passes it. It bounces back, loses speed, and the rail throws sparks + spikes.
+  function railContact(car) {
+    if (Math.abs(car.x) <= RAIL_LIMIT_X) return;
+    const side = car.x > 0 ? 1 : -1;
+    car.x = side * RAIL_LIMIT_X;
+    if (gameState !== 'RACING' || car.railCool > performance.now()) { car.steerV = Math.min(0, (car.steerV || 0) * side) * side; return; }
+    car.railCool = performance.now() + 550;
+    car.steerV = -side * 0.5; car.knockV = 0;
+    car.scrapeTimer = 0.45; car.scrapeDir = side;
+    car.speed = Math.max(105, car.speed * 0.84); car.boostTimer = 0; car.hitRoll = -side * 0.14;
+    spawnShatterDebris(car.x + side * 0.1, car.z + 6, 'spark');
+    if (typeof R3D_FX !== 'undefined' && R3D_FX.railHits.length < 6) R3D_FX.railHits.push({ side, z: car.z + (car._vz || 0) / 0.29 });
+    if (car.isPlayer || Math.abs(car.z - player0().z) < 25) { cameraShake = Math.max(cameraShake, 8); sfxHitCone(); triggerHaptic && triggerHaptic(35); }
+  }
+  const player0 = () => cars.find(c => c.isPlayer) || cars[0]; // world-unit arc height; small speed kick on landing
   const WORLD_SPEED_SCALE = 0.375;
 
   const keys = { left: false, right: false, accel: false, brake: false };
@@ -5190,6 +5213,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   centerStartCircle.addEventListener('click', beginMatchmaking);
 
+  // Analog steering: Left/Right are held. The simulation turns the hold into a smooth lateral speed.
+  function setSteer(dir, on) {
+    if (dir < 0) keys.left = on; else keys.right = on;
+    if (!on) return;
+    initAudio();
+    if (isAutoBetMode || gameState !== 'RACING') return;
+    sfxSteer();
+    if (typeof window._trPushTelemetryNow === "function") window._trPushTelemetryNow();
+  }
+
+  // (old lane-snap steering, no longer wired to the controls)
   function steerPlayer(dir) {
     initAudio();
     if (isAutoBetMode) return; // In Car Bet mode, AI drives all cars automatically!
@@ -5213,13 +5247,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const btnAccel = document.getElementById('btnAccel');
   const btnBrake = document.getElementById('btnBrake');
 
-  btnLeft.addEventListener('pointerdown', (e) => { e.preventDefault(); btnLeft.classList.add('pressed'); steerPlayer(-1); });
-  btnLeft.addEventListener('pointerup', () => btnLeft.classList.remove('pressed'));
-  btnLeft.addEventListener('pointerleave', () => btnLeft.classList.remove('pressed'));
+  btnLeft.addEventListener('pointerdown', (e) => { e.preventDefault(); btnLeft.classList.add('pressed'); setSteer(-1, true); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btnLeft.addEventListener(ev, () => { btnLeft.classList.remove('pressed'); setSteer(-1, false); });
 
-  btnRight.addEventListener('pointerdown', (e) => { e.preventDefault(); btnRight.classList.add('pressed'); steerPlayer(1); });
-  btnRight.addEventListener('pointerup', () => btnRight.classList.remove('pressed'));
-  btnRight.addEventListener('pointerleave', () => btnRight.classList.remove('pressed'));
+  btnRight.addEventListener('pointerdown', (e) => { e.preventDefault(); btnRight.classList.add('pressed'); setSteer(1, true); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btnRight.addEventListener(ev, () => { btnRight.classList.remove('pressed'); setSteer(1, false); });
 
   btnAccel.addEventListener('pointerdown', (e) => {
     e.preventDefault();
@@ -5251,23 +5283,24 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (gameState !== 'RACING' || isAutoBetMode) return;
     const rect = canvas.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width;
-    if (relX < 0.45) steerPlayer(-1);
-    else if (relX > 0.55) steerPlayer(1);
+    if (relX < 0.45) { canvasSteer = -1; setSteer(-1, true); }
+    else if (relX > 0.55) { canvasSteer = 1; setSteer(1, true); }
     else keys.accel = true;
   });
-  canvas.addEventListener('pointerup', () => { keys.accel = false; });
+  let canvasSteer = 0;
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) canvas.addEventListener(ev, () => { keys.accel = false; if (canvasSteer) { setSteer(canvasSteer, false); canvasSteer = 0; } });
 
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { btnLeft.classList.add('pressed'); steerPlayer(-1); }
-    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { btnRight.classList.add('pressed'); steerPlayer(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { btnLeft.classList.add('pressed'); setSteer(-1, true); }
+    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { btnRight.classList.add('pressed'); setSteer(1, true); }
     else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
       btnAccel.classList.add('pressed'); keys.accel = true;
     } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { btnBrake.classList.add('pressed'); keys.brake = true; }
   });
   window.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') btnLeft.classList.remove('pressed');
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') btnRight.classList.remove('pressed');
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { btnLeft.classList.remove('pressed'); setSteer(-1, false); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { btnRight.classList.remove('pressed'); setSteer(1, false); }
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') { btnAccel.classList.remove('pressed'); keys.accel = false; }
     if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { btnBrake.classList.remove('pressed'); keys.brake = false; }
   });
@@ -6534,6 +6567,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const inFinalStretch = raceProgress > 0.65 || timeRemaining <= 20.0;
 
     // Update each car's speed, steering & position (NO artificial bot speed cheats!)
+    // (steering helpers are defined once below the loop)
     for (const car of cars) {
       if (car.bumpCooldown > 0) car.bumpCooldown = Math.max(0, car.bumpCooldown - dt);
       if (car.boostTimer > 0) car.boostTimer = Math.max(0, car.boostTimer - dt);
@@ -6615,9 +6649,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         if (car.speed < targetSpeed) car.speed = Math.min(targetSpeed, car.speed + accel * dt);
         else if (car.speed > targetSpeed) car.speed = Math.max(targetSpeed, car.speed - (keys.brake ? EQUAL_BRAKE_RATE : 58) * dt);
 
-        const dx = car.targetX - car.x;
-        car.x += dx * Math.min(1, dt * 11.5);
-        car.x = Math.max(-0.84, Math.min(0.84, car.x));
+        // a knock from another car arrives as a changed targetX: turn it into a sideways shove
+        if (car._tx !== undefined && car.targetX !== car._tx) car.knockV = (car.targetX - car.x) * 3;
+        const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+        car.steerHold = steerIn ? (car.steerHold || 0) + dt : 0;
+        // light tap = small nudge; the longer the hold, the faster the car moves across (up to ~1 lane in 0.8 s)
+        const wantV = steerIn * STEER_MAX_V * Math.min(1, 0.3 + car.steerHold * 1.7);
+        car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * (steerIn ? 8 : 6.5));
+        car.knockV = (car.knockV || 0) * Math.pow(0.02, dt);
+        car.x += (car.steerV + car.knockV + curveDriftV(car)) * dt;
+        railContact(car);
+        car.lane = nearestLane(car.x);
+        car.targetX = car._tx = car.x + car.steerV * 0.22;
         car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
       } else {
         // AI-Driven Car (All 3 cars in Car Bet Mode, or Bots in Manual Mode)
@@ -6638,7 +6681,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         // racing line: small, smooth, personal lateral wander + random micro-steering inside the lane
         if (!(car.jumpTimer > 0)) {
           if (!P.jit || (P.jitT -= dt) <= 0) { P.jit = (Math.random() - 0.5) * 0.04; P.jitT = 0.4 + Math.random() * 0.9; }
-          car.targetX = Math.max(-0.8, Math.min(0.8, LANE_CENTERS[car.lane] + P.off + Math.sin(tNow * P.wf + P.wp) * P.wob + P.jit));
+          let wander = 1;
+          for (const o of trackObjects) { if (o.type !== 'boost' && o.type !== 'jump' && !o.broken && o.z - car.z > -12 && o.z - car.z < 45) { wander = 0.25; break; } }
+          car.targetX = Math.max(-0.8, Math.min(0.8, LANE_CENTERS[car.lane] + (P.off + Math.sin(tNow * P.wf + P.wp) * P.wob + P.jit) * wander));
         } else car.targetX = LANE_CENTERS[car.lane];
 
         // Natural throttle modulation: continuous (no steps), per-car pace wobble so cars swap places
@@ -6672,9 +6717,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         else car.speed = Math.max(targetSpeed, car.speed - 52 * dt);
 
         const dx = car.targetX - car.x;
-        car.x += dx * Math.min(1, dt * P.steer);
-        // Clamp within asphalt bounds
-        car.x = Math.max(-0.84, Math.min(0.84, car.x));
+        const wantV = Math.max(-STEER_MAX_V, Math.min(STEER_MAX_V, dx * P.steer * 0.55));
+        car.steerV = (car.steerV || 0) + (wantV - (car.steerV || 0)) * Math.min(1, dt * 5.5);
+        car.x += (car.steerV + curveDriftV(car)) * dt;
+        railContact(car);
         car.z += (car.speed * WORLD_SPEED_SCALE) * dt;
       }
     }
@@ -6687,14 +6733,24 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           if (!(car.jumpTimer > 0) && !obj.hitBy.has(car.id) && Math.abs(obj.z + 4 - car.z) < 2.6 && Math.abs(obj.x - car.x) < 0.2) {
             obj.hitBy.add(car.id);
             car.jumpTimer = JUMP_DUR; car.jumpDur = JUMP_DUR; car.jumpY = 0;
-            car.targetX = LANE_CENTERS[car.lane]; // stays in its lane
             if (car.isPlayer || Math.abs(car.z - player.z) < 25) cameraShake = Math.max(cameraShake, 3);
           }
           continue;
         }
-        if (obj.type !== 'boost' && car.jumpY > 0.4) continue; // flying over it
-        const hitDepth = obj.type === 'boost' ? 7.2 : 4.1;
-        if (Math.abs(obj.z - car.z) < hitDepth && Math.abs(obj.x - car.x) < 0.20) {
+        const isPad = obj.type === 'boost';
+        let zHit;
+        if (isPad) zHit = Math.abs(obj.z - car.z) < 7.2;
+        else {
+          const D = (typeof R3D_OBJ !== 'undefined' && R3D_OBJ[obj.type]) || { hw: 1, hd: 0.5, h: 1 };
+          // airborne cars pass only when the whole car is clearly above the obstacle
+          const hop = car.jumpTimer > 0 ? car.jumpY + 1.05 * Math.pow(car.jumpTimer / JUMP_DUR, 2) : 0;
+          if (hop > D.h) continue;
+          // metres from the car centre (as drawn) to the obstacle centre (as drawn)
+          const carM = car._vz !== undefined ? player.z * 0.29 + car._vz : car.z * 0.29;
+          const dzm = (obj.z + 0.9) * 0.29 - carM;
+          zHit = dzm < 2.3 + D.hd && dzm > -(D.hd + 1.6) && Math.abs(obj.x - car.x) * 4.1 < 0.95 + D.hw - 0.2;
+        }
+        if (zHit) if (!isPad || Math.abs(obj.x - car.x) < 0.20) {
           if (obj.type === 'boost') {
             if (!obj.hitBy.has(car.id)) {
               obj.hitBy.add(car.id);
@@ -6708,7 +6764,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
           // Obstacle hit! Shatter obstacle, slow car down noticeably so cars behind pass it!
           obj.hitAnimTimer = 0.32;
-          obj.hitDir = car.x <= obj.x ? 1 : -1;
+          obj.hitDir = Math.abs(obj.x) > 0.3 ? (obj.x > 0 ? 1 : -1) : (car.x <= obj.x ? 1 : -1); // off the road by the nearest side
+          obj.pushM = car.speed * WORLD_SPEED_SCALE * 0.29 * 0.32; // it is shoved ahead at least as fast as the car travels
           spawnShatterDebris(obj.x, obj.z, obj.type);
           spawnTireSmoke(car.x, car.z);
 
@@ -6730,6 +6787,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             car.speed = Math.max(107, car.speed * 0.63);
             if (nearCam) { cameraShake = 11; sfxHitBarrier(); }
           }
+          if (obj.type === 'brokentruck') car.speed = Math.min(car.speed, EQUAL_TOP_SPEED * 0.62); // a truck is a heavy, solid hit
           break;
         }
       }
@@ -6844,7 +6902,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   function runRealisticCasinoAI(bot, inFinalStretch, isDesignatedWinner) {
     if (bot.jumpTimer > 0) return; // airborne: lane is locked
     const P = bot.pers || { thr: 4, aggr: 0.5, jumpy: 0.25, calm: 0.5 };
-    const lookAhead = (isDesignatedWinner ? 128 : 92) * (0.8 + P.calm * 0.4);
+    const lookAhead = (isDesignatedWinner ? 165 : 128) * (0.8 + P.calm * 0.4);
     const scores = [0, 0, 0, 0];
 
     for (let l = 0; l < 4; l++) {
@@ -7869,79 +7927,52 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // UPGRADED RIGHT-SIDE VERTICAL POSITION STATUS METER
 
   function drawRightMiniMap() {
-    const cardW = Math.max(46, Math.floor(cw * 0.10));
-    const mapX = cw - Math.floor(cardW * 0.62);
-    const mapTop = Math.floor(ch * 0.22);
-    const mapBot = Math.floor(ch * 0.62);
-    const mapH = mapBot - mapTop;
-    const railX = mapX + Math.floor(cardW * 0.22);
-
-    ctx.fillStyle = 'rgba(8, 13, 24, 0.90)';
+    // Top-down map of the actual route: the line follows the same bends the player drives.
+    const cardW = Math.max(62, Math.floor(cw * 0.17));
+    const cardX = cw - cardW - Math.floor(cw * 0.016);
+    const mapTop = Math.floor(ch * 0.215), mapBot = Math.floor(ch * 0.615), mapH = mapBot - mapTop;
+    ctx.fillStyle = 'rgba(8, 13, 24, 0.86)';
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
     ctx.lineWidth = 1.5;
-    drawRoundedRect(ctx, mapX - cardW * 0.55, mapTop - 24, cardW, mapH + 46, 11, true);
+    drawRoundedRect(ctx, cardX, mapTop - 24, cardW, mapH + 46, 11, true);
 
-    ctx.fillStyle = '#1e293b';
-    drawRoundedRect(ctx, railX - 3, mapTop, 6, mapH, 3);
-
-    const player = cars.find(c => c.isPlayer);
-    if (player) {
-      const pProg = Math.min(1, Math.max(0, player.z / FINISH_LINE_Z));
-      const fillH = pProg * mapH;
-      ctx.fillStyle = '#28e066';
-      drawRoundedRect(ctx, railX - 3, mapBot - fillH, 6, fillH, 3);
-    }
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = 1;
-    for (const frac of [0.25, 0.5, 0.75]) {
-      const ty = mapBot - frac * mapH;
+    const path = (typeof trackPath === 'function') ? trackPath() : { pts: [[0, 0], [0, FINISH_LINE_Z * 0.29]], step: FINISH_LINE_Z, minX: 0, maxX: 0, len: FINISH_LINE_Z * 0.29 };
+    const pts = path.pts, sy = mapH / path.len, innerW = cardW * 0.62;
+    const sx = Math.min(innerW / Math.max(1, path.maxX - path.minX), sy * 3.2);
+    const cx = cardX + cardW / 2, midX = (path.minX + path.maxX) / 2;
+    const at = (z) => {
+      const f = Math.max(0, Math.min(pts.length - 1.001, z / path.step)), i = Math.floor(f), t = f - i, a = pts[i], b = pts[i + 1];
+      return [cx + (a[0] + (b[0] - a[0]) * t - midX) * sx, mapBot - (a[1] + (b[1] - a[1]) * t) * sy];
+    };
+    const trace = (z0, z1) => {
       ctx.beginPath();
-      ctx.moveTo(railX - 6, ty);
-      ctx.lineTo(railX + 6, ty);
-      ctx.stroke();
-    }
+      for (let z = z0; z < z1; z += path.step) { const q = at(z); if (z === z0) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]); }
+      const e = at(z1); ctx.lineTo(e[0], e[1]); ctx.stroke();
+    };
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(226, 232, 240, 0.9)'; ctx.lineWidth = 7; trace(0, FINISH_LINE_Z);   // kerb outline
+    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 4.6; trace(0, FINISH_LINE_Z);                   // asphalt
+    const player = cars.find(c => c.isPlayer);
+    if (player) { ctx.strokeStyle = '#28e066'; ctx.lineWidth = 2.2; trace(0, Math.max(1, Math.min(FINISH_LINE_Z, player.z))); } // driven part
 
-    ctx.fillStyle = '#facc15';
-    ctx.font = `900 ${Math.max(8, Math.floor(cw * 0.017))}px "Segoe UI", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('FIN', mapX - 2, mapTop - 8);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('STR', mapX - 2, mapBot + 16);
+    const fin = at(FINISH_LINE_Z), str = at(0), fs = Math.max(8, Math.floor(cw * 0.017));
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(fin[0] - 6, fin[1] - 1.5, 12, 3);
+    ctx.font = `900 ${fs}px "Segoe UI", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#facc15'; ctx.fillText('FIN', cardX + cardW / 2, mapTop - 9);
+    ctx.fillStyle = '#94a3b8'; ctx.fillText('STR', cardX + cardW / 2, mapBot + 17);
+    ctx.fillStyle = '#94a3b8'; ctx.fillRect(str[0] - 5, str[1] - 1, 10, 2);
 
     const sorted = [...cars].sort((a, b) => b.z - a.z);
-    const rankLabels = ['1st', '2nd', '3rd'];
-    const rankColors = ['#28e066', '#ffc412', '#ff4d4d'];
-    const minGap = Math.max(16, Math.floor(ch * 0.028));
-
-    const dotYs = sorted.map(c => {
-      const prog = Math.min(1, Math.max(0, c.z / FINISH_LINE_Z));
-      return mapBot - prog * mapH;
-    });
-    for (let i = dotYs.length - 2; i >= 0; i--) {
-      if (dotYs[i] > dotYs[i + 1] - minGap) {
-        dotYs[i] = dotYs[i + 1] - minGap;
-      }
-    }
-
-    for (let i = 0; i < sorted.length; i++) {
-      const c = sorted[i];
-      const dotY = Math.max(mapTop, dotYs[i]);
-
+    for (let i = sorted.length - 1; i >= 0; i--) { // leader drawn last (on top)
+      const c = sorted[i], q = at(Math.min(FINISH_LINE_Z, Math.max(0, c.z))), r = c.isPlayer ? 6.2 : 5;
       ctx.fillStyle = c.primaryColor;
       ctx.strokeStyle = c.isPlayer ? '#28e066' : '#ffffff';
       ctx.lineWidth = c.isPlayer ? 2.2 : 1.4;
-      ctx.beginPath();
-      ctx.arc(railX, dotY, c.isPlayer ? 6.5 : 5.0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = rankColors[i];
-      ctx.font = `900 ${Math.max(8.5, Math.floor(cw * 0.019))}px "Segoe UI", sans-serif`;
-      ctx.textAlign = 'right';
-      ctx.fillText(rankLabels[i], railX - 8, dotY + 3.5);
+      ctx.beginPath(); ctx.arc(q[0] + c.x * 2.2, q[1], r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = `900 ${Math.max(7, Math.floor(r * 1.25))}px "Segoe UI", sans-serif`; ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), q[0] + c.x * 2.2, q[1] + 0.5);
     }
+    ctx.textBaseline = 'alphabetic'; ctx.lineCap = 'butt';
   }
 
   function drawRoundedRect(ctx, x, y, w, h, r, stroke = false) {
