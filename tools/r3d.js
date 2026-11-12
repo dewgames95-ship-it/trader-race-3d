@@ -126,7 +126,7 @@
 
     // ---------- sky ----------
     const SKY = {
-      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#74d040', grass2: '#62c038', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
+      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#5fb53a', grass2: '#4c9e30', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
       rain:   { stops: [[0, '#0f172a'], [0.2, '#1e293b'], [0.36, '#56657a'], [1, '#56657a']], fog: '#57667a', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#b8c7dc', '#3b4a45', 0.95], sun: ['#c9d6ea', 0.75], cloud: '#8693a8', city: '#7f8ea6', road: '#9aa3b2', leaf: '#b9c6c0', glow: 0 },
       snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#e6edf5', grass2: '#d8e1ec', hemi: ['#ffffff', '#c3cfdf', 1.2], sun: ['#ffffff', 1.5], cloud: '#ffffff', city: '#dbe7f5', road: '#e2e8f0', leaf: '#dfeee6', glow: 0.25 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
@@ -153,7 +153,12 @@
       skyFront.colorSpace = T.SRGBColorSpace;
       const d2r = Math.PI / 180;
       const geo = new T.SphereGeometry(900, 40, 20, (90 - 75) * d2r, 150 * d2r, (90 - 66) * d2r, 70 * d2r);
-      skyDome = new T.Mesh(geo, new T.MeshBasicMaterial({ map: skyFront, side: T.DoubleSide, fog: false, depthWrite: false }));
+      { // vertex tint over the photo
+        const pos = geo.attributes.position, tint = new Float32Array(pos.count * 3), lo = col('#ffffff'), hi = col('#5f9bf0'), c = new T.Color();
+        for (let i = 0; i < pos.count; i++) { const e = Math.max(0, Math.min(1, pos.getY(i) / 900 / 0.75)); c.copy(lo).lerp(hi, Math.pow(e, 0.8)); tint[i * 3] = c.r * 1.04; tint[i * 3 + 1] = c.g * 1.04; tint[i * 3 + 2] = c.b * 1.06; }
+        geo.setAttribute('color', new T.BufferAttribute(tint, 3));
+      }
+      skyDome = new T.Mesh(geo, new T.MeshBasicMaterial({ map: skyFront, vertexColors: true, side: T.DoubleSide, fog: false, depthWrite: false }));
       skyDome.scale.z = -1; skyDome.renderOrder = -10; skyDome.frustumCulled = false;
       SKY.sunny.fog = '#bccbe2';
     }
@@ -275,88 +280,75 @@
       const g = new T.Group(); g.add(root);
       return { group: g, size: bb.getSize(new T.Vector3()) };
     };
-    const CITY_CHUNK = 560, cityChunks = [];
-    let cityBase = null;
-    if (cityAScene) { const a = fitModel(cityAScene, 0.016); a.group.position.set(0, -2, -1180); a.group.rotation.y = 0.5; backdrop.add(a.group); }
+    // The whole city is a fixed distant skyline: it rides with the camera (never comes closer, never
+    // rushes past) and is left out of the curved-road bend, so it cannot swing, stretch or pop in turns.
+    const noBend = (mat) => {
+      if (!mat || mat.userData.trNoBend) return;
+      mat.userData.trNoBend = true;
+      mat.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', T.ShaderChunk.project_vertex.replace('float trBend = projectionMatrix[1][0];', 'float trBend = 0.0;')); };
+      mat.customProgramCacheKey = () => 'trNoBend';
+    };
+    const skylinePiece = (group, crisp) => group.traverse((o) => { if (o.isMesh) [].concat(o.material).forEach((m) => { noBend(m); if (crisp) { m.fog = false; m.envMapIntensity = 1.5; } }); });
+    if (cityAScene) { const a = fitModel(cityAScene, 0.016); skylinePiece(a.group, false); a.group.position.set(0, -2, -1180); a.group.rotation.y = 0.5; backdrop.add(a.group); }
     if (cityBScene) {
-      const b = fitModel(cityBScene, 80);
-      for (let i = 0; i < 6; i++) { const g = i ? b.group.clone(true) : b.group; g.userData = { side: i % 2 ? 1 : -1, row: i >> 1, kind: 'block' }; scene.add(g); cityChunks.push(g); }
+      const b = fitModel(cityBScene, 80); skylinePiece(b.group, false);
+      [[-430, -700, 0], [430, -700, 1], [-150, -980, 2], [170, -980, 3]].forEach(([x, z, r], i) => { const g = i ? b.group.clone(true) : b.group; g.position.set(x, -1.2, z); g.rotation.y = r * Math.PI / 2; backdrop.add(g); });
     }
-    // Glass towers: a ring recycled far ahead inside the haze. They stand well back from the road
-    // (a distant skyline behind the trees), alternating sides, and never tower over the HUD.
-    const TW_GAP = 52, TW_N = 30, towerRing = []; let towerBase = null, towerH = 1;
+    // Glass towers: two staggered rows 430-640 m out, right across the horizon (also beyond the end of
+    // the road). Heights stay modest, and lower toward the screen edges so nothing rises behind the HUD.
     if (towerScene) {
-      const t = fitModel(towerScene, 0.55); towerH = t.size.y || 1;
-      for (let i = 0; i < TW_N; i++) { const g = i ? t.group.clone(true) : t.group; scene.add(g); towerRing.push(g); }
-    }
-    const layoutTowers = (base) => {
-      towerRing.forEach((g, k) => {
-        const row = base + k - 2, n = row * 1.37, side = (row & 1) ? 1 : -1;
-        // height grows with the set-back so every tower peaks at about the same modest height on screen
-        const off = 92 + hash(n * 7.1) * 120, h = off * (0.3 + hash(n * 6.3) * 0.16), s = h / towerH;
-        g.scale.setScalar(s);
-        g.position.set(side * off, 0, -(row * TW_GAP + hash(n * 9.9) * 24));
-        g.rotation.y = Math.floor(hash(n * 11.3) * 4) * Math.PI / 2;
-      });
-    };
-    const layoutCity = (base) => {
-      for (const g of cityChunks) {
-        const u = g.userData, row = base + u.row, n = row * 2 + (u.side > 0 ? 1 : 0);
-        if (u.kind === 'block') {
-          g.position.set(u.side * (330 + hash(n * 3.3) * 60), -1.2, -(row * CITY_CHUNK + 260));
-          g.rotation.y = Math.floor(hash(n * 5.7) * 4) * Math.PI / 2;
-        } else {
-          g.position.set(u.side * (62 + hash(n * 7.1) * 30), 0, -(row * CITY_CHUNK * 1.5 + 420 + hash(n * 9.9) * 200));
-          g.rotation.y = hash(n * 11.3) * Math.PI * 2;
-        }
+      const t = fitModel(towerScene, 0.55), towerH = t.size.y || 1, TW_N = 34;
+      skylinePiece(t.group, true);
+      for (let i = 0; i < TW_N; i++) {
+        const g = i ? t.group.clone(true) : t.group, back = i % 2;
+        const d = (back ? 560 : 440) + hash(i * 7.1) * 80, x = ((i + 0.5) / TW_N * 2 - 1) * 560 + (hash(i * 3.3) - 0.5) * 22;
+        const edge = Math.min(1, Math.abs(x) / d / 0.5), h = d * (0.1 + hash(i * 6.3) * 0.065) * (1 - 0.45 * edge * edge);
+        g.scale.setScalar(h / towerH);
+        g.position.set(x, 0, -d);
+        g.rotation.y = Math.floor(hash(i * 11.3) * 4) * Math.PI / 2;
+        backdrop.add(g);
       }
-    };
-
-    // Distant tree line hides where the towers meet the haze.
-    const treeLineMat = new T.MeshBasicMaterial({ color: 0x2f8a3c, fog: true });
-    {
-      const parts = [];
-      for (let i = 0; i < 46; i++) {
-        const r = 9 + hash(i * 6.7) * 8;
-        const g = new T.SphereGeometry(r, 8, 5); g.scale(1.5, 1, 0.4); g.translate(-560 + i * 25 + hash(i) * 10, r * 0.35, -385);
-        parts.push(part(g, '#ffffff'));
-      }
-      backdrop.add(new T.Mesh(merge(parts), treeLineMat));
     }
+    const treeLineMat = new T.MeshBasicMaterial({ color: 0x2f8a3c, fog: true }); // (no tree-line mound at the end of the road any more)
 
     // ---------- ground + road ----------
-    const grassC = makeCanvas(512, 512);
+    const grassC = makeCanvas(1024, 1024);
     const grassTex = canvasTex(grassC, { wrapS: T.RepeatWrapping, wrapT: T.RepeatWrapping });
-    const GRASS_LEN = 2600, GRASS_PERIOD = 20;
+    const GRASS_LEN = 2600, GRASS_PERIOD = 46;
     grassTex.repeat.set(GRASS_LEN / GRASS_PERIOD, GRASS_LEN / GRASS_PERIOD);
     const paintGrass = (a, b) => {
       const g = grassC.getContext('2d'), ca = col(a), cb = col(b);
-      const S = 512, hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString(), wrap = [-S, 0, S];
+      const S = 1024, hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString(), wrap = [-S, 0, S];
+      const dry = '#' + ca.clone().lerp(col('#c2b25a'), 0.4).getHexString(), deep = hx(cb, 0.62);
+      const each = (x, y, m, fn) => { for (const ox of wrap) for (const oy of wrap) { const X = x + ox, Y = y + oy; if (X > -m && X < S + m && Y > -m && Y < S + m) fn(X, Y); } };
       g.fillStyle = a; g.fillRect(0, 0, S, S);
-      for (let i = 0; i < 1100; i++) {                                         // mottled turf, tiles seamlessly
-        const x = hash(i * 1.37) * S, y = hash(i * 2.11) * S, r = 9 + hash(i * 3.3) * 30, k = hash(i * 4.7);
-        g.fillStyle = k < 0.5 ? b : (k < 0.78 ? hx(ca, 0.88) : hx(ca, 1.1));
-        g.globalAlpha = 0.05 + hash(i * 5.9) * 0.06;
-        for (const ox of wrap) for (const oy of wrap) { g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.6, 0, 0, Math.PI * 2); g.fill(); }
+      for (let i = 0; i < 150; i++) {                                          // big patches: darker growth, worn/dry areas, lush spots
+        const x = hash(i * 1.37) * S, y = hash(i * 2.11) * S, r = 40 + hash(i * 3.3) * 120, k = hash(i * 4.7), rot = hash(i * 6.5) * 3.1;
+        g.fillStyle = k < 0.42 ? deep : (k < 0.7 ? dry : (k < 0.88 ? hx(ca, 1.16) : b));
+        g.globalAlpha = 0.09 + hash(i * 5.9) * 0.12;
+        each(x, y, r * 1.2, (X, Y) => { g.beginPath(); g.ellipse(X, Y, r, r * (0.45 + hash(i * 7.3) * 0.4), rot, 0, 6.283); g.fill(); });
+      }
+      for (let i = 0; i < 2400; i++) {                                         // mottled turf
+        const x = hash(i * 1.71 + 2) * S, y = hash(i * 2.93 + 5) * S, r = 6 + hash(i * 3.3) * 20, k = hash(i * 4.7);
+        g.fillStyle = k < 0.5 ? hx(cb, 0.8) : (k < 0.8 ? hx(ca, 1.12) : dry);
+        g.globalAlpha = 0.07 + hash(i * 5.9) * 0.1;
+        each(x, y, r, (X, Y) => { g.beginPath(); g.ellipse(X, Y, r, r * 0.6, 0, 0, 6.283); g.fill(); });
       }
       g.lineCap = 'round';
-      for (let i = 0; i < 5200; i++) {                                         // fine blades: mown-lawn grain
-        const x = hash(i * 1.93 + 7) * S, y = hash(i * 2.57 + 3) * S, k = hash(i * 3.71), len = 2.5 + hash(i * 4.9) * 4.5, lean = (hash(i * 6.1) - 0.5) * 3;
-        g.strokeStyle = k < 0.42 ? hx(cb, 0.8) : (k < 0.8 ? hx(ca, 1.14) : '#d4e77a');
-        g.globalAlpha = 0.2 + hash(i * 7.3) * 0.22; g.lineWidth = 1 + hash(i * 8.7) * 0.9;
-        for (const ox of wrap) for (const oy of wrap) {
-          if (x + ox < -8 || x + ox > S + 8 || y + oy < -8 || y + oy > S + 8) continue;
-          g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + lean, y + oy - len); g.stroke();
-        }
+      for (let i = 0; i < 9000; i++) {                                         // blades
+        const x = hash(i * 1.93 + 7) * S, y = hash(i * 2.57 + 3) * S, k = hash(i * 3.71), len = 3 + hash(i * 4.9) * 6, lean = (hash(i * 6.1) - 0.5) * 4;
+        g.strokeStyle = k < 0.45 ? deep : (k < 0.82 ? hx(ca, 1.2) : dry);
+        g.globalAlpha = 0.25 + hash(i * 7.3) * 0.3; g.lineWidth = 1.2 + hash(i * 8.7) * 1.2;
+        each(x, y, 8, (X, Y) => { g.beginPath(); g.moveTo(X, Y); g.lineTo(X + lean, Y - len); g.stroke(); });
       }
       g.globalAlpha = 1;
-      for (let i = 0; i < 34; i++) {                                           // low bushes + pebbles baked into the turf
-        const x = hash(i * 7.7) * S, y = hash(i * 8.9) * S, rock = hash(i * 3.3) < 0.45, r = rock ? 3.5 + hash(i * 9.1) * 5 : 7 + hash(i * 9.1) * 9;
-        for (const ox of wrap) for (const oy of wrap) {
-          g.fillStyle = 'rgba(20,60,20,0.2)'; g.beginPath(); g.ellipse(x + ox + r * 0.35, y + oy + r * 0.3, r * 1.05, r * 0.7, 0, 0, 6.283); g.fill();
-          g.fillStyle = rock ? 'rgba(128,128,122,0.92)' : 'rgba(58,146,50,0.78)'; g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.72, 0, 0, 6.283); g.fill();
-          g.fillStyle = rock ? 'rgba(206,206,198,0.9)' : 'rgba(150,220,90,0.7)'; g.beginPath(); g.ellipse(x + ox - r * 0.2, y + oy - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
-        }
+      for (let i = 0; i < 46; i++) {                                           // low bushes + stones baked into the turf
+        const x = hash(i * 7.7) * S, y = hash(i * 8.9) * S, rock = hash(i * 3.3) < 0.55, r = rock ? 3 + hash(i * 9.1) * 6 : 7 + hash(i * 9.1) * 9;
+        each(x, y, 30, (X, Y) => {
+          g.fillStyle = 'rgba(15,45,15,0.28)'; g.beginPath(); g.ellipse(X + r * 0.35, Y + r * 0.3, r * 1.05, r * 0.7, 0, 0, 6.283); g.fill();
+          g.fillStyle = rock ? 'rgba(122,122,116,0.95)' : 'rgba(44,120,40,0.85)'; g.beginPath(); g.ellipse(X, Y, r, r * 0.72, 0, 0, 6.283); g.fill();
+          g.fillStyle = rock ? 'rgba(200,200,192,0.9)' : 'rgba(120,190,70,0.7)'; g.beginPath(); g.ellipse(X - r * 0.2, Y - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
+        });
       }
       grassTex.needsUpdate = true;
     };
@@ -366,53 +358,34 @@
 
     const ROAD_W = 2.2 * R3D_XS; // asphalt + both shoulders
     const ROAD_LEN = 1400, ROAD_PERIOD = 14;
-    const roadC = makeCanvas(1024, 1024);
+    const roadC = makeCanvas(1024, 256);
     {
-      const g = roadC.getContext('2d'), W = 1024, Hh = 1024, u = (x) => (x + 1.1) / 2.2 * W, A0 = u(-1), AW = u(1) - u(-1);
-      g.fillStyle = '#868d98'; g.fillRect(0, 0, W, Hh);                        // concrete shoulders
-      for (let i = 0; i < 2600; i++) {
-        const sx = hash(i * 1.7 + 5) * (W - AW), x = sx < A0 ? sx : sx + AW, y = hash(i * 2.3 + 9) * Hh;
-        g.fillStyle = hash(i * 3.1) < 0.5 ? 'rgba(255,255,255,0.14)' : 'rgba(30,34,40,0.16)'; g.fillRect(x, y, 2, 2);
-      }
-      g.fillStyle = '#2d2e31'; g.fillRect(A0, 0, AW, Hh);                      // asphalt
-      for (let i = 0; i < 240; i++) {                                          // soft patches: uneven wear, repairs
-        const x = A0 + hash(i * 1.31 + 2) * AW, y = hash(i * 2.19 + 4) * Hh, r = 26 + hash(i * 3.7) * 70;
-        g.fillStyle = hash(i * 4.3) < 0.5 ? 'rgba(255,255,255,0.028)' : 'rgba(0,0,0,0.07)';
-        for (const oy of [-Hh, 0, Hh]) { g.beginPath(); g.ellipse(x, y + oy, r, r * (0.6 + hash(i * 5.9) * 1.4), 0, 0, 6.283); g.fill(); }
-      }
-      for (let i = 0; i < 7000; i++) {                                         // coarse grain that still reads further up the road
-        const x = A0 + hash(i * 1.57 + 1) * AW, y = hash(i * 2.33 + 6) * Hh, r = 3 + hash(i * 3.1) * 5;
-        g.fillStyle = hash(i * 4.9) < 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(200,204,212,0.07)';
-        g.beginPath(); g.ellipse(x, y, r, r * (0.7 + hash(i * 5.7) * 0.6), 0, 0, 6.283); g.fill();
-      }
-      for (let i = 0; i < 46000; i++) {                                        // aggregate grain: pale stones + dark pits
-        const x = A0 + hash(i * 1.13) * AW, y = hash(i * 2.71) * Hh, k = hash(i * 3.9), q = hash(i * 5.3), sz = q < 0.12 ? 4 : (q < 0.6 ? 3 : 2);
-        g.fillStyle = k < 0.5 ? 'rgba(0,0,0,' + (0.24 + hash(i * 6.7) * 0.24).toFixed(2) + ')' : 'rgba(196,200,208,' + (0.12 + hash(i * 7.9) * 0.18).toFixed(2) + ')';
-        g.fillRect(x, y, sz, sz - (hash(i * 9.1) < 0.4 ? 1 : 0));
+      const g = roadC.getContext('2d'), W = 1024, Hh = 256, u = (x) => (x + 1.1) / 2.2 * W;
+      g.fillStyle = '#7f8896'; g.fillRect(0, 0, W, Hh);                        // shoulders
+      g.fillStyle = '#27292d'; g.fillRect(u(-1), 0, u(1) - u(-1), Hh);         // asphalt
+      for (let i = 0; i < 5200; i++) {                                         // aggregate speckle
+        const x = u(-1) + hash(i * 1.13) * (u(1) - u(-1)), y = hash(i * 2.71) * Hh, k = hash(i * 3.9);
+        g.fillStyle = k < 0.5 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.16)'; g.fillRect(x, y, 2, 2);
       }
       for (const lc of LANE_CENTERS) {                                         // tyre-worn lane centres
         const gr = g.createLinearGradient(u(lc - 0.17), 0, u(lc + 0.17), 0);
-        gr.addColorStop(0, 'rgba(14,16,20,0)'); gr.addColorStop(0.5, 'rgba(14,16,20,0.2)'); gr.addColorStop(1, 'rgba(14,16,20,0)');
+        gr.addColorStop(0, 'rgba(14,16,20,0)'); gr.addColorStop(0.5, 'rgba(14,16,20,0.26)'); gr.addColorStop(1, 'rgba(14,16,20,0)');
         g.fillStyle = gr; g.fillRect(u(lc - 0.17), 0, u(lc + 0.17) - u(lc - 0.17), Hh);
       }
       g.fillStyle = '#f4f6f8';
-      g.fillRect(A0 - 2, 0, 21, Hh); g.fillRect(u(1) - 19, 0, 21, Hh);          // solid edge lines
-      for (let i = 0; i < 700; i++) {                                          // paint wear on the edge lines
-        const x = (i % 2 ? A0 - 2 : u(1) - 19) + hash(i * 1.9) * 20, y = hash(i * 2.9) * Hh;
-        g.fillStyle = 'rgba(60,62,68,0.3)'; g.fillRect(x, y, 2, 2 + hash(i * 3.3) * 5);
-      }
+      g.fillRect(u(-1) - 2, 0, 16, Hh); g.fillRect(u(1) - 14, 0, 16, Hh);       // solid edge lines
     }
     const roadTex = canvasTex(roadC, { wrapT: T.RepeatWrapping });
     roadTex.repeat.set(1, ROAD_LEN / ROAD_PERIOD);
-    // dry sunny asphalt: mostly matte so the grain reads, with a faint sheen from the sky
-    const roadMat = new T.MeshStandardMaterial({ map: roadTex, roughness: 0.6, metalness: 0.03, envMapIntensity: 0.7 });
+    // slightly wet, glossy asphalt that picks up the sky
+    const roadMat = new T.MeshStandardMaterial({ map: roadTex, roughness: 0.34, metalness: 0.05, envMapIntensity: 1.0 });
     const road = new T.Mesh(flatOnRoad(ROAD_W, ROAD_LEN), roadMat);
     road.receiveShadow = true;
     scene.add(road);
 
     // Lane dashes: world-anchored instances re-used as the camera moves.
     const DASH_PERIOD = 19, DASH_ROWS = 46;
-    const dashGeo = flatOnRoad(0.3, DASH_PERIOD * 0.5 * R3D_ZS);
+    const dashGeo = flatOnRoad(0.26, DASH_PERIOD * 0.5 * R3D_ZS);
     const dashes = new T.InstancedMesh(dashGeo, new T.MeshBasicMaterial({ color: 0xffffff }), DASH_ROWS * 3);
     dashes.frustumCulled = false; dashes.position.y = 0.012;
     {
@@ -639,6 +612,10 @@
               plant(FIRS[Math.floor(r(2.1) * 3)], side * (EDGE + 0.6 + r(3.7) * 1.6), z, 7 + r(4.9) * 3, r(5.3) < 0.5, 1.6);
           }
           if (dens > 0.58 && (s & 1) && r(10.1) < 0.7) leafy(side * (EDGE + 7 + r(10.3) * 7), z - segLen * r(10.9), 6 + r(11.3) * 3);
+          // saplings near the verge and tall trees further back, both with gaps
+          if (r(30.1) < 0.3) leafy(side * (EDGE - 1.2 + r(30.7) * 5), z - segLen * r(31.3), 2.4 + r(31.9) * 1.3);
+          if (r(32.3) < 0.26) leafy(side * (EDGE + 9 + r(32.9) * 10), z - segLen * r(33.1), 9.5 + r(33.7) * 3.5);
+          if (r(34.1) < 0.16) plant(ROCKS[Math.floor(r(34.7) * 3)], side * (RAIL_X + 2.2 + r(35.1) * 6), z - segLen * r(35.9), 1.4 + r(36.3) * 0.9, r(36.9) < 0.5, 0.7); // boulders
           // low round bushes on the open lawn
           if (r(24.1) < 0.4 && bi + 5 <= FLORA_ROWS * 16) {
             const bx = side * (RAIL_X + 1.6 + r(24.7) * 7.5), bz = z - segLen * r(25.3), bs = 0.42 + r(25.9) * 0.34;
@@ -907,7 +884,7 @@
       const glass = new T.MeshStandardMaterial({ color: 0x0a0f16, metalness: 0.9, roughness: 0.05, envMapIntensity: 1.8, transparent: true, opacity: 0.4, depthWrite: false });
       const glowMap = src['Material.009'] && src['Material.009'].map;
       const glow = (opacity) => new T.MeshBasicMaterial({ map: glowMap, transparent: true, opacity, blending: T.AdditiveBlending, depthWrite: false, fog: false });
-      for (const k in src) { if ('envMapIntensity' in src[k]) src[k].envMapIntensity = 1.3; }
+      for (const k in src) { if ('envMapIntensity' in src[k]) src[k].envMapIntensity = 1.0; }
       // where the tail lamps and exhausts sit, for the glow sprites
       carModel.updateMatrixWorld(true);
       const lampBox = new T.Box3(); carModel.traverse((o) => { if (o.isMesh && /lights_brakes|lights_position_back/.test((o.parent && o.parent.name || '') + o.name)) lampBox.expandByObject(o); });
@@ -943,22 +920,22 @@
       rig.shadow = new T.Mesh(aoGeo, aoMat); rig.shadow.position.y = 0.022; rig.shadow.renderOrder = 3;
       rig.tag = new T.Sprite(new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
       rig.tag.center.set(0.5, 0); rig.tag.renderOrder = 20;
-      rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.75, depthWrite: false, blending: T.AdditiveBlending, fog: false });
-      rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.tailMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.4, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+      rig.exhMat = new T.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0.16, depthWrite: false, blending: T.AdditiveBlending, fog: false });
       rig.tailSprites = [];
       { // rear detail: diffuser, fins, exhaust tips, light bar
         const dark = new T.MeshStandardMaterial({ color: 0x0b0c0f, roughness: 0.5, metalness: 0.6 }), chrome = new T.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.25, metalness: 1 });
         const dif = new T.Mesh(new T.BoxGeometry(1.2, 0.16, 0.12), dark); dif.position.set(0, 0.24, carKit.rearZ - 0.02); rig.tilt.add(dif);
         for (const fx of [-0.3, 0, 0.3]) { const fin = new T.Mesh(new T.BoxGeometry(0.03, 0.14, 0.2), dark); fin.position.set(fx, 0.24, carKit.rearZ + 0.02); rig.tilt.add(fin); }
         for (const sx of [-1, 1]) { const tip = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.18, 14, 1, true), chrome); tip.rotation.x = Math.PI / 2; tip.position.set(sx * 0.5, 0.33, carKit.rearZ + 0.05); rig.tilt.add(tip); }
-        rig.barMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.5, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+        rig.barMat = new T.SpriteMaterial({ map: glowTex, color: 0xff2a1a, transparent: true, opacity: 0.22, depthWrite: false, blending: T.AdditiveBlending, fog: false });
         const bar = new T.Sprite(rig.barMat); bar.scale.set(1.5, 0.16, 1); bar.position.set(0, carKit.lampY, carKit.rearZ + 0.05); rig.tilt.add(bar);
       }
       for (const sx of [-1, 1]) {
-        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.55, 0.42, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
-        for (const dx of [0.24, 0.42]) { const e = new T.Sprite(rig.exhMat); e.scale.set(0.3, 0.3, 1); e.position.set(sx * dx, 0.33, carKit.rearZ + 0.06); rig.tilt.add(e); }
+        for (const dx of [0, -0.26]) { const t = new T.Sprite(rig.tailMat); t.scale.set(0.36, 0.28, 1); rig.tailSprites.push(t); t.position.set(sx * (carKit.lampX + dx), carKit.lampY, carKit.rearZ + 0.04); rig.tilt.add(t); }
+        for (const dx of [0.24, 0.42]) { const e = new T.Sprite(rig.exhMat); e.scale.set(0.2, 0.2, 1); e.position.set(sx * dx, 0.33, carKit.rearZ + 0.06); rig.tilt.add(e); }
       }
-      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.7; rig.tailMat.opacity = on ? 1 : 0.7; rig.barMat.opacity = on ? 0.95 : 0.45; const k = on ? 1.5 : 1; for (const t of rig.tailSprites) t.scale.set(0.55 * k, 0.42 * k, 1); };
+      rig.setBrake = (on) => { rig.brakeGlow.opacity = on ? 1 : 0.75; rig.tailMat.opacity = on ? 0.95 : 0.4; rig.barMat.opacity = on ? 0.8 : 0.22; const k = on ? 1.6 : 1; for (const t of rig.tailSprites) t.scale.set(0.36 * k, 0.28 * k, 1); };
       rig.group.add(rig.tilt, rig.shadow);
       scene.add(rig.group, rig.tag);
       return rig;
@@ -1201,7 +1178,7 @@
         const PP = ADD.PP;
         composer = new PP.EffectComposer(renderer, { frameBufferType: T.HalfFloatType });
         composer.addPass(new PP.RenderPass(scene, camera));
-        const bloom = new PP.BloomEffect({ mipmapBlur: true, luminanceThreshold: 0.92, luminanceSmoothing: 0.12, intensity: 0.55, radius: 0.7 });
+        const bloom = new PP.BloomEffect({ mipmapBlur: true, luminanceThreshold: 0.95, luminanceSmoothing: 0.1, intensity: 0.32, radius: 0.6 });
         const smaa = new PP.SMAAEffect({ preset: PP.SMAAPreset.MEDIUM });
         const tone = new PP.ToneMappingEffect({ mode: PP.ToneMappingMode.ACES_FILMIC });
         composer.addPass(new PP.EffectPass(camera, bloom, smaa, tone));
@@ -1301,9 +1278,6 @@
         }
         lamps.instanceMatrix.needsUpdate = true;
       }
-      const cBase = Math.floor(-cz / CITY_CHUNK);
-      if (cBase !== cityBase) { cityBase = cBase; layoutCity(cBase); }
-      const tBase = Math.floor(-cz / TW_GAP); if (tBase !== towerBase) { towerBase = tBase; layoutTowers(tBase); }
       const fBase = Math.floor(camTrack / FLORA_SEG);
       if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
 
@@ -1330,9 +1304,17 @@
         const moving = racing ? Math.min(1, car.speed / 206) : 0;
         if (car.scrapeTimer > 0) car.scrapeTimer = Math.max(0, car.scrapeTimer - dt);
         const scrape = car.scrapeTimer > 0 ? Math.sin((1 - car.scrapeTimer / 0.45) * Math.PI) : 0;
-        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 0.7) : 0, hop = car.jumpY || 0;
+        const air = car.jumpTimer > 0 ? 1 - car.jumpTimer / (car.jumpDur || 0.7) : 0;
+        // on a ramp the car rides up the deck (never through it), then the arc starts from the lip height
+        let rampT = 0;
+        if (!(car.jumpTimer > 0)) for (const o of trackObjects) {
+          if (o.type !== 'jump' || Math.abs(o.x - car.x) > 0.22) continue;
+          const dm = -z - o.z * R3D_ZS + 1.2; // metres from the ramp centre as drawn, measured at the front axle
+          if (dm > -2.1 && dm < 3.6) { rampT = Math.min(1, (dm + 2.1) / 4.2); break; }
+        }
+        const hop = car.jumpTimer > 0 ? (car.jumpY || 0) + 1.05 * (1 - air) * (1 - air) : rampT * 1.05;
         rig.group.position.set(x + (car.scrapeDir || 0) * scrape * (RAIL_X - 0.6667 * R3D_XS - 1.15), hop, z);
-        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.16 : 0;
+        rig.tilt.rotation.x = car.jumpTimer > 0 ? (air - 0.5) * 0.24 : -rampT * 0.2;
         rig.shadow.position.y = 0.022 - hop; rig.shadow.scale.setScalar(1 - hop * 0.08);
         const ease = Math.min(1, dt * 9);
         rig.yaw += ((racing ? Math.max(-0.14, Math.min(0.14, -steer * 0.5)) : 0) - rig.yaw) * ease;

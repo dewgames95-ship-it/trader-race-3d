@@ -4737,7 +4737,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const BOOST_TOP_SPEED = 250;
   const EQUAL_ACCEL_RATE = 83;
   const EQUAL_BRAKE_RATE = 140;
-  const JUMP_DUR = 0.7, JUMP_PEAK = 1.25, JUMP_LAND_BOOST = 12; // world-unit arc height; small speed kick on landing
+  const JUMP_DUR = 0.9, JUMP_PEAK = 2.1, JUMP_LAND_BOOST = 14; // world-unit arc height; small speed kick on landing
   const WORLD_SPEED_SCALE = 0.375;
 
   const keys = { left: false, right: false, accel: false, brake: false };
@@ -4864,21 +4864,26 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     let nextId = 10;
     const obstacleTypes = ['barrier', 'cone', 'barrel', 'brokentruck', 'brokencar'];
 
-    // Obstacles: random, max 1 per lane per 40 m. ~40% get a jump ramp 25-35 m ahead in the same lane;
-    // a ramped lane stays clear (landing zone) for 100 m after the obstacle.
-    const blockedUntil = [0, 0, 0, 0];
-    for (let dist = 420, step = 0; dist < FINISH_LINE_Z - 110; dist += 52 + rng() * 40, step++) {
+    const obstaclePool = obstacleTypes.filter((t) => t !== 'brokencar'); // no wrecked-car obstacles
+
+    // Obstacles: sparse and random. One row every ~100 units, usually a single obstacle; a lane is never
+    // used again within 140 units (about 40 m on screen). ~40% get a jump ramp 28-36 units ahead in the
+    // same lane: the approach to the ramp is clear, and the lane stays clear well past the landing.
+    const blockedUntil = [0, 0, 0, 0], lastZ = [-999, -999, -999, -999];
+    for (let dist = 420, step = 0; dist < FINISH_LINE_Z - 110; dist += 80 + rng() * 44, step++) {
       const used = new Set();
-      const cnt = rng() < 0.62 ? 2 : 1;
+      const cnt = rng() < 0.3 ? 2 : 1;
       for (let i = 0; i < cnt; i++) {
         const l = Math.floor(rng() * 4);
         const oz = dist + (rng() * 8 - 4);
+        const type = obstaclePool[Math.floor(rng() * obstaclePool.length)];
+        const rampDist = 28 + rng() * 8;
+        const wantRamp = rng() < 0.4;
         if (used.has(l) || oz < blockedUntil[l]) continue;
         used.add(l);
-        const type = obstacleTypes[Math.floor(rng() * obstacleTypes.length)];
-        const rampDist = 25 + rng() * 10;
-        const ramped = rng() < 0.4 && oz - rampDist > 330 && oz - rampDist >= blockedUntil[l] - 25;
-        blockedUntil[l] = oz + (ramped ? 100 : 40);
+        const ramped = wantRamp && type !== 'brokentruck' && oz - rampDist > 330 && oz - rampDist - lastZ[l] > 90;
+        blockedUntil[l] = oz + (ramped ? 170 : 140);
+        lastZ[l] = oz;
         trackObjects.push({
           id: nextId++,
           z: oz,
@@ -4897,9 +4902,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
 
       if (rng() < 0.68) {
-        const freeLanes = [0, 1, 2, 3].filter(l => !used.has(l) && blockedUntil[l] < dist + 46 - 12 && !(blockedUntil[l] - 100 > dist - 60));
+        const freeLanes = [0, 1, 2, 3].filter(l => !used.has(l) && Math.abs(lastZ[l] - (dist + 46)) > 80);
         if (freeLanes.length > 0) {
           const bl = freeLanes[Math.floor(rng() * freeLanes.length)];
+          blockedUntil[bl] = Math.max(blockedUntil[bl], dist + 46 + 85);
           trackObjects.push({
             id: nextId++,
             z: dist + 46,
@@ -6678,7 +6684,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       if (obj.broken || obj.hitAnimTimer > 0) continue;
       for (const car of cars) {
         if (obj.type === 'jump') {
-          if (!(car.jumpTimer > 0) && !obj.hitBy.has(car.id) && Math.abs(obj.z - car.z) < 2.4 && Math.abs(obj.x - car.x) < 0.2) {
+          if (!(car.jumpTimer > 0) && !obj.hitBy.has(car.id) && Math.abs(obj.z + 4 - car.z) < 2.6 && Math.abs(obj.x - car.x) < 0.2) {
             obj.hitBy.add(car.id);
             car.jumpTimer = JUMP_DUR; car.jumpDur = JUMP_DUR; car.jumpY = 0;
             car.targetX = LANE_CENTERS[car.lane]; // stays in its lane
