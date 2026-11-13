@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="backend-url" content="https://sin-marathon-ripe-george.trycloudflare.com" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<title>TRADER RACE 3D - Mustang GT Championship</title>
+<title>Money Racer</title>
 <style>
   :root {
     --bg-dark: #050811;
@@ -3513,6 +3513,43 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 }
 .notif-modal-title { font-size: 16px; font-weight: 900; font-style: italic; letter-spacing: 0.5px; color: #fff; text-align: center; }
 .notif-modal-empty { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #94a3b8; font-size: 13px; font-weight: 800; }
+
+/* ===== V13: deposit popup (blue theme, as per reference) ===== */
+#resultModalBackdrop.tr-dep-mode .result-modal {
+  border: 2px solid #49a8ff !important; border-radius: 20px !important;
+  background: radial-gradient(120% 70% at 50% 0%, #10244a 0%, #081226 55%, #050b18 100%) !important;
+  box-shadow: 0 0 22px rgba(47, 141, 255, 0.55), inset 0 0 18px rgba(47, 141, 255, 0.12) !important;
+}
+#resultModalBackdrop.tr-dep-mode #modalActionBtn, #resultModalBackdrop.tr-dep-mode #modalSubtitle { display: none !important; }
+#resultModalBackdrop.tr-dep-mode #modalTitle { color: #fff !important; font-size: 21px; margin-bottom: 9px; }
+.trd-sep { width: 1px; align-self: stretch; margin: 2px 0; background: rgba(140, 170, 220, 0.4); flex-shrink: 0; }
+.trd-info, .trd-chain, .trd-addr, .trd-recent-row {
+  display: flex; align-items: center; gap: 7px; border: 1px solid rgba(110, 160, 235, 0.55); border-radius: 11px;
+  background: rgba(8, 16, 34, 0.85); color: #fff; font-weight: 800; font-style: italic;
+}
+.trd-info { justify-content: space-between; padding: 6px 9px; font-size: 9.500px; line-height: 1.250; text-align: left; margin: 0 6px; }
+.trd-info > div { display: flex; align-items: center; gap: 5px; }
+.trd-info b { color: #28e066; }
+.trd-chain { justify-content: space-between; padding: 7px 10px; font-size: 12px; margin-top: 8px; }
+.trd-chain > div { display: flex; align-items: center; gap: 6px; }
+.trd-chain svg { width: 17px; height: 17px; }
+.trd-chain b { color: #ffc928; font-size: 13.500px; }
+.trd-qr { padding: 8px; background: #fff; border-radius: 13px; display: inline-flex; box-shadow: 0 0 0 2px #6cb6ff, 0 0 16px rgba(47, 141, 255, 0.55); }
+.trd-addr { justify-content: space-between; padding: 7px 8px 7px 10px; cursor: pointer; font-style: normal; }
+.trd-addr #trDepAddrText { flex: 1; text-align: left; white-space: nowrap; overflow-x: auto; font: 700 9.600px/1.2 'SFMono-Regular', Consolas, Menlo, monospace; letter-spacing: -0.2px; user-select: all; }
+.trd-addr #trInlineCopyBtn { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 24px; border-radius: 7px; border: 1px solid #6cb6ff; background: linear-gradient(180deg, #2f8dff, #0b4fd6); color: #fff; cursor: pointer; }
+.trd-check {
+  width: 100%; margin-top: 9px; padding: 11px 8px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: #fff; font-size: 15px; font-weight: 900; font-style: italic; border: 1px solid #9fd0ff;
+  background: linear-gradient(180deg, #2d93ff 0%, #0a5cf0 55%, #0a3fc0 100%); box-shadow: 0 3px 0 #072a80, 0 0 12px rgba(40, 130, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.trd-check svg { width: 17px; height: 17px; }
+.trd-check:disabled { opacity: 0.7; }
+.trd-recent-hdr { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(110, 160, 235, 0.3); color: #fff; font-size: 12.500px; font-weight: 800; }
+.trd-recent-row { margin-top: 7px; padding: 7px 10px; font-size: 10.500px; }
+.trd-recent-amt { color: #28e066; font-size: 13px; }
+.trd-recent-time { flex: 1; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.trd-recent-row.trd-empty { justify-content: center; color: #94a3b8; font-style: normal; padding: 10px; }
 #headerNotifBtn { display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; flex-shrink: 0; }
 .top-header { gap: 5px !important; }
 
@@ -6492,7 +6529,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       document.getElementById('profileUsernameText').textContent = cleanName + '582';
     }
     sfxWin();
-    showCrToast('Welcome to Trader Race 3D!');
+    showCrToast('Welcome to Money Racer!');
     setTimeout(() => switchAppTab('bet'), 400);
   });
 
@@ -8532,6 +8569,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let _depPollTimer = null;
   function stopDepPoll() { if (_depPollTimer) { clearInterval(_depPollTimer); _depPollTimer = null; } }
 
+  try {
+    new MutationObserver(() => { if (!resultModalBackdrop.classList.contains('open') && resultModalBackdrop.classList.contains('tr-dep-mode')) resultModalBackdrop.classList.remove('tr-dep-mode'); })
+      .observe(resultModalBackdrop, { attributes: true, attributeFilter: ['class'] });
+  } catch (e) {}
+
   async function triggerDepositCheck(silent) {
     if (!online || playMode !== 'live') {
       if (!silent && playMode === 'demo') toast('Switch to LIVE mode to scan real BSC blockchain deposits!', 'info');
@@ -8588,57 +8630,54 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const addr = getResolvedDepositAddress();
     const minD = (state && state.settings && state.settings.min_deposit) || 0.5;
     modalSvgHolder.innerHTML = OFFICIAL_USDT_SVG.replace('width="20" height="20"', 'width="40" height="40"');
-    modalTitle.textContent = 'DEPOSIT USDT (BEP20)';
-    modalSubtitle.textContent = `Min ${minD} USDT · Max: No Limit · 0% Fee`;
-    modalSubtitle.style.color = '#28e066';
+    modalTitle.textContent = 'DEPOSIT USDT';
+    modalSubtitle.textContent = '';
+    resultModalBackdrop.classList.add('tr-dep-mode');
 
-    const demoStripHtml = playMode === 'demo'
-      ? `<div style="margin-top:8px;padding:6px 8px;background:rgba(250,204,21,0.10);border:1px dashed rgba(250,204,21,0.45);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:6px;">
-           <span style="font-size:10px;font-weight:800;color:#fde047;">🎮 Practice Balance:</span>
-           <div style="display:flex;gap:4px;">
-             <button type="button" class="tr-demo-topup-pill" data-add="100" style="background:#1e293b;color:#4ade80;border:1px solid rgba(74,222,128,0.4);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:900;cursor:pointer;">+$100</button>
-             <button type="button" class="tr-demo-topup-pill" data-add="500" style="background:#1e293b;color:#4ade80;border:1px solid rgba(74,222,128,0.4);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:900;cursor:pointer;">+$500</button>
-           </div>
+    const lastDep = ((state && state.deposits) || [])[0];
+    const depWhen = (d) => { try { const t = new Date((d.created_at || 0) * 1000); return t.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+    const CLOCK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const recentHtml = lastDep
+      ? `<div class="trd-recent-row">
+           ${OFFICIAL_USDT_SVG.replace('width="20" height="20"', 'width="20" height="20"')}
+           <b class="trd-recent-amt">+${fmt(lastDep.amount || 0)} USDT</b>
+           <i class="trd-sep"></i>
+           <span class="trd-recent-time">${CLOCK_SVG}<span>${esc(depWhen(lastDep))}</span></span>
+           ${lastDep.status === 'confirming'
+             ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#f59e0b"/><path d="M12 7v5l3 2" stroke="#fff" stroke-width="2.200" stroke-linecap="round"/></svg>`
+             : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M7.500 12.300l3 3 6-6.300" stroke="#fff" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
          </div>`
-      : '';
+      : `<div class="trd-recent-row trd-empty">No deposits yet</div>`;
 
     modalBodyContent.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(15,23,42,0.92);border:1px solid rgba(243,186,47,0.35);border-radius:9px;padding:6px 9px;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#f8fafc;">
-          ${BNB_CHAIN_SVG}
-          <span>BNB Smart Chain <b style="color:#facc15;">(BEP20)</b></span>
-        </div>
-        <span style="background:rgba(40,224,102,0.16);border:1px solid rgba(40,224,102,0.45);color:#4ade80;font-size:9.5px;font-weight:900;padding:2px 6px;border-radius:99px;">⚡ ~9s Credit</span>
+      <div class="trd-info">
+        <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13.500 2L5 13.500h5.500L9.500 22 19 10h-6z" fill="#ffc928"/></svg><span>~9s<br/>Credit</span></div>
+        <i class="trd-sep"></i>
+        <div>${CLOCK_SVG.replace('width="14" height="14"', 'width="17" height="17"')}<span>Max Time to<br/>Receive: 1 Min</span></div>
+        <i class="trd-sep"></i>
+        <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="17.500" rx="8" ry="3.200" fill="#f2a90f"/><ellipse cx="12" cy="12" rx="8" ry="3.200" fill="#ffc928" stroke="#0b1424" stroke-width="1"/><ellipse cx="12" cy="6.500" rx="8" ry="3.200" fill="#ffd84a" stroke="#0b1424" stroke-width="1"/></svg><span>Minimum<br/>Amount: <b>${minD} USDT</b></span></div>
       </div>
 
-      <div style="display:flex;flex-direction:column;align-items:center;margin:4px 0 8px;">
-        <div id="trDepQrHolder" style="padding:7px;background:#ffffff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5), 0 0 0 2px rgba(40,224,102,0.45);display:inline-flex;align-items:center;justify-content:center;">
-          ${buildQrSvg(addr, 128)}
-        </div>
-        <div style="font-size:9.5px;color:#94a3b8;margin-top:5px;font-weight:700;">Scan QR or copy your personal BEP20 address below</div>
+      <div class="trd-chain">
+        <div>${BNB_CHAIN_SVG}<span>BNB Smart Chain</span></div>
+        <i class="trd-sep"></i>
+        <div>Network: <b>BEP20</b></div>
       </div>
 
-      <div id="trDepAddrBox" style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 8px;background:#050a14;border:1px solid rgba(40,224,102,0.48);border-radius:9px;cursor:pointer;" title="Tap to copy address">
-        <span id="trDepAddrText" style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:9.3px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow-x:auto;color:#f8fafc;flex:1;text-align:left;user-select:all;">${esc(addr)}</span>
-        <button type="button" id="trInlineCopyBtn" style="background:rgba(40,224,102,0.18);border:1px solid rgba(40,224,102,0.45);color:#4ade80;border-radius:6px;padding:3px 6px;font-size:9.5px;font-weight:900;display:inline-flex;align-items:center;gap:3px;cursor:pointer;flex-shrink:0;">
-          ${COPY_ICON_SVG}
-        </button>
+      <div style="display:flex;justify-content:center;margin:10px 0;">
+        <div id="trDepQrHolder" class="trd-qr">${buildQrSvg(addr, 128)}</div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-        <button type="button" class="tr-btn ghost" id="trCopyAddr" style="margin:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:11.5px;padding:9px 8px;">
-          ${COPY_ICON_SVG} <span>Copy Address</span>
-        </button>
-        <button type="button" class="tr-btn green" id="trCheckDepBtn" style="margin:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:11.5px;padding:9px 8px;">
-          ${SCAN_ICON_SVG} <span>Check Payment</span>
-        </button>
+      <div id="trDepAddrBox" class="trd-addr" title="Tap to copy address">
+        <span id="trDepAddrText">${esc(addr)}</span>
+        <button type="button" id="trInlineCopyBtn">${COPY_ICON_SVG}</button>
       </div>
+
+      <button type="button" class="trd-check" id="trCheckDepBtn">${SCAN_ICON_SVG} <span>Check Payment</span></button>
 
       <div id="trDepLiveStatus"></div>
-      ${demoStripHtml}
-      <div style="margin-top:7px;font-size:9.5px;color:#64748b;text-align:center;font-weight:700;">
-        🔒 Automated Smart-Contract Vault • 3-Block Confirmation
-      </div>`;
+      <div class="trd-recent-hdr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.600-5.900M4 4.500v4h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4.300l2.700 1.600" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg><span>Recent Deposit</span></div>
+      ${recentHtml}`;
 
     modalActionBtn.textContent = 'CLOSE';
     resultModalBackdrop.classList.add('open');

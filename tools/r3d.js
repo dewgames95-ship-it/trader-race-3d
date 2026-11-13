@@ -162,7 +162,7 @@
       const box = document.createElement('div');
       box.id = 'r3dNoWebgl';
       box.style.cssText = 'position:absolute;inset:0;z-index:41;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px;text-align:center;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:600 13px/1.45 system-ui,sans-serif;';
-      box.innerHTML = '<div style="font-size:19px;font-weight:900;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div>'
+      box.innerHTML = '<div style="font-size:19px;font-weight:900;font-style:italic;letter-spacing:.06em">MONEY RACER</div>'
         + '<div style="font-size:15px;font-weight:800">3D graphics are not available on this device</div>'
         + '<div style="opacity:.8;max-width:300px">The race needs WebGL. Please update Telegram or your browser, turn on hardware acceleration, and open the game again.</div>'
         + '<button type="button" style="margin-top:6px;padding:9px 22px;border:0;border-radius:10px;background:#22c55e;color:#06210f;font:900 13px system-ui,sans-serif;letter-spacing:.06em">RELOAD</button>';
@@ -199,7 +199,7 @@
     // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
     loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;letter-spacing:.14em;';
-    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div><div id="r3dLoadTxt" style="font-size:13px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .2s linear"></i></span><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
+    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">MONEY RACER</div><div id="r3dLoadTxt" style="font-size:13px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .2s linear"></i></span><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
     canvas.parentNode.appendChild(loadPill);
     // Assets are fetched once, stored with the Cache API under a versioned key and served from there on
     // later opens. Bump ASSET_V whenever a file in assets/game3d changes: the cache key follows it and
@@ -242,13 +242,14 @@
       const left = LOAD_TOTAL - loadedCount, secs = (performance.now() - loadT0) / 1000;
       const pc = Math.min(100, Math.round((got / total) * 90 + (loadedCount / LOAD_TOTAL) * 10));
       const speed = netBytes > 0 ? netBytes / Math.max(0.25, secs) : 0;
-      let eta = (speed > 0 ? (total - got) / speed : (got < total ? 1.5 : 0)) + left * 0.09;
-      eta = shownEta < 0 ? eta : (eta > shownEta ? shownEta + (eta - shownEta) * 0.08 : Math.max(eta, shownEta - 0.1)); // ease, so it counts down smoothly
+      // Short friendly countdown: 5.6 s down to 1.0 s, following progress and never going back up.
+      const want = 1 + 4.6 * (1 - pc / 100);
+      const eta = shownEta < 0 ? 5.6 : Math.max(1, Math.min(shownEta, Math.max(want, shownEta - 0.1)));
       shownEta = eta;
       const bar = loadPill.querySelector('i'), txt = loadPill.querySelector('#r3dLoadTxt'), pct = loadPill.querySelector('#r3dLoadPct');
       if (!bar) return;
       bar.style.width = Math.max(2, pc) + '%'; pct.textContent = pc + '%';
-      txt.textContent = left > 0 ? 'Loading… ' + Math.max(0.1, eta).toFixed(1) + ' s' : 'Starting…';
+      txt.textContent = left > 0 ? 'Loading… ' + eta.toFixed(1) + ' s' : 'Starting…';
     }, 100);
     const tick = (v) => { loadedCount++; return v; };
     const within = (pr, ms) => Promise.race([pr, new Promise((r) => setTimeout(() => r(null), ms))]).then(tick, () => tick(null));
