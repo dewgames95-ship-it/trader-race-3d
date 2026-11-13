@@ -159,7 +159,8 @@
     const T = window.THREE;
     const glCanvas = document.createElement('canvas');
     glCanvas.id = 'raceCanvas3D';
-    glCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;display:block;';
+    // light colour grade on the 3D view only (HUD untouched): a little more punch and richer sky / grass / paint
+    glCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;display:block;filter:contrast(1.1) saturate(1.28) brightness(1.02);';
     canvas.parentNode.insertBefore(glCanvas, canvas);
     canvas.style.position = 'relative';
     R3D.glCanvas = glCanvas;
