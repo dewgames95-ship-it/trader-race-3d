@@ -1,13 +1,13 @@
   // =========================================================================
   // 7b. THREE.JS (WebGL) RACE RENDERER — draws the same cars[] / trackObjects[]
-  //     the simulation owns. Falls back to the Canvas 2D renderer above when
-  //     WebGL or the library is unavailable.
+  //     the simulation owns. If WebGL or the library is unavailable a short
+  //     message is shown over the race view instead.
   // =========================================================================
   const R3D = { status: 'pending', overlayDirty: true };
   const R3D_XS = 4.1;   // metres per lane-space unit (road half-width = 1.0)
-  const R3D_ZS = 0.29;  // metres per track-distance unit (kept low so the sense of speed matches the 2D view)
+  const R3D_ZS = 0.29;  // metres per track-distance unit (kept low for a steady sense of speed)
 
-  // ---- shared with the simulation (also used by the 2D fallback) ----
+  // ---- shared with the simulation ----
   // Obstacle footprints in metres as drawn: half-width, half-depth, height a jumping car must clear.
   const R3D_OBJ = {
     cone: { hw: 1.05, hd: 0.55, h: 0.9 }, barrel: { hw: 0.95, hd: 0.5, h: 1.1 }, barrier: { hw: 1.35, hd: 0.4, h: 1.1 },
@@ -151,8 +151,23 @@
     if (R3D.status === 'failed') return;
     R3D.status = 'failed';
     if (R3D.glCanvas) R3D.glCanvas.style.display = 'none';
-    const cb = document.getElementById('cameraToggleBtn'); if (cb) cb.style.display = 'none'; // the 2D fallback has one view
-    try { console.warn('[race3d] using 2D renderer:', reason); } catch (e) {}
+    const cb = document.getElementById('cameraToggleBtn'); if (cb) cb.style.display = 'none';
+    try { console.warn('[race3d] 3D renderer unavailable:', reason); } catch (e) {}
+    // No 2D fallback any more: tell the player plainly what is wrong.
+    try {
+      const host = canvas.parentNode;
+      if (!host || document.getElementById('r3dNoWebgl')) return;
+      Array.from(host.children).forEach((el) => { if (el !== canvas && el.style && el.style.zIndex === '40' && /LOADING/.test(el.textContent || '')) el.remove(); });
+      const box = document.createElement('div');
+      box.id = 'r3dNoWebgl';
+      box.style.cssText = 'position:absolute;inset:0;z-index:41;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px;text-align:center;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:600 13px/1.45 system-ui,sans-serif;';
+      box.innerHTML = '<div style="font-size:19px;font-weight:900;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div>'
+        + '<div style="font-size:15px;font-weight:800">3D graphics are not available on this device</div>'
+        + '<div style="opacity:.8;max-width:300px">The race needs WebGL. Please update Telegram or your browser, turn on hardware acceleration, and open the game again.</div>'
+        + '<button type="button" style="margin-top:6px;padding:9px 22px;border:0;border-radius:10px;background:#22c55e;color:#06210f;font:900 13px system-ui,sans-serif;letter-spacing:.06em">RELOAD</button>';
+      box.querySelector('button').addEventListener('click', (e) => { e.stopPropagation(); location.reload(); });
+      host.appendChild(box);
+    } catch (e) {}
   }
 
   async function r3dInit() {
@@ -1752,7 +1767,7 @@
       if (composer) { if (composerW !== viewW || composerH !== viewH || composerPR !== pixelCap) { composerW = viewW; composerH = viewH; composerPR = pixelCap; composer.setSize(viewW, viewH); } composer.render(dt); }
       else renderer.render(scene, camera);
 
-      // The 2D canvas stays on top as a transparent layer for the position meter only.
+      // #raceCanvas stays on top as a transparent layer for the route / position mini-map only.
       if (racing) { ctx.clearRect(0, 0, cw, ch); drawRightMiniMap(); R3D.overlayDirty = true; }
       else if (R3D.overlayDirty) { ctx.clearRect(0, 0, cw, ch); R3D.overlayDirty = false; }
     };
@@ -1782,7 +1797,7 @@
       try { R3D.render(); } catch (err) { r3dFail(err && err.message); }
       return;
     }
-    if (R3D.status === 'failed') renderScene2D();
-    // while the library is still loading nothing is drawn (dark viewport for a moment)
+    // while the library is still loading nothing is drawn (dark viewport for a moment);
+    // if it failed, r3dFail() has put a message over the race view
   }
 

@@ -38,7 +38,7 @@ LOADER = f"""<style>
 {{ "imports": {{ "three": "./assets/vendor/three/build/three.module.js", "three/addons/": "./assets/vendor/three/addons/", "postprocessing": "./assets/vendor/postprocessing/postprocessing.js" }} }}
 </script>
 <script type="module">
-// Three.js for the race view: local copy first, pinned CDN second, 2D renderer if both fail.
+// Three.js for the race view: local copy first, pinned CDN second, a 'no WebGL' message if both fail.
 const CDN = 'https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}';
 const sources = [
   {{ core: 'three', gltf: 'three/addons/loaders/GLTFLoader.js', draco: 'three/addons/loaders/DRACOLoader.js', dracoPath: './assets/vendor/three/addons/libs/draco/', pp: 'postprocessing' }},
@@ -78,12 +78,8 @@ def main():
     src = (ROOT / "tools" / "index.base.html").open(encoding="utf-8", newline="").read()  # pristine original, never edited
     src = strip(strip(src, R3D_BEGIN, R3D_END), LOADER_BEGIN, LOADER_END)
 
-    # The old Canvas 2D renderer stays as the fallback under a new name, and its
-    # canvas becomes a transparent layer (position meter) above the WebGL canvas.
-    if "function renderScene2D() {" not in src:
-        src = once(src, "  function renderScene() {\n", "  function renderScene2D() {\n", "renderScene()")
-    if "canvas.getContext('2d', { alpha: true })" not in src:
-        src = once(src, "canvas.getContext('2d', { alpha: false })", "canvas.getContext('2d', { alpha: true })", "2d context")
+    # The old Canvas 2D race renderer has been removed; #raceCanvas is only a
+    # transparent overlay (route / position mini-map) above the WebGL canvas.
 
     # Brief v3: three lanes, fixed grid order (yellow / blue / red), more and more varied obstacles.
     SIM = [
