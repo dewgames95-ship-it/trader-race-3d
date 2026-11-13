@@ -3482,6 +3482,59 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .speed-pill > .speed-value-row { white-space: nowrap; display: block; }
 #weatherBtnText, #cameraBtnText, #headerSoundIcon { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
 #headerSoundIcon svg { width: 18px; height: 18px; display: block; }
+
+/* ===== V10: car bet cards (badge + colour tag + odds pill, big car), D/R mode chip ===== */
+.console-car-bet-grid .console-car-card {
+  padding: 4px 5px 5px; gap: 2px; border-radius: 11px;
+  border: 1.5px solid #2f7df0;
+  background: linear-gradient(180deg, rgba(16, 24, 42, 0.98) 0%, rgba(6, 10, 19, 0.98) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.console-car-bet-grid .console-car-card.selected {
+  border-color: #ffd21f;
+  background: linear-gradient(180deg, rgba(22, 34, 60, 0.98) 0%, rgba(8, 14, 26, 0.98) 100%);
+  box-shadow: 0 0 10px rgba(255, 210, 31, 0.4), inset 0 0 8px rgba(255, 210, 31, 0.1);
+}
+.console-car-bet-grid .console-car-top { gap: 3px; justify-content: flex-start; }
+.console-car-bet-grid .cc-badge { width: 10px; height: 11.5px; flex-shrink: 0; }
+.console-car-bet-grid .console-car-name {
+  flex: 1 1 auto; min-width: 0; font-size: 7.4px; letter-spacing: -0.1px; text-align: left;
+  padding-left: 3px; border-left: 1px solid rgba(255, 255, 255, 0.28);
+}
+.console-car-bet-grid .cc-tag {
+  display: inline-block; margin-right: 2px; padding: 1px 2.5px; border-radius: 2px;
+  background: var(--car-accent, #2f7df0); color: #fff; font-weight: 900; transform: skewX(-8deg);
+}
+.console-car-bet-grid .console-car-card[data-car-theme="blue"] .cc-tag { background: #1d6ff2; }
+.console-car-bet-grid .console-car-card[data-car-theme="yellow"] .cc-tag { color: #1a1300; }
+.console-car-bet-grid .console-car-card[data-car-theme="yellow"] .console-car-name { font-size: 6.3px; letter-spacing: -0.3px; }
+.console-car-bet-grid .console-car-card[data-car-theme="yellow"] .console-car-odds { font-size: 8.4px; padding: 2px 3px; }
+.console-car-bet-grid .console-car-odds {
+  flex-shrink: 0; font-size: 9px; line-height: 1; padding: 2px 4px; border-radius: 6px;
+  border: 1px solid rgba(255, 210, 31, 0.75); background: rgba(255, 210, 31, 0.08); color: #ffd21f;
+}
+.console-car-bet-grid .console-car-Img {
+  width: 100%; height: 30px; flex: 1 1 30px; min-height: 26px; object-fit: contain;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.55));
+}
+.console-car-bet-grid .console-car-pick-btn {
+  margin-top: 0; padding: 3.5px 2px; border-radius: 7px; font-size: 7.6px; letter-spacing: 0;
+  border: 1px solid rgba(96, 165, 250, 0.7); color: #ffffff;
+  background: linear-gradient(180deg, #17346e 0%, #0d1f47 100%);
+}
+.console-car-bet-grid .console-car-card.selected .console-car-pick-btn {
+  background: linear-gradient(180deg, #2fe06c 0%, #12a544 100%); border-color: #9af5b8; color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.top-header .tr-chev {
+  width: 24px !important; height: 24px !important; padding: 0 !important; justify-content: center !important;
+  border-radius: 7px !important; font-size: 12px !important; font-style: italic;
+}
+.top-header .tr-chev.live {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.34), rgba(153, 27, 27, 0.48)) !important;
+  border: 1px solid rgba(248, 113, 113, 0.85) !important;
+  color: #ffd5d5 !important;
+}
 </style>
 
 <style id="v4-unified-overrides">
@@ -3855,35 +3908,32 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     <div class="console-car-bet-grid" id="consoleCarBetGrid">
       <div class="console-car-card" data-car-theme="yellow" data-car-title="CRYPTO CAR" style="--car-accent:#ffc412;">
         <div class="console-car-top">
-          <img class="console-car-Img" src="assets/ui/cb8f3453db.webp" alt="Crypto Car">
-          <div class="console-car-meta">
-            <span class="console-car-name">CRYPTO CAR</span>
-            <span class="console-car-odds" data-odds-lbl>2.4x</span>
-          </div>
+          <svg class="cc-badge" viewBox="0 0 16 18" fill="none"><path d="M1.500 2.200h13v8.300c0 3-2.600 5-6.500 6.300C4.100 15.500 1.500 13.500 1.500 10.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 2.200h4.330v1.800H1.500z" fill="#1fae4b"/><path d="M5.830 2.200h4.340v1.800H5.830z" fill="#ffffff"/><path d="M10.170 2.200h4.330v1.800h-4.330z" fill="#e02828"/><path d="M8 6l1.100 2.300 2.500.300-1.850 1.700.500 2.500L8 11.600l-2.250 1.200.500-2.500L4.400 8.600l2.500-.300z" fill="#0b1220"/></svg>
+          <span class="console-car-name"><b class="cc-tag">YELLOW</b>FERRARI</span>
+          <span class="console-car-odds" data-odds-lbl>2.4x</span>
         </div>
-        <div class="console-car-pick-btn">BET GOLD GT</div>
+        <img class="console-car-Img" src="assets/ui/cb8f3453db.webp" alt="Crypto Car">
+        <div class="console-car-pick-btn">BET YELLOW FERRARI</div>
       </div>
 
       <div class="console-car-card" data-car-theme="blue" data-car-title="TESLA KING" style="--car-accent:#38bdf8;">
         <div class="console-car-top">
-          <img class="console-car-Img" src="assets/ui/1f748c930d.webp" alt="Tesla King">
-          <div class="console-car-meta">
-            <span class="console-car-name">TESLA KING</span>
-            <span class="console-car-odds" data-odds-lbl>2.4x</span>
-          </div>
+          <svg class="cc-badge" viewBox="0 0 16 18" fill="none"><path d="M1.500 2.200h13v8.300c0 3-2.600 5-6.500 6.300C4.100 15.500 1.500 13.500 1.500 10.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 2.200h4.330v1.800H1.500z" fill="#1fae4b"/><path d="M5.830 2.200h4.340v1.800H5.830z" fill="#ffffff"/><path d="M10.170 2.200h4.330v1.800h-4.330z" fill="#e02828"/><path d="M8 6l1.100 2.300 2.500.300-1.850 1.700.500 2.500L8 11.600l-2.250 1.200.500-2.500L4.400 8.600l2.500-.300z" fill="#0b1220"/></svg>
+          <span class="console-car-name"><b class="cc-tag">BLUE</b>FERRARI</span>
+          <span class="console-car-odds" data-odds-lbl>2.4x</span>
         </div>
-        <div class="console-car-pick-btn">BET BLUE GT</div>
+        <img class="console-car-Img" src="assets/ui/1f748c930d.webp" alt="Tesla King">
+        <div class="console-car-pick-btn">BET BLUE FERRARI</div>
       </div>
 
       <div class="console-car-card selected" data-car-theme="red" data-car-title="RACER MG" style="--car-accent:#ff3b3b;">
         <div class="console-car-top">
-          <img class="console-car-Img" src="assets/ui/7e4d9d20e5.webp" alt="Racer MG">
-          <div class="console-car-meta">
-            <span class="console-car-name">RACER MG</span>
-            <span class="console-car-odds" data-odds-lbl>2.4x</span>
-          </div>
+          <svg class="cc-badge" viewBox="0 0 16 18" fill="none"><path d="M1.500 2.200h13v8.300c0 3-2.600 5-6.500 6.300C4.100 15.500 1.500 13.500 1.500 10.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 2.200h4.330v1.800H1.500z" fill="#1fae4b"/><path d="M5.830 2.200h4.340v1.800H5.830z" fill="#ffffff"/><path d="M10.170 2.200h4.330v1.800h-4.330z" fill="#e02828"/><path d="M8 6l1.100 2.300 2.500.300-1.850 1.700.500 2.500L8 11.600l-2.250 1.200.500-2.500L4.400 8.600l2.500-.300z" fill="#0b1220"/></svg>
+          <span class="console-car-name"><b class="cc-tag">RED</b>FERRARI</span>
+          <span class="console-car-odds" data-odds-lbl>2.4x</span>
         </div>
-        <div class="console-car-pick-btn">BET RED GT ✓</div>
+        <img class="console-car-Img" src="assets/ui/7e4d9d20e5.webp" alt="Racer MG">
+        <div class="console-car-pick-btn">BET RED FERRARI ✓</div>
       </div>
     </div>
 
@@ -5370,7 +5420,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       const isSel = card.dataset.carTheme === themeKey;
       card.classList.toggle('selected', isSel);
       const btnEl = card.querySelector('.console-car-pick-btn');
-      const labelMap = { red: 'BET RED GT', blue: 'BET BLUE GT', yellow: 'BET GOLD GT' };
+      const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET YELLOW FERRARI' };
       if (btnEl) btnEl.textContent = labelMap[card.dataset.carTheme] + (isSel ? ' ✓' : '');
     });
     document.querySelectorAll('.car-choice-btn').forEach(b => {
@@ -7783,7 +7833,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const isSel = card.dataset.carTheme === carKey;
         card.classList.toggle('selected', isSel);
         const btnEl = card.querySelector('.console-car-pick-btn');
-        const labelMap = { red: 'BET RED GT', blue: 'BET BLUE GT', yellow: 'BET GOLD GT' };
+        const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET YELLOW FERRARI' };
         if (btnEl) btnEl.textContent = labelMap[card.dataset.carTheme] + (isSel ? ' ✓' : '');
       });
       document.querySelectorAll('.car-choice-btn').forEach(b => {
@@ -8958,6 +9008,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         if (e.key === 'Escape') { inp.value = String(currentBet); inp.blur(); }
       });
       inp.addEventListener('blur', commitInlineInput);
+      inp.addEventListener('change', () => inp.blur());
+      // Closing the phone keyboard (back key / swipe) does not blur the field, so watch the visible
+      // viewport: once it grows back while the field is still focused, apply the amount.
+      const vv = window.visualViewport;
+      if (vv) {
+        let kbMinH = 0;
+        inp.addEventListener('focus', () => { kbMinH = vv.height; });
+        vv.addEventListener('resize', () => {
+          if (document.activeElement !== inp) return;
+          if (vv.height < kbMinH) kbMinH = vv.height;
+          else if (vv.height > kbMinH + 90) inp.blur();
+        });
+      }
     }
 
     // Clone and replace +/- buttons so only the 10% round-figure handler runs
@@ -9062,7 +9125,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     chevBtn.id = 'trModeChev';
     chevBtn.className = 'tr-chev demo';
     chevBtn.setAttribute('aria-label', 'Switch Live or Demo mode');
-    chevBtn.innerHTML = `<span id="trModeChevTxt">DEMO</span><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    chevBtn.innerHTML = `<span id="trModeChevTxt">D</span><svg style="display:none" width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     balBox.appendChild(chevBtn);
 
     const menu = document.createElement('div');
@@ -9111,7 +9174,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       ch.title = playMode === 'live' ? 'LIVE mode (Tap to switch)' : 'DEMO mode (Tap to switch)';
     }
     const chTxt = $('#trModeChevTxt');
-    if (chTxt) chTxt.textContent = playMode === 'live' ? 'LIVE' : 'DEMO';
+    if (chTxt) chTxt.textContent = playMode === 'live' ? 'R' : 'D';
     const tag = $('#trBalModeTag');
     if (tag) {
       tag.className = 'tr-bal-mode-tag ' + playMode;
