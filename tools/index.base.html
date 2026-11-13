@@ -3474,6 +3474,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   box-shadow: inset 0 2px 0 rgba(170, 215, 255, 0.75), inset 0 -3px 0 #5fb4ff;
 }
 .bottom-nav .nav-tab.active svg { filter: drop-shadow(0 0 6px rgba(190, 225, 255, 0.6)); }
+
+/* ===== VISUAL V9: HUD icons (inline SVG, same in every state) ===== */
+.speed-pill { display: grid !important; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 6px; row-gap: 0 !important; }
+.speed-pill > svg { grid-row: 1 / 3; }
+.speed-pill > .hud-pill-label, .speed-pill > .speed-value-row { grid-column: 2; text-align: left; }
+.speed-pill > .speed-value-row { white-space: nowrap; display: block; }
+#weatherBtnText, #cameraBtnText, #headerSoundIcon { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+#headerSoundIcon svg { width: 18px; height: 18px; display: block; }
 </style>
 
 <style id="v4-unified-overrides">
@@ -3579,6 +3587,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 </head>
 <body>
 
+<script>window.TR_ICONS = {"sndOn": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><g transform=\"rotate(-18 12 12)\"><path d=\"M4 10.4v3.2a1 1 0 0 0 1 1h1.3l1.2 4a1 1 0 0 0 1 .7h.9a.8.8 0 0 0 .8-1l-1-3.700L16 17.600V6.400L7.200 9.400H5a1 1 0 0 0-1 1z\" fill=\"#ffffff\"/><path d=\"M18.6 9.600a3.800 3.800 0 0 1 0 4.800M20.900 7.300a7.300 7.300 0 0 1 0 9.400\" stroke=\"#ffffff\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></g></svg>", "sndOff": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><g transform=\"rotate(-18 12 12)\" opacity=\".7\"><path d=\"M4 10.4v3.2a1 1 0 0 0 1 1h1.3l1.2 4a1 1 0 0 0 1 .7h.9a.8.8 0 0 0 .8-1l-1-3.700L16 17.600V6.400L7.200 9.400H5a1 1 0 0 0-1 1z\" fill=\"#ffffff\"/></g><path d=\"M4 4l16 16\" stroke=\"#ff5a5f\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg>", "sunny": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"4.4\" fill=\"#ffc928\"/><path d=\"M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800\" stroke=\"#ffc928\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>", "rain": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M7 15.500a4 4 0 0 1 .5-8 5.200 5.200 0 0 1 10 1.300 3.400 3.400 0 0 1-.5 6.700z\" fill=\"#dbe7f5\"/><path d=\"M8.500 18l-1 3M12.500 18l-1 3M16.500 18l-1 3\" stroke=\"#5fb4ff\" stroke-width=\"1.9\" stroke-linecap=\"round\"/></svg>", "snow": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M12 2.500v19M3.800 7.200l16.400 9.600M3.800 16.800l16.400-9.600M12 6l-2.200-2M12 6l2.200-2M12 18l-2.200 2M12 18l2.200 2\" stroke=\"#cfe8ff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>", "sunset": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M5.500 16a6.500 6.500 0 0 1 13 0z\" fill=\"#ff9d2e\"/><path d=\"M2.500 16h19M6 19.500h12M12 4v2.600M4.600 8.600l1.800 1.600M19.400 8.600l-1.800 1.600\" stroke=\"#ffc928\" stroke-width=\"1.9\" stroke-linecap=\"round\"/></svg>"};</script>
 <div class="app-shell">
   <!-- 1. TOP HEADER BAR -->
   <header class="top-header">
@@ -3631,13 +3640,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     </div>
 
     <button class="header-sfx-btn" id="headerSoundBtn" title="Toggle Game Sound On/Off">
-      <span id="headerSoundIcon">🔊</span>
+      <span id="headerSoundIcon"><svg viewBox="0 0 24 24" fill="none"><g transform="rotate(-18 12 12)"><path d="M4 10.4v3.2a1 1 0 0 0 1 1h1.3l1.2 4a1 1 0 0 0 1 .7h.9a.8.8 0 0 0 .8-1l-1-3.700L16 17.600V6.400L7.200 9.400H5a1 1 0 0 0-1 1z" fill="#ffffff"/><path d="M18.6 9.600a3.800 3.800 0 0 1 0 4.800M20.900 7.300a7.300 7.300 0 0 1 0 9.400" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/></g></svg></span>
     </button>
     <button class="deposit-btn" id="depositBtn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <rect x="2" y="5" width="20" height="15" rx="3" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
-        <path d="M16 10.5H22V14.5H16C14.9 14.5 14 13.6 14 12.5C14 11.4 14.9 10.5 16 10.5Z" fill="#f59f00"/>
-      </svg>
+        <path d="M4.500 7.500L15.500 4a1.200 1.200 0 0 1 1.600 1.100V7.500" fill="#1e293b" stroke="#0f172a" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="2" y="7" width="20" height="13.500" rx="3" fill="#111827" stroke="#0f172a" stroke-width="1.5"/>
+        <path d="M16 11.500H22V16H16C14.800 16 13.800 15 13.800 13.750C13.800 12.500 14.800 11.500 16 11.500Z" fill="#f59f00" stroke="#0f172a" stroke-width="1"/>
+        <circle cx="16.600" cy="13.750" r="1" fill="#111827"/>
+        </svg>
       <span>DEPOSIT</span>
     </button>
   </header>
@@ -3658,11 +3669,10 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   <section class="status-strip">
     <div class="status-card">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-        <path d="M4 21V4M4 4H19L16.5 8.5L19 13H4" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="5" y="5" width="4" height="4" fill="#f8fafc"/>
-        <rect x="9" y="9" width="4" height="4" fill="#f8fafc"/>
-        <rect x="13" y="5" width="4" height="4" fill="#f8fafc"/>
-      </svg>
+        <path d="M5 21.500V3" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <path d="M5 4h15l-2.400 5 2.400 5H5z" fill="#ffffff"/>
+        <path d="M5 4h3.600v3.330H5zM12.200 4h3.600v3.330h-3.600zM8.600 7.330h3.600v3.340H8.600zM15.800 7.330h2.600l-.800 1.670.800 1.670h-2.600zM5 10.670h3.600V14H5zM12.200 10.670h3.600V14h-3.600z" fill="#0b1220"/>
+        </svg>
       <div class="status-text">
         <span class="status-title" id="raceIdText">RACE ID: #589</span>
         <span class="status-highlight-green" id="joinedText">3 / 3 READY</span>
@@ -3671,9 +3681,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     <div class="status-card">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="13" r="8" stroke="#f8fafc" stroke-width="2"/>
-        <path d="M12 9V13L14.5 14.5M9.5 2H14.5" stroke="#ffae00" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+        <circle cx="12" cy="13.500" r="7.600" stroke="#ffffff" stroke-width="2"/>
+        <path d="M12 9.500V13.500L14.600 15M9.500 2.500H14.500M12 2.500V5.500M18.600 6.400L20 7.800" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       <div class="status-text">
         <span class="status-title">TIME LEFT</span>
         <span class="status-highlight-gold" id="timerText">01:00</span>
@@ -3693,19 +3703,23 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     <div class="left-hud-stack">
       <div class="hud-pill" id="leaderboardBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <rect x="9" y="5" width="6" height="15" rx="1" fill="#fbbf24"/>
-          <rect x="2" y="10" width="6" height="10" rx="1" fill="#94a3b8"/>
-          <rect x="16" y="12" width="6" height="8" rx="1" fill="#d97706"/>
+          <rect x="2.800" y="11" width="5.600" height="9.500" rx="1.100" fill="#ffc928"/>
+          <rect x="9.200" y="4.500" width="5.600" height="16" rx="1.100" fill="#ffd84a"/>
+          <rect x="15.600" y="8.500" width="5.600" height="12" rx="1.100" fill="#ff9d1a"/>
         </svg>
         <span class="hud-pill-label">LEADERBOARD</span>
       </div>
 
       <div class="hud-pill" id="modeSelectHudBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M4 14L6.5 8H17.5L20 14H4Z" fill="#38bdf8"/>
-          <rect x="3" y="13" width="18" height="5" rx="2" fill="#2563eb"/>
-          <circle cx="7" cy="18" r="2" fill="#f8fafc"/>
-          <circle cx="17" cy="18" r="2" fill="#f8fafc"/>
+          <rect x="3.600" y="16" width="3.800" height="4" rx="1.200" fill="#dbe4f0"/>
+          <rect x="16.600" y="16" width="3.800" height="4" rx="1.200" fill="#dbe4f0"/>
+          <path d="M5.300 10.800L7 6.300A2 2 0 0 1 8.900 5h6.200a2 2 0 0 1 1.900 1.300l1.700 4.500z" fill="#5fb4ff"/>
+          <path d="M7.600 10.200l1.100-3a.800.800 0 0 1 .750-.500h5.100a.800.800 0 0 1 .750.500l1.100 3z" fill="#dff0ff"/>
+          <rect x="2.600" y="10" width="18.800" height="7.600" rx="2.600" fill="#2f7df0"/>
+          <circle cx="6.600" cy="13.600" r="1.700" fill="#ffffff"/>
+          <circle cx="17.400" cy="13.600" r="1.700" fill="#ffffff"/>
+          <rect x="9.700" y="12.800" width="4.600" height="1.700" rx=".850" fill="#0b2a66"/>
         </svg>
         <span class="hud-pill-label">MODE / CAR</span>
       </div>
@@ -3720,15 +3734,20 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
       <div class="hud-pill" id="howToPlayBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <rect x="2" y="7" width="20" height="11" rx="5" fill="#cbd5e1"/>
-          <path d="M7 10.5V14.5M5 12.5H9" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="15.5" cy="11.5" r="1.2" fill="#ef4444"/>
-          <circle cx="18" cy="13.5" r="1.2" fill="#2563eb"/>
+          <circle cx="12" cy="12" r="9.200" fill="#2563eb" stroke="#8ec5ff" stroke-width="1.600"/>
+          <path d="M9.200 9.600a2.900 2.900 0 1 1 4.500 2.400c-1 .700-1.700 1.200-1.700 2.300" stroke="#ffffff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="17.300" r="1.250" fill="#ffffff"/>
         </svg>
         <span class="hud-pill-label">HOW TO PLAY</span>
       </div>
 
       <div class="hud-pill speed-pill">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M4.300 18a9 9 0 1 1 15.400 0" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 5.800v1.700M5.800 12.500h1.700M16.500 12.500h1.700M7.400 8l1.200 1.200" stroke="#ffffff" stroke-width="1.500" stroke-linecap="round"/>
+          <path d="M12 13.500l4.200-5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="13.500" r="1.700" fill="#ffffff"/>
+        </svg>
         <span class="hud-pill-label">SPEED</span>
         <div class="speed-value-row">
           <span id="speedNum">0</span> <span class="speed-unit">KM/H</span>
@@ -3755,16 +3774,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </button>
         <button class="icon-toggle-btn active" id="hapticToggleBtn">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-            <rect x="7" y="4" width="10" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
+            <rect x="6.500" y="2.800" width="11" height="18.400" rx="2.600" stroke="currentColor" stroke-width="2"/>
+            <path d="M10.500 17.800h3" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"/>
+        </svg>
           <span>HAPTIC</span>
         </button>
       </div>
       <button class="icon-toggle-btn active" id="weatherCycleBtn" title="Change Weather/Climate">
-        <span id="weatherBtnText">☀️ SUNNY</span>
+        <span id="weatherBtnText"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.4" fill="#ffc928"/><path d="M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800" stroke="#ffc928" stroke-width="2" stroke-linecap="round"/></svg>SUNNY</span>
       </button>
       <button class="icon-toggle-btn active" id="cameraToggleBtn" title="Switch camera: behind the car / driver's seat">
-        <span id="cameraBtnText">🎥 TPP</span>
+        <span id="cameraBtnText"><svg viewBox="0 0 24 24" fill="none"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500" fill="#ffffff"/><path d="M15.500 10.500l5.500-3.200v9.400l-5.500-3.200z" fill="#ffffff"/><circle cx="9" cy="12" r="2.300" fill="#0e2a1c"/></svg>CAMERA</span>
       </button>
     </div>
 
@@ -4803,7 +4823,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // False = Manual Drive Mode (User steers with Left/Right/Accelerate/Brake)
   let isAutoBetMode = true;
 
-  const WEATHER_THEMES = ['sunny', 'rain', 'snow', 'sunset'];
+  const WEATHER_THEMES = ['sunny', 'rain', 'snow'];
   const WEATHER_LABELS = {
     sunny: '☀️ SUNNY',
     rain: '🌧️ RAIN',
@@ -5150,7 +5170,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const isLocked = gameState !== 'IDLE';
     if (btn) btn.classList.toggle('locked-weather', isLocked);
     if (btnTxt) {
-      btnTxt.textContent = (isLocked ? '🔒 ' : '') + WEATHER_LABELS[currentWeather];
+      btnTxt.innerHTML = (window.TR_ICONS[currentWeather] || '') + WEATHER_LABELS[currentWeather].replace(/^\S+\s+/, '');
     }
   }
 
@@ -5500,7 +5520,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     soundEnabled = !soundEnabled;
     soundToggleBtn.classList.toggle('active', soundEnabled);
     if (headerSoundBtn) headerSoundBtn.classList.toggle('muted', !soundEnabled);
-    if (headerSoundIcon) headerSoundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+    if (headerSoundIcon) headerSoundIcon.innerHTML = soundEnabled ? window.TR_ICONS.sndOn : window.TR_ICONS.sndOff;
     const p = cars.find(c => c.isPlayer);
     updateEngineSound(p ? p.speed : 0, gameState === 'RACING');
     if (soundEnabled) playTone(580, 760, 0.08, 'sine', 0.1);
@@ -9292,7 +9312,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (pBox) pBox.addEventListener('click', () => { const nb = $('#navProfileBtn'); if (nb) nb.click(); });
     applyTheme(theme);
     soundEnabled = sfxOn && musicOn ? true : (sfxOn || musicOn);
-    const hi = $('#headerSoundIcon'); if (hi) hi.textContent = soundEnabled ? '🔊' : '🔇';
+    const hi = $('#headerSoundIcon'); if (hi) hi.innerHTML = soundEnabled ? window.TR_ICONS.sndOn : window.TR_ICONS.sndOff;
     if (!soundEnabled) { musicOn = false; sfxOn = false; }
     rewireWalletButtons();
     wireLeaderboard();

@@ -137,7 +137,8 @@
     // camera: TPP (behind the car) / FPP (driver's seat); usable at any time, in both play modes
     const camBtn = document.getElementById('cameraToggleBtn'), camTxt = document.getElementById('cameraBtnText');
     try { R3D.fpp = localStorage.getItem('tr_cam') === 'fpp'; } catch (e) {}
-    const label = () => { if (camTxt) camTxt.textContent = R3D.fpp ? '🎥 FPP' : '🎥 TPP'; };
+    const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500" fill="#ffffff"/><path d="M15.500 10.500l5.500-3.200v9.400l-5.500-3.200z" fill="#ffffff"/><circle cx="9" cy="12" r="2.300" fill="#0e2a1c"/></svg>';
+    const label = () => { if (camTxt) camTxt.innerHTML = CAM_ICON + 'CAMERA'; if (camBtn) camBtn.title = R3D.fpp ? 'Camera: driver seat (FPP)' : 'Camera: behind the car (TPP)'; };
     label();
     if (camBtn) camBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -198,29 +199,72 @@
     // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
     loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;letter-spacing:.14em;';
-    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div><div id="r3dLoadTxt" style="opacity:.8;font-size:11px">LOADING 0%</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .25s"></i></span>';
+    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">TRADER RACE 3D</div><div id="r3dLoadTxt" style="font-size:13px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .2s linear"></i></span><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
     canvas.parentNode.appendChild(loadPill);
-    let loadedCount = 0;
-    const LOAD_TOTAL = 11;
-    const tick = (v) => { loadedCount++; const pc = Math.min(100, Math.round(loadedCount / LOAD_TOTAL * 100)); loadPill.querySelector('i').style.width = pc + '%'; loadPill.querySelector('#r3dLoadTxt').textContent = 'LOADING ' + pc + '%'; return v; };
+    // Assets are fetched once, stored with the Cache API under a versioned key and served from there on
+    // later opens. Bump ASSET_V whenever a file in assets/game3d changes: the cache key follows it and
+    // older caches are deleted.
+    const CACHE_KEY = 'tr-assets-' + ASSET_V.slice(3), LOAD_TOTAL = 11;
+    const ASSET_BYTES = { 'car_f8.glb': 1579088, 'car_ao.png': 21407, 'flora.webp': 707288, 'sky.jpg': 44948, 'sky_front.jpg': 153383, 'trees_maple.glb': 761184, 'trees_pine.glb': 599524, 'city_a.glb': 3782056, 'city_b.glb': 2852780, 'tower.glb': 129028, 'grass.glb': 177332 };
+    const loadProg = {}, loadT0 = performance.now();
+    let loadedCount = 0, netBytes = 0, shownEta = -1;
+    let assetCache = null;
+    try {
+      if (window.caches) {
+        assetCache = await caches.open(CACHE_KEY);
+        caches.keys().then((ks) => ks.forEach((k) => { if (k.startsWith('tr-assets-') && k !== CACHE_KEY) caches.delete(k); })).catch(() => {});
+      }
+    } catch (e) { assetCache = null; }
+    // Returns a URL the loaders can read: a blob URL (from the cache, or freshly downloaded with byte
+    // progress), or the plain file URL if anything about caching/streaming is unavailable.
+    const assetUrl = async (file) => {
+      const url = ASSET_BASE + file + ASSET_V, pr = loadProg[file] = { got: 0, total: ASSET_BYTES[file] || 200000 };
+      try {
+        let resp = assetCache ? await assetCache.match(url) : null;
+        if (resp) { const blob = await resp.blob(); pr.got = pr.total; return URL.createObjectURL(blob); }
+        resp = await fetch(url);
+        if (!resp.ok || !resp.body) throw new Error('fetch');
+        const len = +resp.headers.get('content-length');
+        if (len > 0 && !resp.headers.get('content-encoding')) pr.total = len;
+        const reader = resp.body.getReader(), chunks = [];
+        for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); pr.got += value.length; netBytes += value.length; if (pr.got > pr.total) pr.total = pr.got; }
+        const type = resp.headers.get('content-type') || '', blob = new Blob(chunks, { type });
+        pr.total = pr.got = blob.size || pr.total;
+        if (assetCache) assetCache.put(url, new Response(blob, { headers: { 'content-type': type } })).catch(() => {});
+        return URL.createObjectURL(blob);
+      } catch (e) { pr.got = pr.total; return url; }
+    };
+    const freeUrl = (u) => { if (u && u.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(u), 4000); };
+    // Progress = real bytes received (90%) + assets decoded (10%); the countdown is bytes left / measured speed.
+    const loadUi = setInterval(() => {
+      let got = 0, total = 0;
+      for (const f in ASSET_BYTES) { const pr = loadProg[f]; total += pr ? pr.total : ASSET_BYTES[f]; got += pr ? Math.min(pr.got, pr.total) : 0; }
+      const left = LOAD_TOTAL - loadedCount, secs = (performance.now() - loadT0) / 1000;
+      const pc = Math.min(100, Math.round((got / total) * 90 + (loadedCount / LOAD_TOTAL) * 10));
+      const speed = netBytes > 0 ? netBytes / Math.max(0.25, secs) : 0;
+      let eta = (speed > 0 ? (total - got) / speed : (got < total ? 1.5 : 0)) + left * 0.09;
+      eta = shownEta < 0 ? eta : (eta > shownEta ? shownEta + (eta - shownEta) * 0.08 : Math.max(eta, shownEta - 0.1)); // ease, so it counts down smoothly
+      shownEta = eta;
+      const bar = loadPill.querySelector('i'), txt = loadPill.querySelector('#r3dLoadTxt'), pct = loadPill.querySelector('#r3dLoadPct');
+      if (!bar) return;
+      bar.style.width = Math.max(2, pc) + '%'; pct.textContent = pc + '%';
+      txt.textContent = left > 0 ? 'Loading… ' + Math.max(0.1, eta).toFixed(1) + ' s' : 'Starting…';
+    }, 100);
+    const tick = (v) => { loadedCount++; return v; };
     const within = (pr, ms) => Promise.race([pr, new Promise((r) => setTimeout(() => r(null), ms))]).then(tick, () => tick(null));
-    const loadTex = (file) => new Promise((res) => new T.TextureLoader().load(ASSET_BASE + file + ASSET_V, res, undefined, () => res(null)));
-    const loadCar = () => new Promise((res) => {
+    const loadTex = (file) => assetUrl(file).then((u) => new Promise((res) => new T.TextureLoader().load(u, (t) => { freeUrl(u); res(t); }, undefined, () => res(null))));
+    const loadGlb = (file) => assetUrl(file).then((u) => new Promise((res) => {
       if (!ADD.GLTFLoader) return res(null);
       const loader = new ADD.GLTFLoader();
+      loader.setResourcePath(ASSET_BASE);
       if (ADD.DRACOLoader) loader.setDRACOLoader(new ADD.DRACOLoader().setDecoderPath(ADD.dracoPath));
-      loader.load(ASSET_BASE + 'car_f8.glb' + ASSET_V, (g) => res(g.scene), undefined, () => res(null));
-    });
-    const loadGlb = (file) => new Promise((res) => {
-      if (!ADD.GLTFLoader) return res(null);
-      const loader = new ADD.GLTFLoader();
-      if (ADD.DRACOLoader) loader.setDRACOLoader(new ADD.DRACOLoader().setDecoderPath(ADD.dracoPath));
-      loader.load(ASSET_BASE + file + ASSET_V, (g) => res(g.scene), undefined, () => res(null));
-    });
+      loader.load(u, (g) => { freeUrl(u); res(g.scene); }, undefined, () => res(null));
+    }));
+    const loadCar = () => loadGlb('car_f8.glb');
     const treePacks = Promise.all([within(loadGlb('trees_maple.glb'), 30000), within(loadGlb('trees_pine.glb'), 30000), within(loadGlb('city_a.glb'), 40000), within(loadGlb('city_b.glb'), 40000), within(loadGlb('tower.glb'), 30000), within(loadGlb('grass.glb'), 30000)]);
     const [carModel, carAoTex, floraTex, skyEq, skyFront] = await Promise.all([within(loadCar(), 15000), within(loadTex('car_ao.png'), 15000), within(loadTex('flora.webp'), 15000), within(loadTex('sky.jpg'), 15000), within(loadTex('sky_front.jpg'), 15000)]);
     const [mapleScene, pineScene, cityAScene, cityBScene, towerScene, grassScene] = await treePacks;
-    loadPill.remove();
+    clearInterval(loadUi); loadPill.remove();
     if (R3D.status !== 'pending') return;
 
     const scene = new T.Scene();
@@ -282,7 +326,7 @@
 
     // ---------- sky ----------
     const SKY = {
-      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#5fb53a', grass2: '#4c9e30', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
+      sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#55a636', grass2: '#43902c', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
       rain:   { stops: [[0, '#0f172a'], [0.2, '#1e293b'], [0.36, '#56657a'], [1, '#56657a']], fog: '#57667a', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#b8c7dc', '#3b4a45', 0.95], sun: ['#c9d6ea', 0.75], cloud: '#8693a8', city: '#7f8ea6', road: '#9aa3b2', leaf: '#b9c6c0', glow: 0 },
       snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#e6edf5', grass2: '#d8e1ec', hemi: ['#ffffff', '#c3cfdf', 1.2], sun: ['#ffffff', 1.5], cloud: '#ffffff', city: '#dbe7f5', road: '#e2e8f0', leaf: '#dfeee6', glow: 0.25 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
@@ -718,14 +762,14 @@
       for (const q of [[[-1, 0, 0], [1, 0, 0], [1, 1, 0], [-1, 1, 0]], [[0, 0, -1], [0, 0, 1], [0, 1, 1], [0, 1, -1]]]) for (const i of [0, 1, 2, 0, 2, 3]) { P.push(...q[i]); U.push([0, 1, 1, 0][i], [0, 0, 1, 1][i]); }
       tuftGeo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); tuftGeo.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
     }
-    const TUFT_CAP = FLORA_ROWS * 2 * 30;
+    const GRASS_PER_SIDE = 64, TUFT_CAP = FLORA_ROWS * 2 * GRASS_PER_SIDE;
     const TUFT_TINTS = ['#ffffff', '#d9f2b0', '#a8d68a', '#f0e6a0', '#7fbf6a', '#c8f0c0'].map((c) => col(c));
     const tuftMat = new T.MeshBasicMaterial({ map: canvasTex(tuftC), alphaTest: 0.4, side: T.DoubleSide });
     const tufts = new T.InstancedMesh(tuftGeo, tuftMat, TUFT_CAP);
     tufts.frustumCulled = false; tufts.count = 0; scene.add(tufts);
     // Real 3D trees (maple + pine LOD2 meshes from the owner's packs) for the rows nearest the road.
     const treeKits = [], leafMats = [];
-    const TREE_CAP = 90;
+    const TREE_CAP = 150;
     const makeKits = (root, prefix, kind) => {
       if (!root) return;
       root.updateMatrixWorld(true);
@@ -766,7 +810,9 @@
       return true;
     };
     // Owner's grass pack: every patch/clump mesh becomes an instanced kit.
-    const grassKits = [], GRASS_CAP = 620;
+    const grassKits = [], GRASS_CAP = 1500;
+    // natural mix of grass tones: fresh, deep, olive, dry-yellow, blue-green
+    const GRASS_TINTS = ['#ffffff', '#dff2c4', '#b9dc96', '#93c47a', '#c9cf86', '#e6dc9a', '#a7d3a0', '#86b566', '#d6e8a8'].map((c) => col(c));
     if (grassScene) {
       grassScene.updateMatrixWorld(true);
       grassScene.traverse((o) => {
@@ -774,7 +820,7 @@
         const g = o.geometry.clone().applyMatrix4(o.matrixWorld); g.computeBoundingBox();
         const bb = g.boundingBox, c = bb.getCenter(new T.Vector3()); g.translate(-c.x, -bb.min.y, -c.z);
         const mat = o.material.clone(); mat.side = T.DoubleSide; mat.alphaTest = Math.max(mat.alphaTest || 0, 0.4); mat.transparent = false;
-        mat.color.set(/yellow/.test(o.material.name) ? '#cfe88a' : '#9fe070'); leafMats.push(mat); mat.userData.baseTint = mat.color.clone();
+        mat.color.set(/yellow/.test(o.material.name) ? '#c3dc80' : '#8fd464'); leafMats.push(mat); mat.userData.baseTint = mat.color.clone();
         const im = new T.InstancedMesh(g, mat, GRASS_CAP); im.count = 0; im.frustumCulled = false; scene.add(im);
         grassKits.push({ im, n: 0 });
       });
@@ -813,7 +859,9 @@
           if (dens > 0.34 && !(s & 1)) tree(side * (EDGE + r(3.7) * 2.4), z, 5.2 + r(4.9) * 3.2, 0.2);
           if (dens > 0.58 && (s & 1) && r(10.1) < 0.7) tree(side * (EDGE + 7 + r(10.3) * 7), z - segLen * r(10.9), 6 + r(11.3) * 3.4, 0.3);
           // saplings near the verge, tall trees further back, a loose tree line beyond: all with gaps
-          if (r(30.1) < 0.3) tree(side * (EDGE - 1.2 + r(30.7) * 5), z - segLen * r(31.3), 2.5 + r(31.9) * 1.5, 0.25);
+          if (r(30.1) < 0.5) tree(side * (EDGE - 1.2 + r(30.7) * 5), z - segLen * r(31.3), 2.5 + r(31.9) * 1.5, 0.25);
+          if (r(38.1) < 0.45) tree(side * (EDGE + 1.5 + r(38.7) * 9), z - segLen * r(39.3), 2.2 + r(39.9) * 1.9, 0.2);   // more young trees
+          if (r(40.3) < 0.3) tree(side * (EDGE + 11 + r(40.9) * 14), z - segLen * r(41.7), 3 + r(42.1) * 2.4, 0.3);
           if (r(32.3) < 0.26) tree(side * (EDGE + 9 + r(32.9) * 10), z - segLen * r(33.1), 10 + r(33.7) * 4, 0.3);
           if (r(12.1) < 0.3) tree(side * (EDGE + 16 + r(12.7) * 11), z - segLen * r(13.1), 8 + r(13.7) * 4.5, 0.4);
           if (r(15.3) < 0.26) tree(side * (EDGE + 30 + r(15.7) * 30), z - segLen * r(16.3), 11 + r(16.9) * 6, 0.45);
@@ -830,14 +878,15 @@
           }
           if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           if (r(26.3) < 0.55) plant(ROCKS[Math.floor(r(26.9) * 3)], side * (RAIL_X + 4 + r(27.1) * 9), z - segLen * r(27.7), 0.5 + r(28.3) * 0.6, r(28.9) < 0.5, 0); // pebbles further out
-          for (let f = 0; f < 30 && gi < TUFT_CAP; f++) {
+          for (let f = 0; f < GRASS_PER_SIDE && gi < TUFT_CAP; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
             if (grassKits.length) {
               const kit = grassKits[Math.floor(hash(n * 41.3 + f) * grassKits.length)];
               if (kit.n < GRASS_CAP) {
-                const gs = (f % 5 === 0 ? 2.1 : 1.0) + hash(n * 43.7 + f) * 1.2; // every fifth one is a big patch
+                const gs = f >= 30 ? 0.45 + hash(n * 43.7 + f) * 0.55 : (f % 5 === 0 ? 2.1 : 1.0) + hash(n * 43.7 + f) * 1.2; // every fifth one is a big patch; the extra ones are small tufts
                 qy.setFromAxisAngle(upY, hash(n * 45.1 + f) * 6.283);
+                kit.im.setColorAt(kit.n, GRASS_TINTS[Math.floor(hash(n * 51.7 + f * 1.3) * GRASS_TINTS.length)]);
                 kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * (8 + far * 20)), -0.02, z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
               }
               continue;
@@ -856,7 +905,7 @@
       for (const k in species) { species[k].mesh.count = species[k].n; species[k].mesh.instanceMatrix.needsUpdate = true; }
       treeShade.count = si; treeShade.instanceMatrix.needsUpdate = true;
       for (const kit of treeKits) for (const im of kit.parts) { im.count = kit.n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
-      for (const kit of grassKits) { kit.im.count = kit.n; kit.im.instanceMatrix.needsUpdate = true; }
+      for (const kit of grassKits) { kit.im.count = kit.n; kit.im.instanceMatrix.needsUpdate = true; if (kit.im.instanceColor) kit.im.instanceColor.needsUpdate = true; }
       tufts.count = gi; tufts.instanceMatrix.needsUpdate = true; if (tufts.instanceColor) tufts.instanceColor.needsUpdate = true;
       trunks.count = cones.count = 0; dots.count = di; blobs.count = bi;
       blobs.instanceMatrix.needsUpdate = true; if (blobs.instanceColor) blobs.instanceColor.needsUpdate = true;
@@ -1406,8 +1455,8 @@
         m.color.set(w.leaf); if (m.userData.baseTint) m.color.multiply(m.userData.baseTint);
         // sunny: lift the dark grass clumps and tree leaves so the roadside reads as sunlit
         const clump = !!m.userData.baseTint;
-        if (key === 'sunny') m.color.multiplyScalar(clump ? 1.5 : 1.25);
-        if (m.emissive) { m.emissive.set(key === 'sunny' ? (clump ? '#4c9a2e' : '#33701f') : '#000000'); m.emissiveIntensity = clump ? 0.6 : 0.4; }
+        if (key === 'sunny') m.color.multiplyScalar(clump ? 1.34 : 1.15);
+        if (m.emissive) { m.emissive.set(key === 'sunny' ? (clump ? '#3f8a28' : '#2c651c') : '#000000'); m.emissiveIntensity = clump ? 0.6 : 0.4; }
       }
       scene.environmentIntensity = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
       scene.fog.color.set(w.fog);
