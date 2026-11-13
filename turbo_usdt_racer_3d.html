@@ -3362,6 +3362,118 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   font-weight: 800 !important;
   letter-spacing: 0.3px !important;
 }
+
+/* ===== UI CONTROLS V8: bottom console + tab bar reskin (look only) ===== */
+#raceCanvas3D { filter: contrast(1.06) saturate(1.08); }
+.bottom-console {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(30, 64, 120, 0.22) 0%, rgba(4, 8, 16, 0) 60%),
+    linear-gradient(180deg, #0a101c 0%, #04070d 100%) !important;
+  border-top: 1px solid rgba(120, 150, 200, 0.22) !important;
+}
+.bottom-console .console-card,
+.bottom-console .steer-box,
+.bottom-console .console-mode-bar {
+  background: linear-gradient(180deg, rgba(20, 27, 41, 0.96) 0%, rgba(8, 12, 21, 0.98) 100%) !important;
+  border: 1px solid rgba(140, 160, 195, 0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.bottom-console .small-card-title {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  color: #f1f5f9; white-space: nowrap;
+}
+.bottom-console .small-card-title svg { width: 10px; height: 10px; flex-shrink: 0; }
+.bottom-console .step-btn {
+  border: 1px solid rgba(203, 213, 225, 0.45);
+  background: linear-gradient(180deg, #56617a 0%, #2a3346 55%, #1b2233 100%);
+  box-shadow: 0 2px 0 #0a0e17, inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.bottom-console .bet-amount-display {
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: linear-gradient(180deg, #05080e 0%, #0b111c 100%) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 0 8px rgba(40, 224, 102, 0.45);
+}
+.bottom-console .preset-pill {
+  background: linear-gradient(180deg, #1a2233 0%, #0c111c 100%);
+  border: 1px solid rgba(160, 175, 205, 0.38);
+  border-radius: 6px;
+  color: #f1f5f9;
+}
+.bottom-console .preset-pill.active {
+  background: linear-gradient(180deg, #2f8dff 0%, #0b4fd6 100%);
+  border-color: #8ec5ff;
+  box-shadow: 0 0 7px rgba(47, 141, 255, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.bottom-console .payout-main-row svg { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.bottom-console .payout-amount { text-shadow: 0 0 9px rgba(40, 224, 102, 0.5); }
+.bottom-console .winner-sub { color: #f1f5f9; }
+.bottom-console .console-mode-title { color: #e8eef8; }
+.bottom-console .console-mode-pill {
+  background: linear-gradient(180deg, #1c2434 0%, #0c111c 100%);
+  border: 1px solid rgba(160, 175, 205, 0.4);
+  color: #e2e8f0;
+}
+.bottom-console .console-mode-pill.active {
+  background: linear-gradient(180deg, #2f8dff 0%, #0a44c4 100%);
+  border-color: #8ec5ff;
+  color: #ffffff;
+  box-shadow: 0 0 9px rgba(47, 141, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.bottom-console .steer-box { position: relative; }
+.bottom-console .steer-box::after {
+  content: ""; position: absolute; left: 50%; top: 14%; bottom: 14%; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(160, 175, 205, 0.28), transparent);
+  pointer-events: none;
+}
+.bottom-console .steer-circle {
+  background: radial-gradient(circle at 50% 30%, #2a3447 0%, #121826 55%, #070a12 100%);
+  border: 2px solid #aab4c6;
+  box-shadow: 0 0 0 2px #0a0e17, 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 2px 3px rgba(255, 255, 255, 0.18), inset 0 -3px 6px rgba(0, 0, 0, 0.6);
+}
+.bottom-console .steer-circle:active, .bottom-console .steer-circle.pressed {
+  border-color: #6cb6ff;
+  background: radial-gradient(circle at 50% 30%, #2f8dff 0%, #0b3fa8 60%, #071226 100%);
+  box-shadow: 0 0 0 2px #0a0e17, 0 0 12px rgba(47, 141, 255, 0.7), inset 0 2px 3px rgba(255, 255, 255, 0.25);
+}
+.bottom-console .steer-label { color: #ffffff; }
+.bottom-console .pedal-btn { border-radius: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.bottom-console .pedal-accel {
+  flex: 1.35; flex-direction: column; gap: 0; padding: 3px 10px;
+  background: linear-gradient(180deg, #2d93ff 0%, #0a5cf0 50%, #0a3fc0 100%);
+  border: 1px solid #9fd0ff;
+  box-shadow: 0 3px 0 #072a80, 0 0 12px rgba(40, 130, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.bottom-console .pedal-accel:active, .bottom-console .pedal-accel.pressed {
+  box-shadow: 0 1px 0 #072a80, 0 0 16px rgba(40, 130, 255, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.bottom-console .pedal-brake {
+  background: linear-gradient(180deg, #ff4a4f 0%, #e01f2c 50%, #a8121d 100%);
+  border: 1px solid #ffa3a3;
+  box-shadow: 0 3px 0 #5e0a10, 0 0 10px rgba(239, 48, 56, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.bottom-console .pedal-brake:active, .bottom-console .pedal-brake.pressed {
+  box-shadow: 0 1px 0 #5e0a10, 0 0 14px rgba(239, 48, 56, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.bottom-console .pedal-brake svg { width: 19px; height: 19px; }
+/* tab bar */
+.bottom-nav {
+  background: linear-gradient(180deg, #121826 0%, #05080f 100%) !important;
+  border-top: 1px solid rgba(140, 160, 195, 0.32) !important;
+  border-radius: 14px 14px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.bottom-nav .nav-tab { color: #ffffff; border-right: 1px solid rgba(255, 255, 255, 0.07); }
+.bottom-nav .nav-tab:last-child { border-right: none; }
+.bottom-nav .nav-tab.active {
+  background: linear-gradient(180deg, #2f8dff 0%, #0b55e0 55%, #0837a8 100%);
+  clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%);
+  border-right-color: transparent;
+  box-shadow: inset 0 2px 0 rgba(170, 215, 255, 0.75), inset 0 -3px 0 #5fb4ff;
+}
+.bottom-nav .nav-tab.active svg { filter: drop-shadow(0 0 6px rgba(190, 225, 255, 0.6)); }
 </style>
 
 <style id="v4-unified-overrides">
@@ -3679,7 +3791,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div class="bet-top-row">
           <button class="step-btn" id="betMinusBtn">−</button>
           <div class="bet-center-stack">
-            <span class="small-card-title">BET AMOUNT</span>
+            <span class="small-card-title"><svg viewBox="0 0 12 12" fill="none"><ellipse cx="6" cy="9" rx="4.5" ry="1.8" fill="#d99a0b"/><ellipse cx="6" cy="6.6" rx="4.5" ry="1.8" fill="#f2b90f" stroke="#b97c06" stroke-width=".4"/><ellipse cx="6" cy="4.2" rx="4.5" ry="1.8" fill="#ffd84a" stroke="#b97c06" stroke-width=".4"/></svg>BET AMOUNT</span>
             <span class="bet-amount-display" id="betAmountText">1 USDT</span>
           </div>
           <button class="step-btn" id="betPlusBtn">+</button>
@@ -3695,11 +3807,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       </div>
 
       <div class="console-card payout-card">
-        <span class="small-card-title">PAYOUT (WIN)</span>
+        <span class="small-card-title"><svg viewBox="0 0 12 12" fill="none"><path d="M3.4 1.5h5.2v2.6a2.6 2.6 0 0 1-5.2 0z" fill="#ffc928"/><path d="M3.4 2.3H1.7c0 1.7.8 2.6 2 2.7M8.6 2.3h1.7c0 1.7-.8 2.6-2 2.7" stroke="#f2a90f" stroke-width=".8"/><path d="M5.4 6.6h1.2v1.9H5.4z" fill="#f2a90f"/><rect x="3.6" y="8.5" width="4.8" height="1.6" rx=".5" fill="#d98e06"/></svg>PAYOUT (WIN)</span>
         <div class="payout-main-row">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="2" y="6" width="20" height="12" rx="2" fill="#16a34a" stroke="#4ade80" stroke-width="1.5"/>
-            <circle cx="12" cy="12" r="3" fill="#bbf7d0"/>
+            <path d="M3 15.5l9 4 9-4v2.2l-9 4-9-4z" fill="#0e7a34"/>
+            <path d="M3 12.5l9 4 9-4v2.2l-9 4-9-4z" fill="#12913e"/>
+            <path d="M12 4.5l9 4-9 4-9-4z" fill="#34d66b" stroke="#a7f3c4" stroke-width=".9" stroke-linejoin="round"/>
+            <path d="M3 8.5v3l9 4 9-4v-3l-9 4z" fill="#17a849"/>
+            <ellipse cx="12" cy="8.5" rx="2.6" ry="1.3" fill="#d9fbe5"/>
           </svg>
           <span class="payout-amount" id="payoutText">2.4 USDT</span>
         </div>
@@ -3775,14 +3890,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <div class="pedals-stack">
         <button class="pedal-btn pedal-accel" id="btnAccel">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M7 17L12 12L17 17M7 11L12 6L17 11" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 20L12 13L19 20M5 12L12 5L19 12" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>ACCELERATE</span>
         </button>
         <button class="pedal-btn pedal-brake" id="btnBrake">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8" stroke="#ffffff" stroke-width="2.2"/>
-            <circle cx="12" cy="12" r="3" fill="#ffffff"/>
+            <circle cx="12" cy="12" r="10.4" fill="#ffffff"/>
+            <circle cx="12" cy="12" r="7.6" fill="none" stroke="#d6202b" stroke-width="2.6" stroke-dasharray="3.4 2.57"/>
+            <circle cx="12" cy="12" r="4" fill="none" stroke="#d6202b" stroke-width="1.5"/>
+            <path d="M12 6.6v3M12 14.4v3M6.6 12h3M14.4 12h3" stroke="#d6202b" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="1.5" fill="#d6202b"/>
           </svg>
           <span>BRAKE / BACK</span>
         </button>
@@ -4281,61 +4399,48 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   <nav class="bottom-nav">
     <div class="nav-tab" id="navInvestBtn">
       <svg viewBox="0 0 28 28" fill="none">
-        <defs>
-          <linearGradient id="navGradInvest" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#34d399"/>
-            <stop offset="100%" stop-color="#10b981"/>
-          </linearGradient>
-        </defs>
-        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(16,185,129,0.14)" stroke="rgba(52,211,153,0.45)" stroke-width="1.2"/>
-        <rect x="7" y="14" width="3.2" height="6.5" rx="1" fill="url(#navGradInvest)"/>
-        <rect x="12.4" y="10.5" width="3.2" height="10" rx="1" fill="url(#navGradInvest)"/>
-        <rect x="17.8" y="7" width="3.2" height="13.5" rx="1" fill="url(#navGradInvest)"/>
-        <path d="M7.5 11.5L13 8L19.5 5.5" stroke="#fde047" stroke-width="1.6" stroke-linecap="round"/>
+        <rect x="3" y="15" width="4" height="9" rx="1" fill="#22d37a"/>
+        <rect x="8.6" y="11" width="4" height="13" rx="1" fill="#22d37a"/>
+        <rect x="14.2" y="7" width="4" height="17" rx="1" fill="#34e08a"/>
+        <path d="M3 11.5L9 7.5L12.5 9.5L19 4" stroke="#ffd23a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15.6 3.6H19.4V7.4" stroke="#ffd23a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="21.5" cy="22.4" rx="4.6" ry="1.9" fill="#d99a0b"/>
+        <ellipse cx="21.5" cy="19.6" rx="4.6" ry="1.9" fill="#f2b90f" stroke="#a36b05" stroke-width=".5"/>
+        <ellipse cx="21.5" cy="16.8" rx="4.6" ry="1.9" fill="#ffd84a" stroke="#a36b05" stroke-width=".5"/>
       </svg>
       <span>INVEST</span>
     </div>
     <div class="nav-tab active" id="navBetBtn">
       <svg viewBox="0 0 28 28" fill="none">
         <defs>
-          <linearGradient id="navGradBet" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#38bdf8"/>
-            <stop offset="100%" stop-color="#2563eb"/>
-          </linearGradient>
+          <pattern id="navChk" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="4" fill="#ffffff"/>
+            <rect width="2" height="2" fill="#0b1220"/>
+            <rect x="2" y="2" width="2" height="2" fill="#0b1220"/>
+          </pattern>
         </defs>
-        <rect x="2.5" y="6.5" width="23" height="15" rx="6.5" fill="url(#navGradBet)" stroke="#93c5fd" stroke-width="1.3"/>
-        <path d="M9 11.5V16.5M6.5 14H11.5" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round"/>
-        <circle cx="17.5" cy="12.5" r="1.6" fill="#fde047"/>
-        <circle cx="20.5" cy="15.2" r="1.6" fill="#4ade80"/>
+        <path d="M17.5 25L7 6.5" stroke="#e5e7eb" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M10.5 25L21 6.5" stroke="#e5e7eb" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M7 6.5L1.5 9.5L6 17L11.2 14z" fill="url(#navChk)" stroke="#ffffff" stroke-width=".7" stroke-linejoin="round"/>
+        <path d="M21 6.5L26.5 9.5L22 17L16.8 14z" fill="url(#navChk)" stroke="#ffffff" stroke-width=".7" stroke-linejoin="round"/>
       </svg>
       <span>BET (PLAY)</span>
     </div>
     <div class="nav-tab" id="navInviteBtn">
       <svg viewBox="0 0 28 28" fill="none">
-        <defs>
-          <linearGradient id="navGradInvite" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#f472b6"/>
-            <stop offset="100%" stop-color="#a855f7"/>
-          </linearGradient>
-        </defs>
-        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(168,85,247,0.14)" stroke="rgba(216,180,254,0.45)" stroke-width="1.2"/>
-        <circle cx="11.5" cy="10.5" r="3.3" fill="url(#navGradInvite)"/>
-        <path d="M6 20.5C6 17.5 8.4 15.5 11.5 15.5C14.6 15.5 17 17.5 17 20.5" stroke="url(#navGradInvite)" stroke-width="2.2" stroke-linecap="round"/>
-        <path d="M20 9.5V14.5M17.5 12H22.5" stroke="#fde047" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="18.5" cy="9" r="3.6" fill="#cbd5e1"/>
+        <path d="M12.5 22c0-4 2.6-6.5 6-6.5s6 2.5 6 6.5z" fill="#cbd5e1"/>
+        <circle cx="10" cy="10" r="4.2" fill="#ffffff" stroke="#0b1220" stroke-width="1"/>
+        <path d="M2.5 23.5c0-4.6 3.2-7.4 7.5-7.4s7.5 2.800 7.5 7.4z" fill="#ffffff" stroke="#0b1220" stroke-width="1"/>
+        <circle cx="21.5" cy="21" r="4.6" fill="#ffc928" stroke="#0b1220" stroke-width="1"/>
+        <path d="M21.5 18.6v4.8M19.1 21h4.8" stroke="#0b1220" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
       <span>INVITE</span>
     </div>
     <div class="nav-tab" id="navProfileBtn">
       <svg viewBox="0 0 28 28" fill="none">
-        <defs>
-          <linearGradient id="navGradProf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#fbbf24"/>
-            <stop offset="100%" stop-color="#f59e0b"/>
-          </linearGradient>
-        </defs>
-        <rect x="3" y="3" width="22" height="22" rx="6" fill="rgba(245,158,11,0.14)" stroke="rgba(251,191,36,0.45)" stroke-width="1.2"/>
-        <circle cx="14" cy="11" r="3.4" fill="url(#navGradProf)"/>
-        <path d="M8 20.5C8 17.6 10.6 15.6 14 15.6C17.4 15.6 20 17.6 20 20.5" stroke="url(#navGradProf)" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="14" cy="9" r="5" fill="#ffffff"/>
+        <path d="M4.5 24.5c0-5.4 4-8.8 9.500-8.800s9.500 3.400 9.500 8.800z" fill="#ffffff"/>
       </svg>
       <span>PROFILE</span>
     </div>
