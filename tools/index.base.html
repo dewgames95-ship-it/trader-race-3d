@@ -3502,6 +3502,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     linear-gradient(var(--car-accent), var(--car-accent)) right 10% bottom 0 / 12% 1.500px no-repeat;
 }
 .console-car-bet-grid .console-car-pick-btn { padding: 5px 2px; border-radius: 9px; font-size: 8px; border-width: 1.500px; }
+
+/* ===== V12: notifications popup, haptic button hidden ===== */
+#hapticToggleBtn { display: none !important; }
+.right-hud-stack .mini-utility-row:not(:has(> :not([style*="none"]):not(#hapticToggleBtn):not(#soundToggleBtn):not(#musicToggleBtn))) { display: none !important; }
+.notif-modal-card {
+  position: relative; width: min(320px, 92%); margin: auto; padding: 16px 14px 20px; border-radius: 16px;
+  background: linear-gradient(180deg, #131c2e 0%, #070b14 100%); border: 1.500px solid rgba(96, 165, 250, 0.55);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 18px rgba(47, 141, 255, 0.25);
+}
+.notif-modal-title { font-size: 16px; font-weight: 900; font-style: italic; letter-spacing: 0.5px; color: #fff; text-align: center; }
+.notif-modal-empty { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #94a3b8; font-size: 13px; font-weight: 800; }
 #headerNotifBtn { display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; flex-shrink: 0; }
 .top-header { gap: 5px !important; }
 
@@ -3704,7 +3715,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         </div>
         <div class="balance-info">
           <span class="balance-label">BALANCE</span>
-          <span class="balance-val" id="balanceText">100.00 USDT</span>
+          <span class="balance-val" id="balanceText">100.00</span>
         </div>
       </div>
       <button class="plus-btn" id="quickTopupBtn" title="Add 50 USDT">
@@ -4540,6 +4551,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   </nav>
 
   <!-- MODAL 1: CHOOSE RACE MODE & CAR -->
+  <!-- NOTIFICATIONS POPUP -->
+  <div class="modal-backdrop" id="notifModalBackdrop">
+    <div class="notif-modal-card">
+      <button class="modal-close" id="closeNotifModalBtn" aria-label="Close">✕</button>
+      <div class="notif-modal-title">NOTIFICATIONS</div>
+      <div class="notif-modal-empty">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M12 3a6 6 0 0 0-6 6v3.600L4.300 16a1 1 0 0 0 .900 1.500h13.600a1 1 0 0 0 .900-1.500L18 12.600V9a6 6 0 0 0-6-6z" fill="#5b6b86"/><path d="M9.800 19.200a2.300 2.300 0 0 0 4.400 0z" fill="#5b6b86"/></svg>
+        <span>No notifications</span>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="modeModalBackdrop">
     <div class="mode-modal-card">
       <button class="modal-close" id="closeModeModalBtn">✕</button>
@@ -4816,10 +4839,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let _lastHapticMs = 0;
   // light tap feedback on every HUD / console control
   document.addEventListener('click', (e) => {
-    const t = e.target && e.target.closest ? e.target.closest('.hud-pill, .icon-toggle-btn, .console-car-card, #centerStartCircle, .step-btn, .preset-pill, .console-mode-pill, .deposit-btn, .header-sfx-btn, .tr-chev, .nav-tab, #betAmountText, .hud-players-card') : null;
+    const t = e.target && e.target.closest ? e.target.closest('#closeNotifModalBtn, #notifModalBackdrop, .hud-pill, .icon-toggle-btn, .console-car-card, #centerStartCircle, .step-btn, .preset-pill, .console-mode-pill, .deposit-btn, .header-sfx-btn, .tr-chev, .nav-tab, #betAmountText, .hud-players-card') : null;
     if (!t) return;
-    triggerHaptic(18);
-    if (t.id === 'headerNotifBtn' && typeof showCrToast === 'function') showCrToast('No new notifications');
+    _lastHapticMs = 0; triggerHaptic(40);
+    try { playTone(880, 1180, 0.04, 'sine', 0.07); } catch (err) {}
+    if (t.id === 'headerNotifBtn') { const nb = document.getElementById('notifModalBackdrop'); if (nb) nb.classList.add('open'); }
+    if (t.id === 'closeNotifModalBtn' || t.id === 'notifModalBackdrop' && e.target === t) t.closest('#notifModalBackdrop').classList.remove('open');
   }, true);
   function triggerHaptic(pattern) {
     if (window._trFastForwarding || !hapticEnabled) return;
@@ -5362,7 +5387,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   function getMultiplier() { return raceModeCars === 2 ? 1.8 : 2.4; }
 
   function updateUIValues() {
-    balanceText.textContent = `${balanceUsdt.toFixed(2)} USDT`;
+    balanceText.textContent = balanceUsdt.toFixed(2);
     const fmtBet = Number.isInteger(currentBet) ? currentBet.toString() : (+currentBet.toFixed(2)).toString();
     betAmountText.textContent = `${fmtBet} USDT`;
     poolText.textContent = `${+(currentBet * raceModeCars).toFixed(2)} USDT`;
@@ -5758,7 +5783,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   }
 
   function syncSharedWalletUI() {
-    balanceText.textContent = `${balanceUsdt.toFixed(2)} USDT`;
+    balanceText.textContent = balanceUsdt.toFixed(2);
     const profMain = document.getElementById('profileMainBalance');
     if (profMain) profMain.innerHTML = `${balanceUsdt.toFixed(2)} <small>USDT</small>`;
     const profProfit = document.getElementById('profileProfitBalance');
@@ -7687,7 +7712,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (typeof syncSharedWalletUI === 'function') syncSharedWalletUI();
     else if (typeof updateUIValues === 'function') updateUIValues();
     const balEl = $('#balanceText');
-    if (balEl) balEl.textContent = fmt(bal) + ' USDT';
+    if (balEl) balEl.textContent = fmt(bal);
     if (state) {
       const rc = state.referrals || 0;
       const pc = $('#refProgressCount'); if (pc) pc.textContent = Math.min(5, rc) + ' / 5';
