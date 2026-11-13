@@ -160,6 +160,8 @@
     const glCanvas = document.createElement('canvas');
     glCanvas.id = 'raceCanvas3D';
     glCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;display:block;';
+    // colour grade: ~+20% contrast, ~+25% saturation on the 3D scene only (HUD untouched)
+    glCanvas.style.filter = 'contrast(1.2) saturate(1.25)';
     canvas.parentNode.insertBefore(glCanvas, canvas);
     canvas.style.position = 'relative';
     R3D.glCanvas = glCanvas;
