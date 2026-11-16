@@ -4353,6 +4353,61 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   #resultModalBackdrop[data-view="win"] .result-modal::before { animation: none; opacity: 0.35; }
 }
 </style>
+<style id="v17Cars">
+/* v17 cars: Ferrari tints, select popup, leaderboard ids */
+.vc-t { --tc: 148, 163, 184; background: linear-gradient(90deg, rgba(var(--tc), .15), rgba(var(--tc), .04) 75%) !important; border: 1px solid rgba(var(--tc), .42) !important; }
+.vc-t-red { --tc: 255, 59, 69; } .vc-t-blue { --tc: 47, 123, 255; } .vc-t-yellow { --tc: 255, 200, 61; }
+.vc-t.me { box-shadow: 0 0 0 1px rgba(34, 224, 122, .55) inset; }
+.ui-car.vc-pic { width: 54px; height: 31px; object-fit: contain; flex: 0 0 auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+.ui-win-car img.vc-pic { width: 92px; height: 54px; }
+.vl-av, .vl-pav { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; font-weight: 900; font-style: italic; font-variant-numeric: tabular-nums; color: #fff; background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.22), rgba(255,255,255,0) 60%), rgba(var(--vcrgb, 47,123,255), .0), #0d1a33; border: 2px solid var(--vc, #2F7BFF); box-shadow: 0 0 8px var(--vc, #2F7BFF); }
+.vl-av { width: 28px; height: 28px; border-radius: 50%; font-size: 10.5px; border-width: 1.5px; box-shadow: none; }
+.vl-pav { letter-spacing: -.5px; border-color: var(--c) !important; box-shadow: 0 0 12px var(--cg) !important; }
+.vl-row.me, .vl-pin { background: linear-gradient(90deg, rgba(34,224,122,.18), rgba(34,224,122,.06)) !important; border-color: rgba(34,224,122,.7) !important; box-shadow: 0 0 14px rgba(34,224,122,.2); }
+.vl-mine { max-height: none !important; overflow: visible !important; }
+.ui-pd-name { font-variant-numeric: tabular-nums; letter-spacing: .2px; font-size: 10.5px; }
+.ui-pd-profit { font-size: 9.5px; }
+.ui-lb-row .ui-lb-amt { font-variant-numeric: tabular-nums; font-size: 11px; }
+/* select popup */
+#modeModalBackdrop .mode-header-title { font-size: 19px; letter-spacing: .2px; white-space: nowrap; }
+#modeModalBackdrop .mode-header-sub { color: #aab6cc; margin: 2px 0 10px; font-style: normal; font-weight: 600; }
+#modeModalBackdrop .car-picker-section { background: none; border: 0; padding: 0; margin-bottom: 10px; }
+#modeModalBackdrop .car-picker-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+#modeModalBackdrop .car-choice-btn.vc-car { --tc: 47, 123, 255; position: relative; flex-direction: column; justify-content: flex-end; gap: 2px; min-height: 92px; padding: 8px 4px 8px; border-radius: 13px; border: 1.5px solid rgba(var(--tc), .38); background: linear-gradient(180deg, rgba(var(--tc), .17), rgba(8, 14, 28, .94) 85%); color: #fff; transition: transform .18s, box-shadow .18s, border-color .18s; }
+#modeModalBackdrop .car-choice-btn.vc-car.vc-red { --tc: 255, 59, 69; } #modeModalBackdrop .car-choice-btn.vc-car.vc-yellow { --tc: 255, 200, 61; }
+#modeModalBackdrop .car-choice-btn.vc-car .vc-img { width: 100%; height: 46px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+#modeModalBackdrop .car-choice-btn.vc-car span { font-size: 10px; font-style: italic; font-weight: 900; letter-spacing: .2px; white-space: nowrap; }
+#modeModalBackdrop .car-choice-btn.vc-car .vc-chk { position: absolute; top: 5px; right: 5px; width: 18px; height: 18px; color: #22E07A; opacity: 0; transform: scale(.5); transition: opacity .18s, transform .18s; }
+#modeModalBackdrop .car-choice-btn.vc-car.active { border-color: rgb(var(--tc)); box-shadow: 0 0 0 1px rgb(var(--tc)), 0 0 18px rgba(var(--tc), .55); background: linear-gradient(180deg, rgba(var(--tc), .3), rgba(8, 14, 28, .94) 85%); transform: translateY(-1px); }
+#modeModalBackdrop .car-choice-btn.vc-car.active .vc-chk { opacity: 1; transform: scale(1); }
+#modeModalBackdrop .mode-cards-grid { gap: 8px; }
+#modeModalBackdrop .mode-option-card { padding: 10px 7px 8px; gap: 5px; align-items: stretch; border-width: 1.5px; transition: box-shadow .18s, transform .18s; }
+#modeModalBackdrop .mode-option-card > .vc-chk { position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; color: #22E07A; opacity: 0; transform: scale(.5); transition: opacity .18s, transform .18s; }
+#modeModalBackdrop .mode-option-card.selected > .vc-chk { opacity: 1; transform: scale(1); }
+#modeModalBackdrop .mode-option-card.selected { transform: translateY(-1px); box-shadow: 0 0 0 1px #2f7bff, 0 0 20px rgba(47, 123, 255, .55); }
+#modeModalBackdrop .mode-option-card.hard.selected { box-shadow: 0 0 0 1px #ffc83d, 0 0 20px rgba(255, 200, 61, .5); }
+.vc-mhead { display: flex; align-items: center; gap: 6px; text-align: left; padding-right: 20px; min-width: 0; }
+.vc-mic { width: 26px; height: 26px; flex: 0 0 auto; color: #5fa0ff; }
+.mode-option-card.hard .vc-mic { color: #ffc83d; }
+.vc-mhead .mode-card-title { font-size: 13px; white-space: nowrap; text-align: left; }
+.vc-mhead .mode-card-desc { font-size: 9.5px; white-space: nowrap; text-align: left; }
+#modeModalBackdrop .mode-stat-val { font-size: 17px; }
+#modeModalBackdrop .mode-example { text-align: center; font-size: clamp(8.5px, 2.5vw, 10px); }
+#modeModalBackdrop .mode-example b { color: #28e066; } #modeModalBackdrop .hard .mode-example b { color: #fbbf24; }
+#modeModalBackdrop .mode-play-btn { min-height: 44px; font-size: 11px; white-space: nowrap; }
+</style>
+<style id="v17Money">
+  .bottom-console .bet-top-row { gap: 3px; }
+  .bottom-console .tr-max-btn {
+    flex: 0 0 auto; position: relative; height: 22px; min-width: 26px; padding: 0 4px; margin-left: -1px;
+    border-radius: 6px; border: 1px solid #FFC83D; background: rgba(255, 200, 61, 0.08); color: #FFC83D;
+    font-family: inherit; font-weight: 900; font-size: 9px; line-height: 1; letter-spacing: 0.3px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; transition: transform 150ms ease, background 150ms ease;
+  }
+  .bottom-console .bet-top-row .bet-amount-display { white-space: nowrap; font-size: clamp(13px, 4.1vw, 17px) !important; padding-left: 3px !important; padding-right: 3px !important; }
+  .bottom-console .tr-max-btn::after { content: ""; position: absolute; inset: -11px -4px; }
+  .bottom-console .tr-max-btn:active { transform: scale(0.94); background: rgba(255, 200, 61, 0.22); }
+</style>
 </head>
 <body>
 
@@ -4594,6 +4649,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             <span class="bet-amount-display" id="betAmountText">1 USDT</span>
           </div>
           <button class="step-btn" id="betPlusBtn">+</button>
+          <button class="tr-max-btn" id="betMaxBtn" type="button" aria-label="Set maximum bet">MAX</button>
         </div>
         <div class="preset-row">
           <button class="preset-pill" data-bet="0.1">0.1</button>
@@ -4615,7 +4671,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             <path d="M3 8.5v3l9 4 9-4v-3l-9 4z" fill="#17a849"/>
             <ellipse cx="12" cy="8.5" rx="2.6" ry="1.3" fill="#d9fbe5"/>
           </svg>
-          <span class="payout-amount" id="payoutText">2.4 USDT</span>
+          <span class="payout-amount" id="payoutText">2.5 USDT</span>
         </div>
         <span class="winner-sub">WINNER TAKES ALL!</span>
       </div>
@@ -4632,34 +4688,34 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     <!-- 3-CAR BET SELECTOR (Replaces Steering/Pedal Controls in Car Bet Mode) -->
     <div class="console-car-bet-grid" id="consoleCarBetGrid">
-      <div class="console-car-card selected" data-car-theme="red" data-car-title="RACER MG" style="--car-accent:#ff3b3b;">
+      <div class="console-car-card selected" data-car-theme="red" data-car-title="RED FERRARI" style="--car-accent:#ff3b3b;">
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
         <img class="console-car-Img" src="assets/ui/car_f8_red.webp" alt="Red Ferrari">
         <div class="console-car-pick-btn">BET RED FERRARI ✓</div>
       </div>
 
-      <div class="console-car-card" data-car-theme="blue" data-car-title="TESLA KING" style="--car-accent:#38bdf8;">
+      <div class="console-car-card" data-car-theme="blue" data-car-title="BLUE FERRARI" style="--car-accent:#38bdf8;">
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
         <img class="console-car-Img" src="assets/ui/car_f8_blue.webp" alt="Blue Ferrari">
         <div class="console-car-pick-btn">BET BLUE FERRARI</div>
       </div>
 
-      <div class="console-car-card" data-car-theme="yellow" data-car-title="CRYPTO CAR" style="--car-accent:#ffc412;">
+      <div class="console-car-card" data-car-theme="yellow" data-car-title="GOLD FERRARI" style="--car-accent:#ffc412;">
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
-        <img class="console-car-Img" src="assets/ui/car_f8_yellow.webp" alt="Yellow Ferrari">
-        <div class="console-car-pick-btn">BET YELLOW FERRARI</div>
+        <img class="console-car-Img" src="assets/ui/car_f8_yellow.webp" alt="Gold Ferrari">
+        <div class="console-car-pick-btn">BET GOLD FERRARI</div>
       </div>
     </div>
 
@@ -4728,15 +4784,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       </div>
       <div class="bet-stage-sim-bar" id="betStageSimBar">
         <div class="sim-lane-row">
-          <span class="sim-lane-name" style="color:#ff4d4d;">RACER MG</span>
+          <span class="sim-lane-name" style="color:#ff4d4d;">RED FERRARI</span>
           <div class="sim-lane-track"><div class="sim-lane-fill" id="simBarRed" style="background:linear-gradient(90deg,#ef4444,#ff7070);"></div></div>
         </div>
         <div class="sim-lane-row">
-          <span class="sim-lane-name" style="color:#4ade80;">TESLA KING</span>
+          <span class="sim-lane-name" style="color:#60a5fa;">BLUE FERRARI</span>
           <div class="sim-lane-track"><div class="sim-lane-fill" id="simBarGreen" style="background:linear-gradient(90deg,#22c55e,#86efac);"></div></div>
         </div>
         <div class="sim-lane-row">
-          <span class="sim-lane-name" style="color:#fbbf24;">CRYPTO CAR</span>
+          <span class="sim-lane-name" style="color:#fbbf24;">GOLD FERRARI</span>
           <div class="sim-lane-track"><div class="sim-lane-fill" id="simBarGold" style="background:linear-gradient(90deg,#f59e0b,#fde047);"></div></div>
         </div>
       </div>
@@ -4751,20 +4807,20 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <button type="button" id="jumpTo3dPlayBtn" style="background:linear-gradient(180deg,#1d7dfa,#0d47a1);border:1px solid #60a5fa;color:#fff;border-radius:8px;padding:5px 9px;font-size:10px;font-weight:900;font-style:italic;cursor:pointer;">🎮 3D DRIVE</button>
       </div>
       <div class="car-bets">
-        <article class="car-bet selected" data-odds="2.5" data-car-name="Racer MG" style="--bet-color:#ff3030">
-          <img src="assets/ui/7e4d9d20e5.webp" alt="Red Racer MG car">
-          <h3>RACER MG</h3><small>ODDS</small><div class="odds">2.5x</div>
-          <button class="green-btn" type="button" data-bet-car="Racer MG">BET NOW</button>
+        <article class="car-bet selected" data-odds="2.5" data-car-name="Red Ferrari" style="--bet-color:#ff3030">
+          <img src="assets/ui/car_f8_red.webp" alt="Red Ferrari car">
+          <h3>RED FERRARI</h3><small>ODDS</small><div class="odds">2.5x</div>
+          <button class="green-btn" type="button" data-bet-car="Red Ferrari">BET NOW</button>
         </article>
-        <article class="car-bet" data-odds="2.5" data-car-name="Tesla King" style="--bet-color:#35d751">
-          <img src="assets/ui/21cdd3bfcf.webp" alt="Green Tesla King car">
-          <h3>TESLA KING</h3><small>ODDS</small><div class="odds">2.5x</div>
-          <button class="green-btn" type="button" data-bet-car="Tesla King">BET NOW</button>
+        <article class="car-bet" data-odds="2.5" data-car-name="Blue Ferrari" style="--bet-color:#2f7bff">
+          <img src="assets/ui/car_f8_blue.webp" alt="Blue Ferrari car">
+          <h3>BLUE FERRARI</h3><small>ODDS</small><div class="odds">2.5x</div>
+          <button class="green-btn" type="button" data-bet-car="Blue Ferrari">BET NOW</button>
         </article>
-        <article class="car-bet" data-odds="2.5" data-car-name="Crypto Car" style="--bet-color:#e4ad2f">
-          <img src="assets/ui/cb8f3453db.webp" alt="Gold Crypto Car">
-          <h3>CRYPTO CAR</h3><small>ODDS</small><div class="odds">2.5x</div>
-          <button class="green-btn" type="button" data-bet-car="Crypto Car">BET NOW</button>
+        <article class="car-bet" data-odds="2.5" data-car-name="Gold Ferrari" style="--bet-color:#e4ad2f">
+          <img src="assets/ui/car_f8_yellow.webp" alt="Gold Ferrari">
+          <h3>GOLD FERRARI</h3><small>ODDS</small><div class="odds">2.5x</div>
+          <button class="green-btn" type="button" data-bet-car="Gold Ferrari">BET NOW</button>
         </article>
       </div>
     </section>
@@ -5333,62 +5389,50 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   <div class="modal-backdrop" id="modeModalBackdrop">
     <div class="mode-modal-card">
       <button class="modal-close" id="closeModeModalBtn" aria-label="Close">✕</button>
-      <div class="mode-header-title">CHOOSE RACE MODE</div>
-      <div class="mode-header-sub">Select your 3D Mustang GT and <span>start winning!</span></div>
+      <div class="mode-header-title">SELECT YOUR FERRARI</div>
+      <div class="mode-header-sub">Pick a car and a race mode.</div>
 
       <div class="car-picker-section">
-        <div class="car-picker-title">SELECT YOUR GT MUSTANG</div>
         <div class="car-picker-row">
-          <button class="car-choice-btn active" data-car="blue">
-            <svg class="car-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 13.6l1.5-4.2A2.6 2.6 0 0 1 7.2 7.6h9.6a2.6 2.6 0 0 1 2.5 1.8l1.5 4.2c.7.3 1.2 1 1.2 1.8v2.2a1 1 0 0 1-1 1h-1.3a2.2 2.2 0 0 1-4.2 0H9a2.2 2.2 0 0 1-4.2 0H3.5a1 1 0 0 1-1-1v-2.2c0-.8.5-1.5 1.200-1.800z" fill="#2f7bff" stroke="rgba(255,255,255,.55)" stroke-width="1"/><path d="M6.600 9.600h10.800l1 3H5.600z" fill="rgba(8,14,28,.55)"/></svg>
-            <span>BLUE GT</span>
+          <button class="car-choice-btn vc-car vc-red" data-car="red" type="button">
+            <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <img class="vc-img vc-img-red" alt="RED FERRARI" src="assets/ui/car_f8_red.webp">
+            <span>RED FERRARI</span>
           </button>
-          <button class="car-choice-btn" data-car="red">
-            <svg class="car-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 13.6l1.5-4.2A2.6 2.6 0 0 1 7.2 7.6h9.6a2.6 2.6 0 0 1 2.5 1.8l1.5 4.2c.7.3 1.2 1 1.2 1.8v2.2a1 1 0 0 1-1 1h-1.3a2.2 2.2 0 0 1-4.2 0H9a2.2 2.2 0 0 1-4.2 0H3.5a1 1 0 0 1-1-1v-2.2c0-.8.5-1.5 1.200-1.800z" fill="#ff3b45" stroke="rgba(255,255,255,.55)" stroke-width="1"/><path d="M6.600 9.600h10.800l1 3H5.600z" fill="rgba(8,14,28,.55)"/></svg>
-            <span>RED GT</span>
+          <button class="car-choice-btn vc-car vc-blue active" data-car="blue" type="button">
+            <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <img class="vc-img vc-img-blue" alt="BLUE FERRARI" src="assets/ui/car_f8_blue.webp">
+            <span>BLUE FERRARI</span>
           </button>
-          <button class="car-choice-btn" data-car="yellow">
-            <svg class="car-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 13.6l1.5-4.2A2.6 2.6 0 0 1 7.2 7.6h9.6a2.6 2.6 0 0 1 2.5 1.8l1.5 4.2c.7.3 1.2 1 1.2 1.8v2.2a1 1 0 0 1-1 1h-1.3a2.2 2.2 0 0 1-4.2 0H9a2.2 2.2 0 0 1-4.2 0H3.5a1 1 0 0 1-1-1v-2.2c0-.8.5-1.5 1.200-1.800z" fill="#ffc83d" stroke="rgba(255,255,255,.55)" stroke-width="1"/><path d="M6.600 9.600h10.800l1 3H5.600z" fill="rgba(8,14,28,.55)"/></svg>
-            <span>GOLD GT</span>
+          <button class="car-choice-btn vc-car vc-yellow" data-car="yellow" type="button">
+            <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <img class="vc-img vc-img-yellow" alt="GOLD FERRARI" src="assets/ui/car_f8_yellow.webp">
+            <span>GOLD FERRARI</span>
           </button>
         </div>
       </div>
 
       <div class="mode-cards-grid">
         <div class="mode-option-card" id="cardMode2">
-          <span class="mode-top-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.500l8 3v6c0 4.800-3.300 8.500-8 10-4.700-1.500-8-5.200-8-10v-6z" fill="#fff"/><path d="M8.300 12l2.800 2.800 4.600-5.400" fill="none" stroke="#1450c8" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></svg>EASY MODE</span>
-          <div class="mode-card-title">2 CAR RACE</div>
-          <div class="mode-card-desc">High Chance to Win</div>
+          <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="vc-mhead"><svg class="vc-mic" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 20.5l2.2-6a3 3 0 0 1 2.8-2h12a3 3 0 0 1 2.8 2l2.2 6v3a1 1 0 0 1-1 1h-2.2a2.6 2.6 0 0 1-5 0h-6.600a2.6 2.6 0 0 1-5 0H6a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 8.5h6M5 5.500h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><div class="mode-card-title">2 CAR RACE</div><div class="mode-card-desc">Head to head</div></div></div>
           <div class="mode-stats-row">
-            <div class="mode-stat-box">
-              <div class="mode-stat-lbl">WIN CHANCE</div>
-              <div class="mode-stat-val">50%</div>
-            </div>
-            <div class="mode-stat-box">
-              <div class="mode-stat-lbl">PROFIT</div>
-              <div class="mode-stat-val">80%</div>
-            </div>
+            <div class="mode-stat-box"><div class="mode-stat-lbl">WIN CHANCE</div><div class="mode-stat-val">50%</div></div>
+            <div class="mode-stat-box"><div class="mode-stat-lbl">PAYOUT</div><div class="mode-stat-val gold" data-mode-odds="2">1.9x</div></div>
           </div>
-          <div class="mode-example">Bet: 10 USDT → <b style="color:#28e066;">Win: 18 USDT</b></div>
-          <button class="mode-play-btn" id="selectMode2Btn">PLAY 2 CAR RACE</button>
+          <div class="mode-example">Bet 10 USDT &rarr; Win <b data-mode-win="2">19 USDT</b></div>
+          <button class="mode-play-btn" id="selectMode2Btn" type="button">PLAY 2 CAR RACE</button>
         </div>
 
         <div class="mode-option-card hard selected" id="cardMode3">
-          <span class="mode-top-pill hard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2c.8 3.600-2 5-3.400 7.500-1.400 2.500-.5 5 .9 6.100-.1-1.800.7-3 1.900-3.900.2 2.800 3.800 3.600 3.800 7.300A5.800 5.800 0 0 1 8 19.400C5.200 17.800 4 14.400 5.200 11 6.400 7.500 12.400 6 13 2z" fill="#1a1200"/></svg>HARD MODE</span>
-          <div class="mode-card-title">3 CAR RACE</div>
-          <div class="mode-card-desc">High Reward, High Risk</div>
+          <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="vc-mhead"><svg class="vc-mic" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 22l1.700-4.600a2.400 2.400 0 0 1 2.200-1.500h6.200a2.400 2.400 0 0 1 2.200 1.500L18 22v2.200h-14zM15 12.500l1.400-3.700a2 2 0 0 1 1.900-1.300h5.300a2 2 0 0 1 1.900 1.300l1.400 3.700v1.800H15z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/><path d="M20.500 20.500h7M20.500 24h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><div class="mode-card-title">3 CAR RACE</div><div class="mode-card-desc">Bigger payout</div></div></div>
           <div class="mode-stats-row">
-            <div class="mode-stat-box">
-              <div class="mode-stat-lbl">WIN CHANCE</div>
-              <div class="mode-stat-val gold">33%</div>
-            </div>
-            <div class="mode-stat-box">
-              <div class="mode-stat-lbl">PROFIT</div>
-              <div class="mode-stat-val gold">140%</div>
-            </div>
+            <div class="mode-stat-box"><div class="mode-stat-lbl">WIN CHANCE</div><div class="mode-stat-val">33%</div></div>
+            <div class="mode-stat-box"><div class="mode-stat-lbl">PAYOUT</div><div class="mode-stat-val gold" data-mode-odds="3">2.5x</div></div>
           </div>
-          <div class="mode-example">Bet: 10 USDT → <b style="color:#fbbf24;">Win: 24 USDT</b></div>
-          <button class="mode-play-btn hard" id="selectMode3Btn">PLAY 3 CAR RACE</button>
+          <div class="mode-example">Bet 10 USDT &rarr; Win <b data-mode-win="3">25 USDT</b></div>
+          <button class="mode-play-btn hard" id="selectMode3Btn" type="button">PLAY 3 CAR RACE</button>
         </div>
       </div>
     </div>
@@ -5475,7 +5519,7 @@ window.dispatchEvent(new Event('tr-three'));
   } catch (e) {}
 
   // =========================================================================
-  // 1. V8 MUSTANG GT AUDIO SYNTHESIZER, EXCITEMENT SFX & PER-SEC HAPTICS
+  // 1. V8 FERRARI AUDIO SYNTHESIZER, EXCITEMENT SFX & PER-SEC HAPTICS
   // =========================================================================
   let soundEnabled = true;
   let hapticEnabled = true;
@@ -5864,33 +5908,67 @@ window.dispatchEvent(new Event('tr-three'));
   // Popup content builders (Leaderboard / Race Info / How to Play / Result)
   const UI_MEDAL = { 1: 'g', 2: 's', 3: 'b' };
   function uiRk(n) { return `<span class="ui-rk ${UI_MEDAL[n] || ''}">#${uiEsc(n)}</span>`; }
+  // v17Cars helpers: odds fallback, masked ids, tinted rows
+  function vcOdds(n) {
+    n = n || (typeof raceModeCars !== 'undefined' ? raceModeCars : 3);
+    try {
+      if (typeof raceOdds === 'function' && n === raceModeCars) { const v = +raceOdds(); if (v > 0) return v; }
+      if (typeof RACE_ODDS !== 'undefined' && RACE_ODDS && +RACE_ODDS[n] > 0) return +RACE_ODDS[n];
+    } catch (e) {}
+    return n === 2 ? 1.9 : 2.5;
+  }
+  function vcFmt(n) { const v = Math.round((+n || 0) * 100) / 100; return v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+  function vcMask(uid) {
+    let d = String(uid == null ? '' : uid).replace(/\D+/g, '');
+    if (d.length < 4) { let h = 0; const t = String(uid || 'x'); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 10000; d = String(h).padStart(4, '0'); }
+    return '******' + d.slice(-4);
+  }
+  function vcRefreshModeOdds() {
+    [2, 3].forEach(n => {
+      const o = vcOdds(n);
+      document.querySelectorAll('[data-mode-odds="' + n + '"]').forEach(e => { e.textContent = o + 'x'; });
+      document.querySelectorAll('[data-mode-win="' + n + '"]').forEach(e => { e.textContent = (Math.round(o * 10 * 100) / 100) + ' USDT'; });
+    });
+  }
   function uiLeaderboardHtml(racers, sortedCars, finishZ) {
     const pod = [1, 2, 3].map(n => racers.find(r => +r.rank === n) || null);
+    const idOf = (r) => vcMask(r.uid != null ? r.uid : r.name);
+    const volOf = (r) => (r.volume == null || isNaN(+r.volume)) ? '&mdash;' : vcFmt(r.volume);
+    const winOf = (r) => uiEsc(r.profit);
+    const av = (r) => `<span class="vl-av" style="--vc:${uiEsc(r.color || '#94a3b8')}">${uiEsc(idOf(r).slice(-2))}</span>`;
     const col = (r, n) => {
       if (!r) return `<div class="ui-pd p${n} empty"><div class="ui-pd-av">?</div><div class="ui-pd-name">&mdash;</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
-      const ini = uiEsc(String(r.name || '?').replace(/^[^A-Za-z0-9]+/, '').charAt(0).toUpperCase() || '?');
-      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av">${ini}</div><div class="ui-pd-name">${uiEsc(r.name)}</div><div class="ui-pd-profit">${uiEsc(r.profit)}</div><div class="ui-pd-wins">${uiEsc(r.wins)}W</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
+      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av vl-pav">${uiEsc(idOf(r).slice(-2))}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-wins">Vol ${volOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
     };
-    const rest = racers.filter(r => !pod.includes(r));
+    let me = racers.find(r => r.isMe);
+    if (!me) {
+      let myUid = '';
+      try { myUid = (typeof getMyUidStr === 'function') ? getMyUidStr() : ''; } catch (e) {}
+      me = { rank: '—', uid: myUid, color: '#22E07A', profit: '+0.00 USDT', volume: 0, isMe: true };
+    }
+    const rest = racers.filter(r => !pod.includes(r) && !r.isMe);
+    const row = (r, pin) => `
+          <div class="ui-lb-row vl-row${r.isMe ? ' me' : ''}${pin ? ' vl-pin' : ''}">
+            <div class="ui-lb-l">${uiRk(r.rank)}${av(r)}<div style="min-width:0"><div class="ui-lb-name">${uiEsc(idOf(r))}${r.isMe ? '<span class="ui-you">YOU</span>' : ''}</div><div class="ui-lb-sub">Volume ${volOf(r)} USDT</div></div></div>
+            <div class="ui-lb-r"><span class="ui-lb-amt">${winOf(r)}</span></div>
+          </div>`;
     let h = '';
     if (!racers.length) {
       h += `<div class="ui-lb-empty">${UI_IC.trophy}<b>Be the first on the leaderboard!</b>Win a Live race to claim the top spot.</div>`;
     } else {
       h += `<div class="ui-podium">${col(pod[1], 2)}${col(pod[0], 1)}${col(pod[2], 3)}</div>`;
-      if (rest.length) {
-        h += `<div class="ui-pop-sec" style="color:#FFC83D;margin-top:2px">${UI_IC.list}RANKINGS</div><div class="ui-lb-list">` + rest.map(r => `
-          <div class="ui-lb-row${r.isMe ? ' me' : ''}">
-            <div class="ui-lb-l">${uiRk(r.rank)}<span class="ui-dot" style="background:${uiEsc(r.color || '#94a3b8')};color:${uiEsc(r.color || '#94a3b8')}"></span><div style="min-width:0"><div class="ui-lb-name">${uiEsc(r.name)}</div><div class="ui-lb-sub">${uiEsc(r.wins)}W${r.best ? ' &bull; best ' + uiEsc(r.best) : ''}</div></div></div>
-            <div class="ui-lb-r"><span class="ui-lb-amt">${uiEsc(r.profit)}</span></div>
-          </div>`).join('') + '</div>';
-      }
+    }
+    h += `<div class="ui-pop-sec" style="color:#22E07A;margin-top:2px">${UI_IC.flag}YOUR RANK</div><div class="ui-lb-list vl-mine">${row(me, true)}</div>`;
+    if (rest.length) {
+      h += `<div class="ui-pop-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS</div><div class="ui-lb-list">` + rest.map(r => row(r, false)).join('') + '</div>';
     }
     h += `<div class="ui-pop-sec" style="color:#38bdf8">${UI_IC.flag}LIVE RACE GRID</div><div class="ui-grid-list">` + sortedCars.map((c, i) => {
       const pct = Math.min(100, Math.round((c.z / finishZ) * 100));
       const col2 = i === 0 ? '#22E07A' : (i === 1 ? '#FFC83D' : '#FF5C6C');
-      return `<div class="ui-grid-row" style="border-color:${col2}55">
-        <div class="ui-lb-l"><span class="ui-rk" style="background:${col2};color:#07101f">#${i + 1}</span><img class="ui-car" src="${c.imgUrl}" alt="">
-          <div style="min-width:0"><div class="ui-lb-name">${uiEsc(c.name)}</div><div class="ui-lb-sub">${uiEsc(c.nameLabel)} &bull; Lane ${c.lane + 1}</div></div></div>
+      const who = c.isPlayer ? 'You' : (c.displayName || c.floatLabel || '');
+      return `<div class="ui-grid-row vc-t vc-t-${uiEsc(c.themeKey)}">
+        <div class="ui-lb-l"><span class="ui-rk" style="background:${col2};color:#07101f">#${i + 1}</span><img class="ui-car vc-pic" src="${uiEsc(c.imgUrl)}" alt="">
+          <div style="min-width:0"><div class="ui-lb-name">${uiEsc(c.carTitle)}</div><div class="ui-lb-sub">${uiEsc(who)} &bull; Lane ${c.lane + 1}</div></div></div>
         <div class="ui-lb-r" style="flex-direction:column;align-items:flex-end;gap:1px"><span class="ui-lb-pct" style="color:${col2}">${pct}%</span><span class="ui-lb-sub">${Math.round(c.speed)} KM/H</span></div>
       </div>`;
     }).join('') + '</div>';
@@ -5919,7 +5997,12 @@ window.dispatchEvent(new Event('tr-three'));
   let currentBet = 1.0;
   let raceIdCounter = 589;
   let raceModeCars = 3;
-  // Default car bet selection: 'red' (RACER MG), 'blue' (TESLA KING), 'yellow' (CRYPTO CAR)
+  // v17 money: single source of truth for the total-return multiplier (bet x odds, stake included)
+  const RACE_ODDS = { 2: 1.9, 3: 2.5 };
+  function raceOdds() { return RACE_ODDS[raceModeCars] || RACE_ODDS[3]; }
+  const creditedRaces = new Set(); // race keys whose win was already credited (idempotent auto-claim)
+  let currentRaceCreditKey = null;
+  // Default car bet selection: 'red' (Red Ferrari), 'blue' (Blue Ferrari), 'yellow' (Gold Ferrari)
   let selectedPlayerTheme = 'red';
   // True = Auto-Run Car Bet Mode (All cars driven by AI, controls replaced by Car Bet selector)
   // False = Manual Drive Mode (User steers with Left/Right/Accelerate/Brake)
@@ -5951,36 +6034,36 @@ window.dispatchEvent(new Event('tr-three'));
   const CAR_THEMES = {
     red: {
       themeKey: 'red',
-      carTitle: 'RACER MG',
-      nameLabel: 'RED GT',
+      carTitle: 'RED FERRARI',
+      nameLabel: 'RED FERRARI',
       primaryColor: '#e61e25',
       darkColor: '#540408',
       highlightColor: '#ff7070',
       stripeColor: '#0f172a',
       badgeColor: '#dc2626',
-      imgUrl: CAR_IMAGES.red
+      imgUrl: 'assets/ui/car_f8_red.webp'
     },
     blue: {
       themeKey: 'blue',
-      carTitle: 'TESLA KING',
-      nameLabel: 'BLUE GT',
+      carTitle: 'BLUE FERRARI',
+      nameLabel: 'BLUE FERRARI',
       primaryColor: '#1264f2',
       darkColor: '#041e54',
       highlightColor: '#60a5fa',
       stripeColor: '#f8fafc',
       badgeColor: '#2563eb',
-      imgUrl: CAR_IMAGES.blue
+      imgUrl: 'assets/ui/car_f8_blue.webp'
     },
     yellow: {
       themeKey: 'yellow',
-      carTitle: 'CRYPTO CAR',
-      nameLabel: 'GOLD GT',
+      carTitle: 'GOLD FERRARI',
+      nameLabel: 'GOLD FERRARI',
       primaryColor: '#f5b000',
       darkColor: '#633d00',
       highlightColor: '#fef08a',
       stripeColor: '#0f172a',
       badgeColor: '#eab308',
-      imgUrl: CAR_IMAGES.yellow
+      imgUrl: 'assets/ui/car_f8_yellow.webp'
     }
   };
 
@@ -6012,9 +6095,9 @@ window.dispatchEvent(new Event('tr-three'));
   const outcomeSchedule2Car = ['bot1', 'player', 'bot1', 'player', 'bot1', 'bot1', 'player', 'bot1', 'player', 'bot1'];
 
   let winHistory = [
-    { raceId: 586, winner: 'RACER MG', car: 'RED GT', mode: '3 CAR', prize: '2.40 USDT', time: '51.42s', gap: '+0.68s' },
-    { raceId: 587, winner: 'YOU (TESLA KING)', car: 'BLUE GT', mode: '3 CAR', prize: '2.40 USDT', time: '50.84s', gap: '-0.91s' },
-    { raceId: 588, winner: 'CRYPTO CAR', car: 'GOLD GT', mode: '3 CAR', prize: '2.40 USDT', time: '51.16s', gap: '+0.54s' }
+    { raceId: 586, winner: 'RED FERRARI', car: 'RED FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '51.42s', gap: '+0.68s' },
+    { raceId: 587, winner: 'YOU (BLUE FERRARI)', car: 'BLUE FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '50.84s', gap: '-0.91s' },
+    { raceId: 588, winner: 'GOLD FERRARI', car: 'GOLD FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '51.16s', gap: '+0.54s' }
   ];
 
   // Equalized physics constants — ZERO unnatural bot speed cheats!
@@ -6522,7 +6605,7 @@ window.dispatchEvent(new Event('tr-three'));
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   }
 
-  function getMultiplier() { return raceModeCars === 2 ? 1.8 : 2.4; }
+  function getMultiplier() { return raceOdds(); }
 
   function updateUIValues() {
     balanceText.textContent = balanceUsdt.toFixed(2);
@@ -6613,7 +6696,7 @@ window.dispatchEvent(new Event('tr-three'));
       const isSel = card.dataset.carTheme === themeKey;
       card.classList.toggle('selected', isSel);
       const btnEl = card.querySelector('.console-car-pick-btn');
-      const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET YELLOW FERRARI' };
+      const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET GOLD FERRARI' };
       if (btnEl) btnEl.textContent = labelMap[card.dataset.carTheme] + (isSel ? ' ✓' : '');
     });
     document.querySelectorAll('.car-choice-btn').forEach(b => {
@@ -6795,6 +6878,7 @@ window.dispatchEvent(new Event('tr-three'));
       showCrToast('Mode & Car can only be changed before matchmaking starts!');
       return;
     }
+    vcRefreshModeOdds();
     modeModalBackdrop.classList.add('open');
   }
   document.getElementById('modeSelectHudBtn').addEventListener('click', openModeModal);
@@ -6833,7 +6917,18 @@ window.dispatchEvent(new Event('tr-three'));
     }
   }
   document.getElementById('closeModalBtn').addEventListener('click', closeResultModal);
-  modalActionBtn.addEventListener('click', closeResultModal);
+  // v17 money: winnings are already credited when the result is known; CLAIM only confirms and closes
+  let claimClosing = false;
+  modalActionBtn.addEventListener('click', () => {
+    if (resultModalBackdrop.dataset.view === 'win') {
+      if (claimClosing) return;
+      claimClosing = true;
+      modalActionBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M5 12.500l4.500 4.500L19 7.500" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Claimed';
+      setTimeout(() => { claimClosing = false; if (resultModalBackdrop.classList.contains('open')) closeResultModal(); }, 450);
+      return;
+    }
+    closeResultModal();
+  });
 
   const TROPHY_SVG = UI_IC.trophy;
   const LOSS_SVG = UI_IC.sad;
@@ -6871,15 +6966,15 @@ window.dispatchEvent(new Event('tr-three'));
   ];
 
   let carBetHistory = [
-    { id: 586, car: 'RACER MG (RED GT)', bet: '2.00 USDT', odds: '2.4x', outcome: 'LOST (-2.00 USDT • +0.68s gap)', win: false },
-    { id: 587, car: 'TESLA KING (BLUE GT)', bet: '1.00 USDT', odds: '2.4x', outcome: 'WON (+2.40 USDT • 1st Place)', win: true },
-    { id: 588, car: 'CRYPTO CAR (GOLD GT)', bet: '5.00 USDT', odds: '2.4x', outcome: 'WON (+12.00 USDT • 1st Place)', win: true }
+    { id: 586, car: 'RED FERRARI', bet: '2.00 USDT', odds: '2.5x', outcome: 'LOST (-2.00 USDT • +0.68s gap)', win: false },
+    { id: 587, car: 'BLUE FERRARI', bet: '1.00 USDT', odds: '2.5x', outcome: 'WON (+2.50 USDT • 1st Place)', win: true },
+    { id: 588, car: 'GOLD FERRARI', bet: '5.00 USDT', odds: '2.5x', outcome: 'WON (+12.50 USDT • 1st Place)', win: true }
   ];
 
   let walletTransactions = [
     { id: 'TX-9041', type: 'Deposit (USDT BEP20)', amount: '+100.00 USDT', status: 'Completed', positive: true },
     { id: 'TX-9042', type: 'VIP 3 Daily Profit', amount: '+39.00 USDT', status: 'Credited', positive: true },
-    { id: 'TX-9043', type: 'Race #587 Win Prize', amount: '+2.40 USDT', status: 'Completed', positive: true }
+    { id: 'TX-9043', type: 'Race #587 Win Prize', amount: '+2.50 USDT', status: 'Completed', positive: true }
   ];
 
   function showCrToast(msg) {
@@ -6981,7 +7076,7 @@ window.dispatchEvent(new Event('tr-three'));
     });
 
     if (tabName === 'bet' || tabName === 'race') {
-      // BOTH 'bet' and 'race' use the Real 3D Mustang GT Highway Viewport!
+      // BOTH 'bet' and 'race' use the Real 3D Ferrari Highway Viewport!
       topHeaderEl.style.display = 'flex';
       statusStripEl.style.display = 'grid';
       viewportWrapEl.style.display = 'block';
@@ -7129,7 +7224,7 @@ window.dispatchEvent(new Event('tr-three'));
               <img src="${inv.carImg}" alt="" style="width:64px;height:40px;object-fit:contain;background:rgba(0,0,0,0.35);border-radius:7px;padding:2px;">
               <div>
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;font-style:italic;color:#fff;line-height:1.05;">${inv.plan}</div>
-                <div style="font-size:9.5px;color:#38bdf8;font-weight:800;">${inv.racerName || 'Assigned Pro Mustang GT'}</div>
+                <div style="font-size:9.5px;color:#38bdf8;font-weight:800;">${inv.racerName || 'Assigned Ferrari'}</div>
               </div>
             </div>
             <span style="background:rgba(15,23,42,0.95);border:1px solid ${statusColor};color:${statusColor};font-size:8.5px;font-weight:900;padding:3px 7px;border-radius:99px;font-style:italic;">
@@ -7637,11 +7732,11 @@ window.dispatchEvent(new Event('tr-three'));
 
   // --- E. UPGRADED CHAMPIONSHIP LEADERBOARD MODAL (LIVE TELEMETRY + TOP RACERS + HISTORY) ---
   const topChampionshipRacers = [
-    { rank: 1, name: 'APEX_WHALE', car: 'RED GT', color: '#e61e25', wins: 142, best: '49.82s', profit: '+4,820 USDT' },
-    { rank: 2, name: 'TURBO_KING', car: 'GOLD GT', color: '#f5b000', wins: 118, best: '50.11s', profit: '+3,490 USDT' },
-    { rank: 3, name: 'NITRO_VIP', car: 'BLUE GT', color: '#1264f2', wins: 96, best: '50.34s', profit: '+2,710 USDT' },
-    { rank: 4, name: 'TRADER582 (YOU)', car: 'RED GT', color: '#28e066', wins: 29, best: '50.84s', profit: '+645 USDT' },
-    { rank: 5, name: 'CRYPTO_DRIFT', car: 'GOLD GT', color: '#f5b000', wins: 24, best: '51.05s', profit: '+510 USDT' }
+    { rank: 1, uid: '5120018688', color: '#FFC83D', profit: '+4,820.00 USDT', volume: 48200 },
+    { rank: 2, uid: '7340112951', color: '#C9D4E6', profit: '+3,490.00 USDT', volume: 36150 },
+    { rank: 3, uid: '6200487364', color: '#E0904F', profit: '+2,710.00 USDT', volume: 29800 },
+    { rank: 4, uid: '1892256077', color: '#2F7BFF', profit: '+1,205.50 USDT', volume: 14320 },
+    { rank: 5, uid: '9047731240', color: '#2F7BFF', profit: '+510.00 USDT', volume: 8940 }
   ];
 
   document.getElementById('leaderboardBtn').addEventListener('click', () => {
@@ -7659,7 +7754,7 @@ window.dispatchEvent(new Event('tr-three'));
   document.getElementById('howToPlayBtn').addEventListener('click', () => {
     modalSvgHolder.innerHTML = TROPHY_SVG;
     modalTitle.textContent = 'HOW TO PLAY & WIN';
-    modalSubtitle.textContent = '3D Car Betting & Mustang GT Racing Rules';
+    modalSubtitle.textContent = '3D Car Betting & Racing Rules';
     modalSubtitle.style.color = '';
     modalBodyContent.innerHTML = `
       <div class="ui-list">
@@ -7680,10 +7775,10 @@ window.dispatchEvent(new Event('tr-three'));
     modalSubtitle.style.color = '';
     modalBodyContent.innerHTML = `
       <div class="ui-tiles">
-        <div class="ui-tile" style="--c:#ffffff"><span class="ui-ic" style="color:#7fb2ff">${UI_IC.gauge}</span><span class="ui-row-lbl">GT top speed</span><span class="ui-row-val">258 KM/H</span><span class="ui-row-sub">Equal spec</span></div>
+        <div class="ui-tile" style="--c:#ffffff"><span class="ui-ic" style="color:#7fb2ff">${UI_IC.gauge}</span><span class="ui-row-lbl">Top speed</span><span class="ui-row-val">258 KM/H</span><span class="ui-row-sub">Equal spec</span></div>
         <div class="ui-tile" style="--c:#38bdf8"><span class="ui-ic" style="color:#38bdf8">${UI_IC.bolt}</span><span class="ui-row-lbl">Blue booster surge</span><span class="ui-row-val">312 KM/H</span><span class="ui-row-sub">Turbo pump</span></div>
-        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2 car mode payout</span><span class="ui-row-val">1.8x</span><span class="ui-row-sub">80% profit</span></div>
-        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3 car mode payout</span><span class="ui-row-val">2.4x</span><span class="ui-row-sub">140% profit</span></div>
+        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2 car mode payout</span><span class="ui-row-val">1.9x</span><span class="ui-row-sub">90% profit</span></div>
+        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3 car mode payout</span><span class="ui-row-val">2.5x</span><span class="ui-row-sub">150% profit</span></div>
       </div>
     `;
     modalActionBtn.textContent = 'CLOSE';
@@ -7726,7 +7821,7 @@ window.dispatchEvent(new Event('tr-three'));
     winHistory.push({
       raceId: raceIdCounter,
       winner: winnerCar.carTitle || winnerCar.name,
-      car: winnerCar.nameLabel,
+      car: winnerCar.carTitle,
       mode: `${raceModeCars} CAR`,
       prize: `${payout.toFixed(2)} USDT`,
       time: `${winnerTimeNum.toFixed(2)}s`,
@@ -7735,7 +7830,7 @@ window.dispatchEvent(new Event('tr-three'));
 
     carBetHistory.unshift({
       id: raceIdCounter,
-      car: `${userCar.carTitle} (${userCar.nameLabel})`,
+      car: userCar.carTitle,
       bet: `${currentBet.toFixed(2)} USDT`,
       odds: `${mult}x`,
       outcome: playerWon
@@ -7746,24 +7841,29 @@ window.dispatchEvent(new Event('tr-three'));
 
     const total = standings.length;
     const stRow = (st) => `
-      <div class="ui-lb-row ui-st-row${st.car.isPlayer ? ' me' : ''}">
-        <div class="ui-lb-l">${uiRk(st.rank)}<img class="ui-car" src="${st.car.imgUrl}" alt="" style="width:38px;height:22px;object-fit:contain;flex:0 0 auto">
+      <div class="ui-lb-row ui-st-row vc-t vc-t-${uiEsc(st.car.themeKey)}${st.car.isPlayer ? ' me' : ''}">
+        <div class="ui-lb-l">${uiRk(st.rank)}<img class="ui-car vc-pic" src="${uiEsc(st.car.imgUrl)}" alt="">
           <div style="min-width:0"><div class="ui-lb-name">${uiEsc(st.car.carTitle)}${st.car.isPlayer ? '<span class="ui-you">YOU</span>' : ''}</div>
-          <div class="ui-lb-sub ${st.rank === 1 ? 'ui-lead' : 'ui-late'}">${st.rank === 1 ? 'WINNER' : '+' + st.gapSec.toFixed(2) + 's behind'}</div></div></div>
-        <div class="ui-lb-r" style="flex-direction:column;align-items:flex-end;gap:1px"><span class="ui-lb-name" style="font-variant-numeric:tabular-nums">${st.timeSec.toFixed(2)}s</span><span class="ui-lb-sub">${uiEsc(st.car.nameLabel)}</span></div>
+          <div class="ui-lb-sub">${uiEsc(st.car.isPlayer ? 'You' : (st.car.displayName || st.car.floatLabel || ''))}</div></div></div>
+        <div class="ui-lb-r" style="flex-direction:column;align-items:flex-end;gap:1px"><span class="ui-lb-name" style="font-variant-numeric:tabular-nums">${st.timeSec.toFixed(2)}s</span><span class="ui-lb-sub ${st.rank === 1 ? 'ui-lead' : 'ui-late'}">${st.rank === 1 ? 'WINNER' : '+' + st.gapSec.toFixed(2) + 's'}</span></div>
       </div>`;
     const standingsHtml = `
       <div class="ui-pop-sec">${UI_IC.flag}FINAL POSITIONS</div>
       <div class="ui-grid-list">${standings.map(stRow).join('')}</div>`;
     const winnerCardHtml = `
-      <div class="ui-win-car"><img src="${winnerCar.imgUrl}" alt="${uiEsc(winnerCar.carTitle)}">
+      <div class="ui-win-car vc-t vc-t-${uiEsc(winnerCar.themeKey)}"><img class="vc-pic" src="${uiEsc(winnerCar.imgUrl)}" alt="${uiEsc(winnerCar.carTitle)}">
         <div style="min-width:0"><div class="t">${UI_IC.crown}${playerWon ? 'YOUR WINNING CAR' : 'RACE WINNER'}</div>
-        <div class="n">${uiEsc(winnerCar.carTitle)} \u2022 ${uiEsc(winnerCar.nameLabel)}</div>
+        <div class="n">${uiEsc(winnerCar.carTitle)}</div>
+        <div class="s">${uiEsc(winnerCar.isPlayer ? 'Driven by you' : 'Driven by ' + (winnerCar.displayName || winnerCar.floatLabel || 'Player'))}</div>
         <div class="s">Finish time ${winnerTimeNum.toFixed(2)}s</div></div></div>`;
 
     if (playerWon) {
-      balanceUsdt = +(balanceUsdt + payout).toFixed(2);
-      totalProfitReceivedUsdt = +(totalProfitReceivedUsdt + netProfit).toFixed(2);
+      const _ck = currentRaceCreditKey || ('race-' + raceIdCounter);
+      if (!creditedRaces.has(_ck)) {
+        creditedRaces.add(_ck);
+        balanceUsdt = +(balanceUsdt + payout).toFixed(2);
+        totalProfitReceivedUsdt = +(totalProfitReceivedUsdt + netProfit).toFixed(2);
+      }
       sfxWin();
       modalSvgHolder.innerHTML = TROPHY_SVG;
       modalTitle.textContent = 'YOU WON!';
@@ -7775,7 +7875,7 @@ window.dispatchEvent(new Event('tr-three'));
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#1<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Payout</span><span class="ui-res-val">+${payout.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>BET <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${mult}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
+        <div class="ui-res-sum"><span>BET <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -7793,7 +7893,7 @@ window.dispatchEvent(new Event('tr-three'));
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#${rank}<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Loss</span><span class="ui-res-val">-${currentBet.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${mult}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
+        <div class="ui-res-sum"><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -11792,7 +11892,7 @@ window.dispatchEvent(new Event('tr-three'));
   let demoBal = 1000;
   try { demoBal = parseFloat(localStorage.getItem('tr_demo_bal') || '1000') || 1000; } catch (e) {}
   let state = null, online = false, busy = false;
-  let minBet = 0.1, maxBet = 100, mult2 = 1.8, mult3 = 2.4;
+  let minBet = 0.1, maxBet = 100;
   let pendingBet = null; // {bet_id, winner, payout, amount}
 
   function saveDemo() { try { localStorage.setItem('tr_demo_bal', String(demoBal)); } catch (e) {} }
@@ -12028,7 +12128,7 @@ window.dispatchEvent(new Event('tr-three'));
         const isSel = card.dataset.carTheme === carKey;
         card.classList.toggle('selected', isSel);
         const btnEl = card.querySelector('.console-car-pick-btn');
-        const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET YELLOW FERRARI' };
+        const labelMap = { red: 'BET RED FERRARI', blue: 'BET BLUE FERRARI', yellow: 'BET GOLD FERRARI' };
         if (btnEl) btnEl.textContent = labelMap[card.dataset.carTheme] + (isSel ? ' ✓' : '');
       });
       document.querySelectorAll('.car-choice-btn').forEach(b => {
@@ -12326,7 +12426,7 @@ window.dispatchEvent(new Event('tr-three'));
       if (j && j.deposit_address) cacheDepositAddress(j.deposit_address);
       const s = j.settings || {};
       minBet = +s.min_bet || 0.1; maxBet = +s.max_bet || 100;
-      mult2 = +s.mult_2 || 1.8; mult3 = +s.mult_3 || 2.4;
+      window._trServerOdds = { 2: +s.mult_2 || null, 3: +s.mult_3 || null }; // informational only: labels/demo use RACE_ODDS
       applyBalanceUI();
       syncInvestFromState();
       syncCarsAndLabelsWithRoom();
@@ -12353,7 +12453,7 @@ window.dispatchEvent(new Event('tr-three'));
 
   const _gm = getMultiplier;
   getMultiplier = function () {
-    try { return raceModeCars === 2 ? mult2 : mult3; } catch (e) { return _gm ? _gm() : 2.4; }
+    return raceOdds();
   };
 
   // ---- Bet flow: supports 10s shared multiplayer rooms in BOTH Live and Demo modes ----
@@ -12482,6 +12582,16 @@ window.dispatchEvent(new Event('tr-three'));
   const _showResult = showRaceResultModal;
   showRaceResultModal = async function (rank, sorted) {
     stopRoomPolling();
+    // test-only: _trForceWin = true (win) or 'lose' (loss), honoured ONLY for a demo/offline bet (never live)
+    if (window._trForceWin && pendingBet && pendingBet.demo) {
+      const me = sorted.find(c => c.isPlayer);
+      if (me) sorted = window._trForceWin === 'lose' ? sorted.filter(c => c !== me).concat([me]) : [me].concat(sorted.filter(c => c !== me));
+    }
+    // v17 money: one idempotent credit per race (key = bet id, else race counter)
+    const _raceKey = (pendingBet && pendingBet.bet_id) ? String(pendingBet.bet_id) : ('race-' + raceIdCounter);
+    const _alreadyCredited = creditedRaces.has(_raceKey);
+    creditedRaces.add(_raceKey);
+    currentRaceCreditKey = _raceKey;
     // Honest result: `sorted` is the order the cars really crossed the line. A winner that was pre-assigned
     // by a bet or room reply never reorders it, and the demo payout is worked out from this order.
     rank = sorted.findIndex(c => c.isPlayer) + 1;
@@ -12491,13 +12601,13 @@ window.dispatchEvent(new Event('tr-three'));
       if (pendingBet.demo) {
         clearPendingDemoBet();
         const stake = +pendingBet.amount || +currentBet || 0;
-        pendingBet.payout = rank === 1 ? +fmt(stake * (raceModeCars === 2 ? mult2 : mult3)) : 0;
-        if (pendingBet.payout > 0) {
+        pendingBet.payout = rank === 1 ? +fmt(stake * raceOdds()) : 0;
+        if (pendingBet.payout > 0 && !_alreadyCredited) {
           demoBal = +fmt(demoBal + pendingBet.payout);
           saveDemo();
           applyBalanceUI();
         }
-      } else if (!pendingBet.demo && pendingBet.bet_id) {
+      } else if (!pendingBet.demo && pendingBet.bet_id && !_alreadyCredited) {
         try { const j = await api('/api/race/result', { bet_id: pendingBet.bet_id }); state = j; applyBalanceUI(); } catch (e) {}
       }
     }
@@ -12830,7 +12940,8 @@ window.dispatchEvent(new Event('tr-three'));
 
   function openLiveWithdraw() {
     stopDepPoll();
-    const avail = playMode === 'live' ? (state ? +state.balance : 0) : demoBal;
+    const avail = (state && isFinite(+state.balance)) ? Math.max(0, +state.balance) : 0; // always the LIVE balance, never demoBal
+    if (playMode === 'demo' && !state && API && !window._trWdTried) { window._trWdTried = true; refresh(true).then(() => { if (state && resultModalBackdrop.classList.contains('open') && modalTitle.textContent.indexOf('WITHDRAW') === 0) openLiveWithdraw(); }); }
     const minW = (state && state.settings && +state.settings.min_withdraw) || 0.5;
     const maxW = (state && state.settings && +state.settings.max_withdraw) || 0;
     const maxLabel = maxW > 0 ? `${maxW} USDT` : 'No Limit';
@@ -13129,6 +13240,14 @@ window.dispatchEvent(new Event('tr-three'));
     return Math.min(maxBet, next);
   }
 
+  // v17 money: MAX chip = min(max bet, balance) rounded down to 2 decimals, never below the minimum
+  const betMaxBtn = document.getElementById('betMaxBtn');
+  if (betMaxBtn) betMaxBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const cap = Math.min(maxBet, Math.floor((+balanceUsdt + 1e-9) * 100) / 100);
+    setBet(Math.max(minBet, +cap.toFixed(2)));
+  });
+
   function calcNextBetMinus(cur) {
     let next;
     if (cur <= 1) {
@@ -13410,8 +13529,10 @@ window.dispatchEvent(new Event('tr-three'));
     if (timer) clearTimeout(timer);
     const me = (state && state.user && state.user.id) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id);
     const cols = ['#e61e25', '#f5b000', '#1264f2', '#28e066', '#a855f7'];
-    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, name: r.name + (r.user_id === me ? ' (YOU)' : ''), car: '', color: cols[i % cols.length], wins: r.wins, best: '', profit: '+' + fmt(r.profit) + ' USDT', isMe: r.user_id === me }));
-    if (me && rows.length && !rows.some(r => r.isMe)) rows.push({ rank: '—', name: 'YOU', car: '', color: '#28e066', wins: 0, best: '', profit: '+0.00 USDT', isMe: true });
+    const volOf = (r) => { const v = [r.volume, r.bet_volume, r.total_bet, r.total_wagered, r.wagered].find(x => x != null && !isNaN(+x)); return v == null ? null : +v; };
+    const medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
+    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, uid: r.user_id, name: r.name, color: medal[i] || cols[i % cols.length], profit: '+' + fmt(r.profit) + ' USDT', volume: volOf(r), isMe: r.user_id === me }));
+    if (me && !rows.some(r => r.isMe)) rows.push({ rank: '—', uid: me, name: 'YOU', color: '#22E07A', profit: '+0.00 USDT', volume: (data.me && volOf(data.me)) || 0, isMe: true });
     topChampionshipRacers.length = 0; rows.forEach(r => topChampionshipRacers.push(r));
   }
 
