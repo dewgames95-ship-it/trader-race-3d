@@ -4519,13 +4519,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #leaderboardBtn { color: #ffc83d; } #modeSelectHudBtn { color: #5fb4ff; } #raceInfoBtn { color: #7fb2ff; } #howToPlayBtn { color: #8ec5ff; } .speed-pill { color: #22e07a; }
 .hud-pill .hud-pill-label { color: #fff; }
 /* right chip stack */
-.right-hud-stack { top: 36px; right: 6px; gap: 8px; align-items: stretch; width: 96px; zoom: 1 !important; opacity: 1 !important; }
+.right-hud-stack { top: 36px; right: 3px; gap: 7px; align-items: stretch; width: 92px; zoom: 1 !important; opacity: 1 !important; }
 .right-hud-stack .icon-toggle-btn { zoom: 1 !important; }
 .right-hud-stack .mini-utility-row { justify-content: flex-end; }
 #weatherCycleBtn, #weatherChip { --acc: #ffc83d; }
 #mapChip { --acc: #22e07a; } #timerChip { --acc: #2f7bff; } #cameraToggleBtn { --acc: #5fe3ff; }
 .right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip {
-  width: 96px; height: 27px; box-sizing: border-box; border-radius: 10px; padding: 0 6px; position: relative; font-size: 8.6px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
+  width: 92px; height: 26px; box-sizing: border-box; border-radius: 10px; padding: 0 6px; position: relative; font-size: 8.6px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
   border: 1px solid color-mix(in srgb, var(--acc) 65%, transparent); background: linear-gradient(180deg, rgba(16,28,54,.92), rgba(7,13,28,.94)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 28%, transparent), inset 0 1px 0 rgba(255,255,255,.08); }
 .right-hud-stack #weatherChip { padding: 0; display: block; border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -4593,6 +4593,19 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
   #openRandToast .ic { width: 13px !important; height: 13px !important; }
   #openRandToast .ort-l2 { display: none !important; }
 }
+</style>
+<style id="v17Fix">
+/* close button stays visible while a tall popup scrolls; compact leaderboard so it fits the screen */
+#resultModalBackdrop[data-view]:not(.tr-dep-mode) .modal-close { position: sticky !important; top: 0 !important; right: auto !important; float: right; display: block; margin: 0 0 0 -40px !important; background-color: rgba(20, 30, 52, 0.92) !important; }
+#resultModalBackdrop:not(.tr-dep-mode) { padding-top: 56px !important; padding-bottom: 8px !important; box-sizing: border-box; } /* keep the card below the top bar */
+#resultModalBackdrop:not(.tr-dep-mode) > .result-modal { max-height: 100% !important; overflow-y: auto; }
+.result-modal:has(.ui-podium) { padding-top: 10px !important; }
+.result-modal:has(.ui-podium) .ui-podium { margin: 0 0 8px; }
+.result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px; } .result-modal:has(.ui-podium) .ui-pd-base { height: 28px !important; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px !important; }
+.result-modal:has(.ui-podium) .ui-pd-base i { font-size: 18px; }
+.result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-av { width: 46px; height: 46px; font-size: 18px; }
+.result-modal:has(.ui-podium) .ui-pd-av { width: 38px; height: 38px; font-size: 15px; }
+.result-modal:has(.ui-podium) #modalSvgHolder { display: none !important; }
 </style>
 </head>
 <body>
@@ -7127,8 +7140,8 @@ window.dispatchEvent(new Event('tr-three'));
     if (skip) return;
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
     const map = pick(MAP_KEYS);
-    let wx = pick(WEATHER_THEMES); if (map === 'desert' && wx === 'snow') wx = pick(['sunny', 'rain', 'night']);
-    const cars3 = Math.random() < 0.5 ? 2 : 3;
+    const wx = 'sunny';   // owner's choice: every fresh open starts Sunny in 3-car mode; only the map is random
+    const cars3 = 3;
     localMapChoice = map; currentMap = map; currentWeather = wx;
     try { selectRaceMode(cars3); } catch (e) {}
     try { updateWeatherButtonLabel(); updateMapTimerChips(); } catch (e) {}

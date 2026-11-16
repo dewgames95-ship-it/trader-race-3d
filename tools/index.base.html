@@ -4596,7 +4596,9 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 </style>
 <style id="v17Fix">
 /* close button stays visible while a tall popup scrolls; compact leaderboard so it fits the screen */
-#resultModalBackdrop[data-view]:not(.tr-dep-mode) .modal-close { position: sticky !important; top: 0 !important; right: auto !important; float: right; display: block; margin: 0 0 -40px auto !important; background-color: rgba(20, 30, 52, 0.92) !important; }
+#resultModalBackdrop[data-view]:not(.tr-dep-mode) .modal-close { position: sticky !important; top: 0 !important; right: auto !important; float: right; display: block; margin: 0 0 0 -40px !important; background-color: rgba(20, 30, 52, 0.92) !important; }
+#resultModalBackdrop:not(.tr-dep-mode) { padding-top: 56px !important; padding-bottom: 8px !important; box-sizing: border-box; } /* keep the card below the top bar */
+#resultModalBackdrop:not(.tr-dep-mode) > .result-modal { max-height: 100% !important; overflow-y: auto; }
 .result-modal:has(.ui-podium) { padding-top: 10px !important; }
 .result-modal:has(.ui-podium) .ui-podium { margin: 0 0 8px; }
 .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px; } .result-modal:has(.ui-podium) .ui-pd-base { height: 28px !important; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px !important; }
