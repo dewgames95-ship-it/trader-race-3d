@@ -10395,21 +10395,21 @@ window.dispatchEvent(new Event('tr-three'));
     // ---------- mountain: rock wall on one side, valley on the other, ridges on the horizon ----------
     const CLIFF_MOD = 40, CLIFF_AHEAD = 760, CLIFF_BEHIND = 70, CLIFF_VAR = 4, CLIFF_CAP = 24;
     const mtGroup = new T.Group(); mtGroup.visible = false; scene.add(mtGroup);
-    const ROCK_TONES = ['#7d7166', '#8f8272', '#6b6259', '#9b8f7e', '#5f5750', '#85796b'].map((h) => col(h));
-    const cliffMat = vcMat({ flatShading: true, side: T.DoubleSide });
+    const ROCK_TONES = ['#8a7560', '#9c8468', '#76665a', '#a8927a', '#6a5a4c', '#917c66'].map((h) => col(h));
+    const cliffMat = vcMat({ side: T.DoubleSide }), cliffHH = [];
     // one 40 m wall module: a faceted face with strata bands, a ledge on top and a back that drops to the ground; both ends are 13 m
     // high with a plain profile, so any two modules (also mirrored) meet without a seam
     const buildCliff = (v) => {
       const NZ = 12, NY = 8, NR = NY + 4, DZ = CLIFF_MOD / NZ, X0 = RAIL_X + 2.6, P = [], C = [], I = [], hh = [];
       for (let i = 0; i <= NZ; i++) hh.push(i === 0 || i === NZ ? 13 : 8 + Math.pow(hash(v * 17.3 + i * 3.71), 1.1) * 22);
       for (let i = 1; i < NZ; i++) hh[i] = hh[i] * 0.75 + (hh[i - 1] + hh[i + 1]) * 0.125;
-      const cc = new T.Color(), moss = col('#657f48');
+      const cc = new T.Color(), moss = col('#5c8a3c'); cliffHH[v] = hh;
       for (let r = 0; r < NR; r++) for (let i = 0; i <= NZ; i++) {
         const end = i === 0 || i === NZ, hv = (q) => hash(v * 31.7 + i * 5.3 + r * 1.7 + q);
         let x, y;
         if (r <= NY) {
           y = r === 0 ? -0.3 : hh[i] * r / NY * (end ? 1 : 1 + (hv(1.3) - 0.5) * 0.14);
-          x = 0.2 * y + (end || r === 0 ? 0 : (hv(0) - 0.5) * 1.9);
+          x = 0.2 * y + (end || r === 0 ? 0 : (hv(0) - 0.5) * 1.2 + Math.sin(i * 1.9 + v * 2.3) * 0.5);
         } else {
           const xf = 0.2 * hh[i];
           if (r === NY + 1) { x = xf + 3.2 + (end ? 0 : hv(2.1) * 2); y = hh[i] + (end ? 0 : (hv(3.1) - 0.4) * 1.5); }
@@ -10418,17 +10418,25 @@ window.dispatchEvent(new Event('tr-three'));
         }
         P.push(X0 + x, y, -i * DZ);
         const ck = end ? 0 : v * 7.1 + i * 0.5; // the two end columns look the same on every module: no colour seams
-        cc.copy(ROCK_TONES[(Math.floor(r / 2) + Math.floor(hash(ck) * 3)) % 6]).multiplyScalar((r === 0 ? 0.45 : (r === 1 ? 0.65 : 0.82)) + (end ? 0.2 : hv(6.7) * 0.4) + (r % 2 ? -0.07 : 0.05) + (!end && (i + r) % 3 === 0 ? -0.1 : 0)); // strata bands, dark cracks, dark foot
-        if (r >= NY + 1) cc.lerp(moss, r === NY + 1 ? 0.5 : 0.3);
+        cc.copy(ROCK_TONES[(Math.floor(r / 2) + Math.floor(hash(ck) * 3)) % 6]).multiplyScalar((r === 0 ? 0.45 : (r === 1 ? 0.65 : 0.82)) + (end ? 0.2 : hv(6.7) * 0.4) + (r % 2 ? -0.1 : 0.06) + (!end && (i * 7 + v * 3) % 5 === 0 && r > 1 && r <= NY ? -0.2 : 0) + (r === 1 ? -0.1 : 0)); // strata bands, dark vertical gullies, dark damp foot
+        if (r >= NY + 1) cc.lerp(moss, r === NY + 1 ? 0.8 : 0.55); else if (r === NY) cc.lerp(moss, 0.25 + hv(8.8) * 0.3);
         C.push(cc.r, cc.g, cc.b);
       }
       for (let r = 0; r < NR - 1; r++) for (let i = 0; i < NZ; i++) { const a = r * (NZ + 1) + i, b = a + 1, c = a + NZ + 1, d = c + 1; I.push(a, c, b, b, c, d); }
-      return indexed(P, C, I, false); // flat shading derives the normals
+      const g = indexed(P, C, I, true), nA = g.attributes.normal; // smooth faces; the two end columns get a plain x/y normal so modules (also mirrored) light the same at the joint
+      for (let r = 0; r < NR; r++) for (const i of [0, NZ]) { const k = r * (NZ + 1) + i, nx = nA.getX(k), ny = nA.getY(k), l = Math.hypot(nx, ny) || 1; nA.setXYZ(k, nx / l, ny / l, 0); }
+      return g;
     };
+    // bushes + pines on the cliff top and trees on the valley slope (instanced, laid out with the cliff)
+    const capGeo = merge([part(new T.ConeGeometry(0.9, 3.2, 6), '#2f5a2e', 0, 1.9, 0), part(new T.SphereGeometry(1.0, 6, 5), '#4a7a38', 1.3, 0.55, 0.4), part(new T.CylinderGeometry(0.1, 0.14, 0.7, 5), '#5a3f26', 0, 0.3, 0)]);
+    const CAP_N = 4, capTrees = new T.InstancedMesh(capGeo, vcMat(), CLIFF_CAP * 5 * CAP_N); capTrees.frustumCulled = false; capTrees.count = 0; mtGroup.add(capTrees);
+    const VT_N = 16, vTreeGeo = new T.ConeGeometry(1.7, 7.5, 6).translate(0, 3.7, 0), vTreeMat = new T.MeshLambertMaterial({ color: 0xffffff }); tintMats.push(vTreeMat);
+    const vTrees = new T.InstancedMesh(vTreeGeo, vTreeMat, CLIFF_CAP * 5 * VT_N); vTrees.frustumCulled = false; vTrees.count = 0; mtGroup.add(vTrees);
+    const VT_COLS = ['#244a2a', '#2c5530', '#1f4026', '#33612f', '#3b6a36'].map((h) => col(h));
     const cliffMeshes = Array.from({ length: CLIFF_VAR }, (_, v) => { const m = new T.InstancedMesh(buildCliff(v), cliffMat, CLIFF_CAP); m.frustumCulled = false; m.count = 0; mtGroup.add(m); return m; });
     // valley: the ground beyond the rail falls away (the grass plane is cut there, see trCut); one extruded profile, no noise, so it can follow the camera in 6 m steps
     const VAL_X = [0, 1.2, 3.5, 8, 15, 26, 44, 80, 150, 300, 600, 1000], VAL_Y = [-0.03, -0.12, -1.0, -5.5, -13, -26, -44, -60, -68, -64, -50, -40];
-    const VAL_COL = ['#5d8f3e', '#6b8a46', '#7a6a52', '#6e665c', '#5f5a52', '#3f5d3c', '#35553a', '#44664a', '#6f8f8c', '#86a3a3', '#9ab4b8', '#a9c0c6'];
+    const VAL_COL = ['#5d8f3e', '#5a8a3e', '#4a7a36', '#36602e', '#2d5430', '#2a4e2e', '#2f5733', '#3e6446', '#5f8a80', '#86a8ae', '#9cbcc4', '#a9c8d0'];
     const valleyY = (ax) => {
       const d = ax - (RAIL_X + 0.45);
       if (d <= 0) return -0.03;
@@ -10467,10 +10475,20 @@ window.dispatchEvent(new Event('tr-three'));
     let cliffBase = null;
     const layoutCliff = (camM) => {
       const i0 = Math.floor((camM - CLIFF_BEHIND) / CLIFF_MOD), i1 = Math.floor((camM + CLIFF_AHEAD) / CLIFF_MOD), n = [0, 0, 0, 0];
-      let ns = 0;
+      let ns = 0, nc = 0, nv = 0;
       for (let i = i0; i <= i1; i++) {
         const z0 = i * CLIFF_MOD, v = Math.min(CLIFF_VAR - 1, Math.floor(hash(i * 3.17 + 0.4) * CLIFF_VAR)), mir = hash(i * 5.9 + 1.1) < 0.5 ? -1 : 1;
         if (n[v] < CLIFF_CAP) { m4.compose(v3a.set(0, 0, -z0 - (mir < 0 ? CLIFF_MOD : 0)), q0, v3b.set(cliffSide, 1, mir)); cliffMeshes[v].setMatrixAt(n[v]++, m4); }
+        const hh = cliffHH[v], tun = (z0 > tnM0 - 60 && z0 < tnM1 + 60);
+        for (let q = 0; q < CAP_N && !tun && nc < capTrees.instanceMatrix.count; q++) { // bushes / pines on the grass cap
+          const hv = (w) => hash(i * 9.7 + q * 6.1 + w), k = 1 + Math.floor(hv(1) * 10), zz = -z0 - (mir < 0 ? CLIFF_MOD : 0) + mir * -(k + hv(2) * 0.8) * (CLIFF_MOD / 12), sc = 0.6 + hv(3) * 1.1;
+          qy.setFromAxisAngle(upY, hv(4) * 6.28);
+          m4.compose(v3a.set(cliffSide * (RAIL_X + 2.6 + 0.2 * hh[k] + 4.5 + hv(5) * 3), hh[k] - 0.2, zz), qy, v3b.set(sc, sc * (0.7 + hv(6) * 0.8), sc)); capTrees.setMatrixAt(nc++, m4);
+        }
+        for (let q = 0; q < VT_N && !tun && nv < vTrees.instanceMatrix.count; q++) { // forest on the valley slope
+          const hv = (w) => hash(i * 5.3 + q * 8.9 + w), d = 14 + Math.pow(hv(1), 1.4) * 150, ax = RAIL_X + 0.45 + d, sc = 0.7 + hv(2) * 0.9 + d * 0.004;
+          m4.compose(v3a.set(-cliffSide * ax, valleyY(ax) - 0.4, -(z0 + hv(3) * CLIFF_MOD)), q0, v3b.set(sc, sc * (0.8 + hv(4) * 0.6), sc)); vTrees.setMatrixAt(nv, m4); vTrees.setColorAt(nv++, VT_COLS[Math.floor(hv(5) * 5)]);
+        }
         for (let q = 0; q < 8 && ns < 160; q++) { // boulders at the foot of the wall
           const hv = (w) => hash(i * 13.1 + q * 4.7 + w), sc = 0.35 + Math.pow(hv(1), 2) * 1.5;
           if (hv(2) < 0.55) continue;
@@ -10480,38 +10498,40 @@ window.dispatchEvent(new Event('tr-three'));
         }
       }
       cliffMeshes.forEach((m, v) => { m.count = n[v]; m.instanceMatrix.needsUpdate = true; });
+      capTrees.count = nc; capTrees.instanceMatrix.needsUpdate = true; vTrees.count = nv; vTrees.instanceMatrix.needsUpdate = true; if (vTrees.instanceColor) vTrees.instanceColor.needsUpdate = true;
       scree.count = ns; scree.instanceMatrix.needsUpdate = true; if (scree.instanceColor) scree.instanceColor.needsUpdate = true;
     };
     // layered ridges (with snow caps) on the horizon: ride with the camera like the skyline, hazed by their own vertex colours
     const ridgeMat = basicVC({ fog: false });
     const ridgeMesh = (() => {
       // 4 procedural height-field layers (fractal + ridged noise): sun-shaded rock strata, forest on the gentle low slopes, snow above an irregular line, haze growing with distance
-      const P = [], C = [], I = [], fogc = col('#c3d0e2'), snow = col('#f6f9fd'), forest = col('#3d5a38'), forest2 = col('#56703f'), cc = new T.Color(), rk = new T.Color();
+      const P = [], C = [], I = [], fogc = col('#a8c0dc'), snow = col('#f6f9fd'), forest = col('#27472b'), forest2 = col('#3a5b30'), cc = new T.Color(), rk = new T.Color();
       const sm = (t) => t * t * (3 - 2 * t), clamp01 = (t) => Math.max(0, Math.min(1, t));
       const vn = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = sm(x - ix), fy = sm(y - iy), h = (a, b) => hash(a * 12.9 + b * 78.2 + 5.1); return (h(ix, iy) * (1 - fx) + h(ix + 1, iy) * fx) * (1 - fy) + (h(ix, iy + 1) * (1 - fx) + h(ix + 1, iy + 1) * fx) * fy; };
       const fbm = (x, y, o) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * vn(x * f + k * 17, y * f + k * 31); a *= 0.5; f *= 2.05; } return t / 0.9375; };
       const rid = (x, y, o) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * (1 - Math.abs(vn(x * f + k * 7, y * f + k * 13) * 2 - 1)); a *= 0.5; f *= 2.1; } return t / 0.9375; };
-      const LAY = [{ z: -520, base: 40, amp: 95, sn: 0.86, c: '#5e5850', haze: 0.12, fs: 0.0100 }, { z: -680, base: 70, amp: 150, sn: 0.8, c: '#5f5d5a', haze: 0.3, fs: 0.0075 }, { z: -860, base: 110, amp: 210, sn: 0.74, c: '#66656a', haze: 0.48, fs: 0.0058 }, { z: -1060, base: 150, amp: 270, sn: 0.7, c: '#777a84', haze: 0.66, fs: 0.0046 }];
-      const NX = 170, NR = 6, DX = 12, DD = 22, SY = -95;
+      const LAY = [{ z: -520, base: 20, amp: 130, sn: 0.82, haze: 0.1, fs: 0.0100 }, { z: -690, base: 40, amp: 190, sn: 0.76, haze: 0.28, fs: 0.0075 }, { z: -880, base: 60, amp: 260, sn: 0.7, haze: 0.42, fs: 0.0058 }, { z: -1080, base: 80, amp: 330, sn: 0.66, haze: 0.55, fs: 0.0046 }];
+      const NX = 250, NR = 8, DX = 8, DD = 16, SY = -40;
       LAY.forEach((L, li) => {
-        const Hf = (x, d) => { const u = x * L.fs + li * 11.3, v = d * 0.012 + li * 5.7; return L.base * 0.3 + L.amp * (0.42 * fbm(u * 1.3, v, 5) + 0.58 * Math.pow(rid(u, v, 4), 1.35)) + 6 * fbm(x * 0.05, d * 0.05, 2); };
-        const start = P.length / 3, haze = L.haze;
+        // tall distinct peaks: a low-frequency mask lifts some summits far above the saddles between them
+        const Hf = (x, d) => { const u = x * L.fs + li * 11.3, v = d * 0.012 + li * 5.7, mask = Math.pow(fbm(u * 0.5 + 2, v * 0.5, 3), 1.6) * 1.9; return L.base + L.amp * (0.12 * fbm(u * 1.3, v, 5) + 0.88 * Math.pow(rid(u, v, 4), 2.1) * (0.2 + mask)) + 5 * fbm(x * 0.05, d * 0.05, 2); };
+        const start = P.length / 3, haze = L.haze, top = L.base + L.amp * 0.9;
         for (let r = 0; r < NR; r++) for (let i = 0; i <= NX; i++) {
           const x = -1000 + i * DX, d = r * DD, h = Hf(x, d);
-          const hx = (Hf(x + 6, d) - Hf(x - 6, d)) / 12, hd = (Hf(x, d + 6) - Hf(x, d - 6)) / 12, sl = Math.sqrt(hx * hx + hd * hd);
+          const hx = (Hf(x + 5, d) - Hf(x - 5, d)) / 10, hd = (Hf(x, d + 5) - Hf(x, d - 5)) / 10, sl = Math.sqrt(hx * hx + hd * hd);
           const nl = 1 / Math.sqrt(hx * hx + 1 + hd * hd), lit = Math.max(0, (-hx * SUN_DIR.x + SUN_DIR.y + hd * SUN_DIR.z) * nl);
-          const hn = h / (L.base * 0.3 + L.amp), strata = 0.86 + 0.22 * Math.sin(h * 0.45 + vn(x * 0.03, d * 0.03) * 6);
-          rk.set(L.c).multiplyScalar(strata * (0.95 + 0.2 * vn(x * 0.09, h * 0.1)));
-          const tree = (1 - sm(clamp01((hn - 0.3) / 0.22))) * (1 - sm(clamp01((sl - 0.35) / 0.5)));
-          cc.copy(rk).lerp(vn(x * 0.07, d * 0.07 + h * 0.05) > 0.5 ? forest : forest2, tree * 0.9);
-          const sline = L.sn + (vn(x * 0.02 + 3, d * 0.02) - 0.5) * 0.3 + (hn > 0.5 ? 0 : 0), sn = sm(clamp01((hn - sline) / 0.12)) * (1 - sm(clamp01((sl - 0.8) / 0.7)) * 0.7);
+          const hn = h / top, gul = rid(x * 0.045, h * 0.07 + d * 0.02, 3), strata = 0.8 + 0.3 * Math.sin(h * 0.55 + vn(x * 0.03, d * 0.03) * 6);
+          rk.set(vn(x * 0.02, h * 0.04) > 0.5 ? '#7a6a58' : '#6c6358').multiplyScalar(strata * (0.65 + 0.7 * gul));
+          const tree = (1 - sm(clamp01((hn - 0.22) / 0.3))) * (1 - sm(clamp01((sl - 0.55) / 0.7)));
+          cc.copy(rk).lerp(vn(x * 0.07, d * 0.07 + h * 0.05) > 0.5 ? forest : forest2, tree);
+          const sline = L.sn + (vn(x * 0.02 + 3, d * 0.02) - 0.5) * 0.3, sn = sm(clamp01((hn - sline) / 0.1)) * (1 - sm(clamp01((sl - 1.1) / 0.8)) * 0.6);
           cc.lerp(snow, sn);
-          cc.multiplyScalar(0.5 + 0.7 * lit).lerp(fogc, haze + (1 - haze) * 0.1 * (r / NR));
+          cc.multiplyScalar(0.3 + 1.0 * lit).lerp(fogc, haze);
           P.push(x, h, L.z - d); C.push(cc.r, cc.g, cc.b);
         }
         for (let r = 0; r < NR - 1; r++) for (let i = 0; i < NX; i++) { const a = start + r * (NX + 1) + i, b = a + 1, c = a + NX + 1, e = c + 1; I.push(a, b, c, b, e, c); }
-        // skirt: the front row drops to the ground, hazed like the layer
-        const sk = P.length / 3; cc.copy(col(L.c)).lerp(fogc, Math.min(1, haze + 0.25));
+        // skirt: the front row drops below the ground; dark forest green, hazed like the layer
+        const sk = P.length / 3; cc.copy(forest).lerp(fogc, haze);
         for (let i = 0; i <= NX; i++) { P.push(-1000 + i * DX, SY, L.z); C.push(cc.r, cc.g, cc.b); }
         for (let i = 0; i < NX; i++) { const a = start + i, b = a + 1, c = sk + i, e = c + 1; I.push(a, c, b, b, c, e); }
       });
