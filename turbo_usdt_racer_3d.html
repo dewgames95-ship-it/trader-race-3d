@@ -6316,14 +6316,18 @@ window.dispatchEvent(new Event('tr-three'));
   let packPlan = { early: 0, late: 0, flip: 0.5 };
   function pickRaceFavourite() {
     if (!isAutoBetMode) return null;
-    const room = window._trActiveRoom, rnd = (room && room.room_id) ? makeRoomRng(room.room_id + ':fav') : Math.random;
+    const room = window._trActiveRoom, rnd = (room && room.room_id) ? makeRoomRng(room.room_id + ':fav') : uniformRand01;
     const order = cars.slice().sort((a, b) => (a.themeKey < b.themeKey ? -1 : 1));
     return order[Math.floor(rnd() * order.length)].id;
   }
+  window._trPickFav = () => pickRaceFavourite(); // test hook
   let raceCount = 0;
-  // Casino house-edge schedule (~33% player win in 3-car, ~40% in 2-car, natural streaks)
-  const outcomeSchedule3Car = ['bot1', 'player', 'bot2', 'bot1', 'bot2', 'player', 'bot1', 'bot2', 'bot1', 'player'];
-  const outcomeSchedule2Car = ['bot1', 'player', 'bot1', 'player', 'bot1', 'bot1', 'player', 'bot1', 'player', 'bot1'];
+  // v17 fair winner (demo/offline): every car in the race has exactly the same chance (1/2 or 1/3); the house edge comes only from the odds
+  function uniformRand01() {
+    try { if (window.crypto && crypto.getRandomValues) { const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] / 4294967296; } } catch (e) {}
+    return Math.random();
+  }
+  function pickUniformWinnerId() { const ids = cars.length ? cars.map(c => c.id) : (raceModeCars === 2 ? ['player', 'bot1'] : ['player', 'bot1', 'bot2']); return ids[Math.floor(uniformRand01() * ids.length)]; }
 
   let winHistory = [
     { raceId: 586, winner: 'RED FERRARI', car: 'RED FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '51.42s', gap: '+0.68s' },
@@ -6373,6 +6377,7 @@ window.dispatchEvent(new Event('tr-three'));
   let debrisParticles = [];
   let tireSmokeParticles = [];
   let sideSlamEventsTriggered = 0;
+  let contactPlan = [], contactOp = null; // v17: planned car-to-car contacts (see contactDirector)
 
   const AI_RACER_NAMES = ['Nova Pulse','Volt Rider','Apex Ghost','Nitro Hawk','Pixel Drift','Quantum Ace','Shadow Wing','Turbo Mirage'];
   function pickAiName(seed) {
@@ -6963,8 +6968,7 @@ window.dispatchEvent(new Event('tr-three'));
     updateWeatherButtonLabel();
     updateTopPositionBanner();
 
-    const sched = raceModeCars === 2 ? outcomeSchedule2Car : outcomeSchedule3Car;
-    designatedWinnerId = sched[raceCount % sched.length];
+    designatedWinnerId = pickUniformWinnerId();
     raceCount++;
 
     sfxMatchmakingTick(10);
@@ -8273,6 +8277,7 @@ window.dispatchEvent(new Event('tr-three'));
           packPlan = { early: rev ? chase : -lead, late: rev ? -lead : chase, flip: 0.3 + r() * 0.45 };
           packGangNext = performance.now() + 2500 + r() * 6500; packGangUntil = 0; }
         planOncoming();
+        planContacts();
         updateTopPositionBanner();
       }
       return;
@@ -8314,6 +8319,7 @@ window.dispatchEvent(new Event('tr-three'));
 
     const raceProgress = leaderZ / FINISH_LINE_Z;
     const inFinalStretch = raceProgress > 0.65 || timeRemaining <= 20.0 * RACE_K;
+    contactDirector();
 
     // Update each car's speed, steering & position (NO artificial bot speed cheats!)
     // (steering helpers are defined once below the loop)
@@ -8441,6 +8447,7 @@ window.dispatchEvent(new Event('tr-three'));
         // Natural throttle modulation: continuous (no steps), per-car pace wobble so cars swap places
         const cruise = (car.boostTimer > 0 || car.hitSlowTimer > 0) ? maxSpd : maxSpd * ACCEL_BONUS;
         let targetSpeed = cruise;
+        if (contactOp && contactOp.aggr === car) targetSpeed *= contactOp.spd; // planned contact: close in or ease off by at most 6%
         const designatedCar = cars.find(c => c.id === raceFavId) || car;
         if (car.hitSlowTimer <= 0 && car.boostTimer <= 0 && car.jumpTimer <= 0 && gameState === 'RACING') {
           targetSpeed *= 1 + P.pace * Math.sin(tNow * P.pf + P.pp);
@@ -8601,7 +8608,8 @@ window.dispatchEvent(new Event('tr-three'));
               // a slam (speed loss, shove, sparks) needs a real hit: someone steering into the other, not two cars merely side by side
               const closing = ((a.steerV || 0) + (a.knockV || 0) - (b.steerV || 0) - (b.knockV || 0)) * pushSign;
 
-              if (pass === 0 && closing > 0.3 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0) {
+              if (pass === 0 && closing > 0.3 && a.bumpCooldown <= 0 && b.bumpCooldown <= 0 && contactGate(a, b)) {
+                noteContact('side', a, b);
                 a.bumpCooldown = 0.42;
                 b.bumpCooldown = 0.42;
 
@@ -8642,7 +8650,8 @@ window.dispatchEvent(new Event('tr-three'));
               const rearCar = dz >= 0 ? a : b;
               rearCar.z = frontCar.z - MIN_DZ;
 
-              if (pass === 0 && rearCar.bumpCooldown <= 0) {
+              if (pass === 0 && rearCar.bumpCooldown <= 0 && contactGate(rearCar, frontCar)) {
+                noteContact(contactOp && contactOp.kind === 'head' && contactOp.aggr !== rearCar ? 'head' : 'rear', rearCar, frontCar);
                 rearCar.bumpCooldown = 0.38;
                 frontCar.bumpCooldown = 0.38;
                 // Rear car bumps front car forward slightly and slows down itself
@@ -8763,6 +8772,73 @@ window.dispatchEvent(new Event('tr-three'));
   }
 
   // Race AI Decision Maker (Dodges obstacles, hunts Blue Boosters, and performs sudden side-hits!)
+  // =========================================================================
+  // v17 CONTACT DIRECTOR: a few planned car-to-car contacts spread over the race (rear tap, side swipe, head-to-head merge).
+  // It only nudges the existing AI (lane score bonus + at most 6% speed on ONE non-favourite AI car); the contact itself, its sparks,
+  // sound, shake and slow-down come from the existing collision solver below. The designated winner is never the aggressor.
+  // =========================================================================
+  function planContacts() {
+    contactOp = null; contactPlan = []; lastContactEl = -99;
+    window._trContactLog = [];
+    const dur = RACE_DURATION_SEC, n = Math.max(1, Math.round((2 + Math.random() * 1.6) * RACE_K));
+    const kinds = ['rear', 'side', 'head']; for (let i = kinds.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [kinds[i], kinds[j]] = [kinds[j], kinds[i]]; }
+    const t0 = 3.6, t1 = dur - 3.2, slot = (t1 - t0) / n;
+    for (let i = 0; i < n; i++) contactPlan.push({ t: t0 + slot * (i + 0.25 + Math.random() * 0.5), kind: kinds[i % 3], tries: 0 });
+  }
+  // contacts with effects (sparks, sound, shake, slow-down): never in the first 3 s or the last 2 s, planned ones always, others at most one per 18 s * RACE_K
+  let lastContactEl = -99;
+  function contactGate(a, b) {
+    if (gameState !== 'RACING') return true;
+    const el = RACE_DURATION_SEC - timeRemaining;
+    if (el < 3 || timeRemaining < 2) return false;
+    const planned = contactOp && ((contactOp.aggr === a && contactOp.vict === b) || (contactOp.aggr === b && contactOp.vict === a));
+    if (!planned && el - lastContactEl < 18 * RACE_K) return false;
+    lastContactEl = el; return true;
+  }
+  function noteContact(kind, a, b) {
+    const el = RACE_DURATION_SEC - timeRemaining;
+    if (window._trContactLog) window._trContactLog.push({ kind, t: +el.toFixed(1), a: a.id, b: b.id, planned: !!(contactOp && ((contactOp.aggr === a && contactOp.vict === b) || (contactOp.aggr === b && contactOp.vict === a))) });
+    if (contactOp && ((contactOp.aggr === a && contactOp.vict === b) || (contactOp.aggr === b && contactOp.vict === a))) {
+      contactOp.hit = true;
+      if (kind === 'head') { const rc = a.z < b.z ? a : b; if (!(rc.id === raceFavId && rc.z / FINISH_LINE_Z > 0.6)) rc.hitSlowTimer = Math.max(rc.hitSlowTimer || 0, 0.4); } // the car that arrives brakes hard
+    }
+  }
+  function contactDirector() {
+    if (gameState !== 'RACING') return;
+    const el = RACE_DURATION_SEC - timeRemaining;
+    if (contactOp) {
+      const o = contactOp;
+      if (o.hit || el > o.end || o.aggr.jumpTimer > 0 || o.vict.jumpTimer > 0 || timeRemaining < 2.4) {
+        if (!o.hit && o.tries < 2 && timeRemaining > 6) contactPlan.unshift({ t: el + 1.5, kind: o.kind, tries: o.tries + 1 });
+        contactOp = null; return;
+      }
+      const g = o.vict.z - o.aggr.z;
+      if (o.kind === 'rear') { o.spd = g > 5.5 ? 1.06 : 1; o.lane = o.vict.lane; }
+      else if (o.kind === 'head') { o.spd = -g > 6 ? 0.94 : 1; o.lane = o.vict.lane; }
+      else { o.spd = Math.abs(g) > 4 ? (g > 0 ? 1.06 : 0.94) : 1; o.lane = Math.abs(g) < 14 ? o.vict.lane : Math.max(0, Math.min(3, o.vict.lane + (o.aggr.lane >= o.vict.lane ? 1 : -1))); }
+      return;
+    }
+    if (!contactPlan.length) return;
+    const e = contactPlan[0];
+    if (el < e.t) return;
+    if (timeRemaining < 2.6) { contactPlan.length = 0; return; }
+    let best = null, bestG = 1e9;
+    for (const a of cars) {
+      if ((a.isPlayer && !isAutoBetMode) || a.id === raceFavId || a.jumpTimer > 0 || a.hitSlowTimer > 0 || a.boostTimer > 0) continue;
+      if (typeof trackClosedLaneAhead === 'function' && trackClosedLaneAhead(a.z, 420) >= 0) continue;
+      for (const v of cars) {
+        if (v === a || v.jumpTimer > 0) continue;
+        if (v.id === raceFavId && el > 0.7 * RACE_DURATION_SEC) continue;
+        const g = v.z - a.z, ag = Math.abs(g);
+        const ok = e.kind === 'rear' ? (g >= 4 && g <= 40) : e.kind === 'head' ? (g <= -6 && g >= -40) : ag < 30;
+        if (ok && ag < bestG) { bestG = ag; best = { a, v }; }
+      }
+    }
+    if (!best) { if (el > e.t + 4) { contactPlan.shift(); } return; }
+    contactPlan.shift();
+    contactOp = { kind: e.kind, aggr: best.a, vict: best.v, hit: false, end: el + 3.4, tries: e.tries || 0, spd: 1, lane: -1 };
+  }
+
   function runRealisticCasinoAI(bot, inFinalStretch, isDesignatedWinner) {
     if (bot.jumpTimer > 0) return; // airborne: lane is locked
     const P = bot.pers || { thr: 4, aggr: 0.5, jumpy: 0.25, calm: 0.5 };
@@ -8785,6 +8861,7 @@ window.dispatchEvent(new Event('tr-three'));
     // lane squeeze ahead: the closed lane is out of bounds, so merge early
     const closedLane = (typeof trackClosedLaneAhead === 'function') ? trackClosedLaneAhead(bot.z, 150 + P.calm * 90) : -1;
     if (closedLane >= 0) scores[closedLane] -= 900;
+    if (contactOp && contactOp.aggr === bot && contactOp.lane >= 0 && closedLane < 0) scores[contactOp.lane] += 300; // planned contact: lean into the victim's lane
     // wrong-way car: everyone gets out of its lane, except a target that is not paying attention
     if (oncoming && oncoming.state === 'coming') {
       const dzo = oncoming.z - bot.z;
@@ -10665,6 +10742,7 @@ window.dispatchEvent(new Event('tr-three'));
         }
         for (let s = 2.8; s < MOD - 1; s += 2.8) { const top = arch(s / MOD) - 0.2; box(ax - 0.05, ax + 0.05, -0.02, top, s - 0.05, s + 0.05, '#e4e1dc'); }
         box(sg * 6 - 0.65, sg * 6 + 0.65, -9.8, -2.4, MOD / 2 - 0.65, MOD / 2 + 0.65, '#a7adb5');
+        parts.push(part(new T.CylinderGeometry(1.9, 2.2, 0.08, 16), '#eef7f8', sg * 6, LAKE_WY + 0.03, -MOD / 2)); // foam ring around the pier
       }
       box(-7.4, 7.4, -2.4, -1.2, MOD / 2 - 0.9, MOD / 2 + 0.9, '#9ea4ac');
       const m = new T.InstancedMesh(merge(parts), lakeDeckMat, LAKE_NMOD); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m;
@@ -10672,6 +10750,32 @@ window.dispatchEvent(new Event('tr-three'));
     // water: one big plane that follows the camera (the grass has a hole over the water stretch), ripples scroll slowly
     const lakeTex = rippleTex.clone(); lakeTex.needsUpdate = true;
     const lakeWaterMat = new T.MeshStandardMaterial({ color: 0x1f78a0, map: lakeTex, roughness: 0.12, metalness: 0.3, envMapIntensity: 1.4 });
+    // v17: wave-normal shading (sun glints through the scene's sun/moon light), sky tint at grazing angles, darker deep water with distance
+    const lakeU = { t: { value: 0 }, sky: { value: new T.Color(0xcfe9fb) } };
+    lakeWaterMat.onBeforeCompile = (sh) => {
+      sh.uniforms.uT = lakeU.t; sh.uniforms.uSky = lakeU.sky;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        uniform float uT; uniform vec3 uSky; varying vec3 vWP;
+        vec2 lkGrad(vec2 p, float t) {
+          vec2 g = vec2(0.0);
+          g += vec2(0.80, 0.60) * cos(dot(p, vec2(0.80, 0.60)) * 0.55 + t * 1.30) * 0.30;
+          g += vec2(-0.55, 0.83) * cos(dot(p, vec2(-0.55, 0.83)) * 1.10 + t * 1.90) * 0.17;
+          g += vec2(0.95, -0.30) * cos(dot(p, vec2(0.95, -0.30)) * 2.30 + t * 2.60) * 0.09;
+          g += vec2(-0.30, -0.95) * cos(dot(p, vec2(-0.30, -0.95)) * 4.70 + t * 3.40) * 0.045;
+          return g;
+        }`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        { float dd = length(vViewPosition); float fade = 1.0 - smoothstep(180.0, 700.0, dd) * 0.75;
+          vec2 g = lkGrad(vWP.xz, uT) * fade;
+          vec3 nw = normalize(vec3(-g.x, 1.0, -g.y));
+          normal = normalize(mix(normal, normalize((viewMatrix * vec4(nw, 0.0)).xyz), 0.9)); }`)
+        .replace('#include <fog_fragment>', `{ float dd = length(vViewPosition); vec3 vd = normalize(vViewPosition);
+          float fr = pow(1.0 - clamp(dot(normal, vd), 0.0, 1.0), 3.0);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * vec3(0.55, 0.72, 0.85), smoothstep(90.0, 650.0, dd) * 0.55);
+          gl_FragColor.rgb += uSky * fr * 0.38; }
+        #include <fog_fragment>`);
+    };
     const lakeWater = (() => {
       const g = new T.PlaneGeometry(2600, 2600, 2, Math.round(2600 / 6)); g.rotateX(-Math.PI / 2);
       const pos = g.attributes.position, uv = g.attributes.uv;
@@ -10689,7 +10793,7 @@ window.dispatchEvent(new Event('tr-three'));
         for (const t of TT) {
           const y = t <= 0 ? -0.1 : -0.1 + (LAKE_WY - 0.4 + 0.1) * smooth01(0, 16, t);
           P.push(x, y, -(off + t));
-          if (t <= 0) tc.copy(cg); else if (t < 5) tc.copy(cg).lerp(cs, t / 5); else if (t < 11) tc.copy(cs).lerp(cw, (t - 5) / 6); else tc.copy(cw);
+          if (t === 3) tc.set('#eef6f4'); else if (t <= 0) tc.copy(cg); else if (t < 5) tc.copy(cg).lerp(cs, t / 5); else if (t < 11) tc.copy(cs).lerp(cw, (t - 5) / 6); else tc.copy(cw);
           const jit = 0.94 + hash(x * 0.37 + t) * 0.12; C.push(tc.r * jit, tc.g * jit, tc.b * jit);
         }
       }
@@ -10718,19 +10822,29 @@ window.dispatchEvent(new Event('tr-three'));
         trees.push(part(new T.CylinderGeometry(0.25, 0.35, 1.6 * s, 6), '#6b4a2a', Math.cos(ang) * rad, y + 0.8 * s, Math.sin(ang) * rad));
         trees.push(part(new T.ConeGeometry(1.9 * s, 6.2 * s, 7), i % 3 ? '#2f6f3c' : '#3a8444', Math.cos(ang) * rad, y + 4.4 * s, Math.sin(ang) * rad));
       }
-      return merge([body, ...trees]);
+      const rocks = [];
+      for (let i = 0; i < 6; i++) { const ang = hash(v * 9.1 + i * 3.7) * 6.283, rad = R * (0.85 + hash(i * 2.9 + v) * 0.3), sz = 0.8 + hash(i * 4.4 + v) * 1.3; rocks.push(part(new T.DodecahedronGeometry(sz, 0).scale(1.2, 0.8, 1), i % 2 ? '#8d9199' : '#a2a69f', Math.cos(ang) * rad, -0.2 + sz * 0.3, Math.sin(ang) * rad)); }
+      return merge([body, ...trees, ...rocks]);
     };
-    const islandMeshes = [0, 1].map((v) => { const m = new T.InstancedMesh(buildIsland(v), islandMat, 8); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m; });
+    const islandMeshes = [0, 1].map((v) => { const m = new T.InstancedMesh(buildIsland(v), islandMat, 14); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m; });
     // far shore: a low hazy bank riding with the camera in front of the skyline, so the city stands on land across the water
     const shoreFarMat = basicVC({ fog: false });
     const shoreFar = (() => {
-      const P = [], C = [], I = [], top = col('#5f8f62').lerp(col('#c3d6e4'), 0.25), low = col('#cbbf8c').lerp(col('#c3d6e4'), 0.22), deep = col('#7fa6ad');
-      for (let i = 0; i <= 130; i++) {
-        const x = -900 + i * 14, h = 2.6 + 7 * Math.pow(Math.abs(Math.sin(x * 0.011 + 1)), 1.3) + 4 * Math.pow(Math.sin(x * 0.027 + 0.3), 2) + hash(i * 1.7) * 1.2, base = P.length / 3;
-        P.push(x, h, -380, x, 0.4, -380, x, -8, -380); C.push(top.r, top.g, top.b, low.r, low.g, low.b, deep.r, deep.g, deep.b);
-        if (i > 0) { const a = base - 3; I.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
-      }
-      const m = new T.Mesh(indexed(P, C, I, false), shoreFarMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(shoreFarMat); return m;
+      // three layers across the water: a dark tree line, low hills, and hazy mountains behind them
+      const grp = new T.Group(); const hz = col('#c3d6e4');
+      const layer = (zc, hBase, hAmp, step, hazeK, cTop, cLow, trees, seed) => {
+        const P = [], C = [], I = [], top = col(cTop).lerp(hz, hazeK), low = col(cLow).lerp(hz, hazeK * 0.9), deep = col('#7fa6ad').lerp(hz, hazeK * 0.5);
+        for (let i = 0; i <= Math.round(1800 / step); i++) {
+          const x = -900 + i * step, h = hBase + hAmp * Math.pow(Math.abs(Math.sin(x * 0.0071 + seed)), 1.2) + hAmp * 0.55 * Math.pow(Math.sin(x * 0.019 + seed * 2.3), 2) + hash(i * 1.7 + seed) * (trees ? 3.2 : 1.0), base = P.length / 3;
+          P.push(x, h, zc, x, 0.4, zc, x, -8, zc); C.push(top.r, top.g, top.b, low.r, low.g, low.b, deep.r, deep.g, deep.b);
+          if (i > 0) { const q = base - 3; I.push(q, q + 3, q + 1, q + 1, q + 3, q + 4, q + 1, q + 4, q + 2, q + 2, q + 4, q + 5); }
+        }
+        const m = new T.Mesh(indexed(P, C, I, false), shoreFarMat); m.frustumCulled = false; grp.add(m);
+      };
+      layer(-760, 26, 42, 24, 0.62, '#6d8aa0', '#9fb4c2', false, 2.1);   // hazy mountains
+      layer(-560, 9, 20, 16, 0.4, '#5f8a66', '#cbbf8c', false, 0.7);     // low hills
+      layer(-380, 2.6, 9, 6, 0.18, '#3f7a4c', '#cbbf8c', true, 0.3);     // shore + tree line
+      grp.visible = false; backdrop.add(grp); noBend(shoreFarMat); return grp;
     })();
     let lakeM0 = Infinity, lakeM1 = -Infinity, lakeNMod = 0, lakeBase = null, islBase = null;
     const placeLake = (lake) => {
@@ -10750,13 +10864,13 @@ window.dispatchEvent(new Event('tr-three'));
     const layoutIslands = (camM) => {
       const s0 = Math.floor((camM - 120) / ISL_SEG), s1 = Math.floor((camM + 680) / ISL_SEG), n = [0, 0];
       for (let s = s0; s <= s1; s++) for (const side of [-1, 1]) {
-        if (hash(s * 3.1 + side * 7.7) > 0.58) continue;
+        if (hash(s * 3.1 + side * 7.7) > 0.7) continue;
         const zc = s * ISL_SEG + hash(s * 9.7 + side * 2.1) * 150;
         if (zc < lakeM0 + 40 || zc > lakeM1 - 40) continue;
-        const v = hash(s * 1.9 + side) < 0.5 ? 0 : 1, sc = 0.7 + hash(s * 5.3 + side) * 0.8;
-        if (n[v] >= 8) continue;
+        const v = hash(s * 1.9 + side) < 0.5 ? 0 : 1, sc = 0.4 + hash(s * 5.3 + side) * 1.0;
+        if (n[v] >= 14) continue;
         qy.setFromAxisAngle(upY, hash(s * 2.3 + side * 5) * 6.28);
-        islandMeshes[v].setMatrixAt(n[v]++, m4.compose(v3a.set(side * (100 + hash(s * 5.3 + side * 3) * 320), LAKE_WY, -zc), qy, v3b.set(sc, sc * (0.8 + hash(s * 6.1) * 0.5), sc)));
+        islandMeshes[v].setMatrixAt(n[v]++, m4.compose(v3a.set(side * Math.max(30 + sc * 46, 50 + hash(s * 5.3 + side * 3) * 420), LAKE_WY, -zc), qy, v3b.set(sc, sc * (0.8 + hash(s * 6.1) * 0.5), sc)));
       }
       islandMeshes.forEach((m, v) => { m.count = n[v]; m.instanceMatrix.needsUpdate = true; });
     };
@@ -11812,6 +11926,7 @@ window.dispatchEvent(new Event('tr-three'));
           const lb = Math.floor((camM - LAKE_BEHIND - lakeM0) / LAKE_MOD); if (lb !== lakeBase) { lakeBase = lb; layoutLake(camM); }
           const ib = Math.floor(camM / 60); if (ib !== islBase) { islBase = ib; layoutIslands(camM); }
           lakeWater.position.z = grass.position.z;
+          lakeU.t.value = tSec; lakeU.sky.value.copy(scene.fog.color);
           lakeTex.offset.set((tSec * 0.011) % 1, (lakeWater.position.z / 9 + tSec * 0.017) % 1);
         }
       }
