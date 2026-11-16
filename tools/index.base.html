@@ -4550,6 +4550,47 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 /* Mode popup title vs close button at 360 px */
 #modeModalBackdrop .mode-header-title { padding: 0 34px; font-size: clamp(15px, 4.9vw, 19px); }
 </style>
+<style id="v17Chat">
+.bottom-console { position: relative; }
+#v17ChatWrap { position: absolute; right: 10px; bottom: calc(100% + 8px); z-index: 30; display: none; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+#v17ChatWrap.show { display: flex; }
+#v17ChatBtn { pointer-events: auto; position: relative; width: 44px; height: 44px; border-radius: 50%; padding: 0; display: grid; place-items: center; cursor: pointer; background: linear-gradient(180deg, rgba(20,34,62,.92), rgba(8,14,28,.94)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 8px rgba(0,0,0,.5); -webkit-tap-highlight-color: transparent; transition: transform .15s, opacity .2s; }
+#v17ChatBtn:active { transform: scale(.94); }
+#v17ChatBtn .v17c-ic { width: 20px; height: 20px; }
+#v17ChatBtn .v17c-ring { position: absolute; inset: 0; width: 44px; height: 44px; transform: rotate(-90deg); opacity: 0; pointer-events: none; }
+#v17ChatBtn .v17c-ring circle { fill: none; stroke: #22E07A; stroke-width: 2; stroke-dasharray: 125.7; stroke-dashoffset: 125.7; stroke-linecap: round; }
+#v17ChatBtn.cd { opacity: .55; }
+#v17ChatBtn.cd .v17c-ring { opacity: 1; }
+#v17ChatBtn.cd .v17c-ring circle { animation: v17cRing 3s linear forwards; }
+@keyframes v17cRing { from { stroke-dashoffset: 125.7; } to { stroke-dashoffset: 0; } }
+#v17ChatTray { pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: min(340px, calc(100vw - 20px)); opacity: 0; transform: translateY(8px); transition: opacity .18s, transform .18s; visibility: hidden; }
+#v17ChatTray.open { opacity: 1; transform: none; visibility: visible; }
+#v17ChatTray.open .v17c-chip { pointer-events: auto; }
+.v17c-chip { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 10px 4px 9px; border-radius: 16px; cursor: pointer; text-align: left; font: 800 12px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef4ff; background: linear-gradient(180deg, rgba(20,34,62,.96), rgba(8,14,28,.97)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 8px rgba(0,0,0,.5); -webkit-tap-highlight-color: transparent; }
+.v17c-chip:active { transform: scale(.97); }
+.v17c-chip .ic { width: 17px; height: 17px; }
+@media (prefers-reduced-motion: reduce) { #v17ChatTray, #v17ChatBtn { transition: none; } }
+</style>
+<style id="v17Polish">
+#balanceText, #payoutText { font-variant-numeric: tabular-nums; }
+/* skeleton shimmer (reusable) */
+.ui-skel { position: relative; overflow: hidden; border-radius: 8px; color: transparent !important; background: rgba(120,150,200,.14); }
+.ui-skel::after, body.v17-lb-load .ui-lb-empty::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(190,215,255,.22) 50%, transparent 80%); transform: translateX(-100%); animation: v17Skel 1.2s ease-in-out infinite; }
+@keyframes v17Skel { to { transform: translateX(100%); } }
+body.v17-lb-load .ui-lb-empty { position: relative; overflow: hidden; min-height: 132px; border-radius: 12px; background: repeating-linear-gradient(180deg, rgba(120,150,200,.14) 0 34px, transparent 34px 42px); }
+body.v17-lb-load .ui-lb-empty > * { visibility: hidden; }
+body.v17-st-load #screenInvite .ref-stat strong { position: relative; overflow: hidden; border-radius: 6px; color: transparent !important; background: rgba(120,150,200,.16); width: 56px; min-height: 22px; }
+body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(190,215,255,.22) 50%, transparent 80%); transform: translateX(-100%); animation: v17Skel 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ui-skel::after, body.v17-lb-load .ui-lb-empty::after, body.v17-st-load #screenInvite .ref-stat strong::after { animation: none; } }
+.ub-copied .ub-i { color: var(--ub-green); }
+/* random-on-open toast: one short line at <= 400 px so it stays clear of the start circle */
+@media (max-width: 400px) {
+  #openRandToast { left: 60px !important; right: 120px !important; padding: 5px 8px !important; }
+  #openRandToast .ort-l1 { flex-wrap: nowrap !important; white-space: nowrap; font-size: 10.5px !important; gap: 4px !important; letter-spacing: .02em !important; }
+  #openRandToast .ic { width: 13px !important; height: 13px !important; }
+  #openRandToast .ort-l2 { display: none !important; }
+}
+</style>
 </head>
 <body>
 <!-- ICON SET v17 (shared sprite). Usage: <svg class="ic"><use href="#ic-name"/></svg>
@@ -4900,6 +4941,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       </div>
     </div>
 
+    <div id="v17ChatWrap" aria-label="Quick chat">
+      <div id="v17ChatTray" role="menu">
+        <button type="button" tabindex="-1" role="menuitem" class="v17c-chip" data-say="Let's gooo 🚀"><svg class="ic ic-green"><use href="#ic-rocket"/></svg><span>Let's gooo 🚀</span></button>
+        <button type="button" tabindex="-1" role="menuitem" class="v17c-chip" data-say="Catch me if you can 😂"><svg class="ic ic-gold"><use href="#ic-bolt"/></svg><span>Catch me if you can 😂</span></button>
+        <button type="button" tabindex="-1" role="menuitem" class="v17c-chip" data-say="Nice try buddy"><svg class="ic ic-blue"><use href="#ic-crown"/></svg><span>Nice try buddy</span></button>
+        <button type="button" tabindex="-1" role="menuitem" class="v17c-chip" data-say="GG, well played 🤝"><svg class="ic ic-cyan"><use href="#ic-users"/></svg><span>GG, well played 🤝</span></button>
+        <button type="button" tabindex="-1" role="menuitem" class="v17c-chip" data-say="That was close"><svg class="ic ic-white"><use href="#ic-gauge"/></svg><span>That was close</span></button>
+      </div>
+      <button type="button" tabindex="-1" id="v17ChatBtn" aria-label="Quick chat" aria-expanded="false"><svg class="ic ic-white v17c-ic"><use href="#ic-chat"/></svg><svg class="v17c-ring" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20"/></svg></button>
+    </div>
     <div class="controls-grid" id="manualControlsGrid" style="display:none;">
       <div class="steer-box">
         <div class="steer-btn-wrap">
@@ -5304,8 +5355,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div style="font-size:12px;font-weight:700;opacity:0.9;">Profit Balance</div>
         <div class="balance-big" id="profileProfitBalance" style="font-size:32px">32.50 <small>USDT</small></div>
         <div class="wallet-buttons">
-          <button class="deposit-wallet" id="profileDepositBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(90deg)"><use href="#ub-arrow"/></svg> Deposit</button>
-          <button class="withdraw-wallet" id="profileWithdrawBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(-90deg)"><use href="#ub-arrow"/></svg> Withdraw</button>
+          <button class="deposit-wallet" id="profileDepositBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-deposit-arrow"/></svg> Deposit</button>
+          <button class="withdraw-wallet" id="profileWithdrawBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-withdraw-arrow"/></svg> Withdraw</button>
         </div>
       </section>
 
@@ -10812,6 +10863,96 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 50));
   else setTimeout(boot, 50);
 })();
+
+  // ---------- v17 chat: Manual Drive quick replies (button + tray), visible only while a manual race is running ----------
+  (() => {
+    const wrap = document.getElementById('v17ChatWrap'), btn = document.getElementById('v17ChatBtn'), tray = document.getElementById('v17ChatTray');
+    if (!wrap || !btn || !tray) return;
+    let cdUntil = 0;
+    const feel = () => { try { _lastHapticMs = 0; triggerHaptic(40); } catch (e) {} try { playTone(880, 1180, 0.04, 'sine', 0.07); } catch (e) {} };
+    const setOpen = (on) => { tray.classList.toggle('open', !!on); btn.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    const sync = () => {
+      const show = !isAutoBetMode && gameState === 'RACING';
+      wrap.classList.toggle('show', show);
+      if (!show) setOpen(false);
+      btn.classList.toggle('cd', performance.now() < cdUntil);
+    };
+    for (const el of [btn, tray]) el.addEventListener('mousedown', (e) => e.preventDefault()); // never steal focus from the driving keys
+    btn.addEventListener('click', () => { if (performance.now() < cdUntil) return; feel(); setOpen(!tray.classList.contains('open')); });
+    tray.addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-say]'); if (!chip) return;
+      feel();
+      if (typeof window.trSay === 'function' && window.trSay(chip.getAttribute('data-say'))) {
+        cdUntil = performance.now() + 3000; btn.classList.remove('cd'); void btn.offsetWidth; btn.classList.add('cd');
+      }
+      setOpen(false);
+    });
+    document.addEventListener('pointerdown', (e) => { if (tray.classList.contains('open') && !wrap.contains(e.target)) setOpen(false); }, true);
+    setInterval(sync, 200); sync();
+  })();
+
+  // ---------- v17 polish: count-up on balance / payout, loading skeleton hooks, one icon set on the older screens ----------
+  (() => {
+    // (a) count-up: watches the text only (no balance/payout code is touched), always ends on the exact real text
+    const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const NUM = /-?\d[\d,]*(?:\.\d+)?/;
+    const parts = (t) => { const m = NUM.exec(t); return m ? { pre: t.slice(0, m.index), suf: t.slice(m.index + m[0].length), val: parseFloat(m[0].replace(/,/g, '')), dec: (m[0].split('.')[1] || '').length, comma: m[0].indexOf(',') >= 0 } : null; };
+    const fmtN = (p, v) => p.pre + (p.comma ? v.toLocaleString('en-US', { minimumFractionDigits: p.dec, maximumFractionDigits: p.dec }) : v.toFixed(p.dec)) + p.suf;
+    const countUp = (el) => {
+      if (!el) return;
+      let target = el.textContent, cur = target, raf = 0, tmo = 0, busy = false;
+      const mo = new MutationObserver(() => {
+        if (busy) return;
+        const t = el.textContent;
+        if (t === target) return;
+        const a = parts(cur), b = parts(t);
+        cancelAnimationFrame(raf); clearTimeout(tmo);
+        target = t;
+        const done = () => { busy = true; el.textContent = target; cur = target; mo.takeRecords(); busy = false; };
+        if (reduce || !a || !b || Math.abs(a.val - b.val) < 0.005) { cur = t; return; }
+        const t0 = performance.now(), dur = 450, from = a.val, to = b.val;
+        const step = (now) => {
+          const k = Math.min(1, (now - t0) / dur);
+          if (k >= 1) { done(); return; }
+          cur = fmtN(b, from + (to - from) * (1 - Math.pow(1 - k, 3)));
+          busy = true; el.textContent = cur; mo.takeRecords(); busy = false;
+          raf = requestAnimationFrame(step);
+        };
+        step(t0); tmo = setTimeout(done, dur + 120); // hidden tab / slow frames: still land on the real text
+      });
+      mo.observe(el, { childList: true, characterData: true, subtree: true });
+    };
+    countUp(document.getElementById('balanceText')); countUp(document.getElementById('payoutText'));
+    // (b) skeleton hooks: only flags on <body> while the board / state requests are in flight
+    if (window.fetch && !window._v17FetchWrapped) {
+      window._v17FetchWrapped = true;
+      const of = window.fetch.bind(window), cnt = { lb: 0, st: 0 };
+      window.fetch = function (input, init) {
+        const u = String(typeof input === 'string' ? input : (input && input.url) || '');
+        const k = /\/api\/leaderboard/.test(u) ? 'lb' : /\/api\/(state|webapp\/open)/.test(u) ? 'st' : '';
+        const pr = of(input, init);
+        if (k) { cnt[k]++; document.body.classList.add(k === 'lb' ? 'v17-lb-load' : 'v17-st-load'); const off = () => { if (--cnt[k] <= 0) { cnt[k] = 0; document.body.classList.remove(k === 'lb' ? 'v17-lb-load' : 'v17-st-load'); } }; pr.then(off, off); }
+        return pr;
+      };
+    }
+    // (c) one icon set: old #ub-* sprite uses and the popup/toast inline icons point at the shared #ic-* symbols
+    const IC = { rocket: 'rocket', chart: 'chart', users: 'users', shield: 'shield', trophy: 'trophy', flag: 'flag', flagfin: 'flag', coin: 'coin', wallet: 'wallet', copy: 'copy', check: 'check', bolt: 'bolt', lock: 'lock', gift: 'gift', help: 'help', chat: 'chat', music: 'music', sound: 'sound', bell: 'bell', sliders: 'settings', chev: 'chevron', x: 'close' };
+    const useSvg = (n, extra) => `<svg viewBox="0 0 24 24" aria-hidden="true"${extra || ''}><use href="#ic-${n}"/></svg>`;
+    try {
+      UI_IC.crown = useSvg('crown', ' class="ic-gold"'); UI_IC.flag = useSvg('flag'); UI_IC.bolt = useSvg('bolt'); UI_IC.gauge = useSvg('gauge'); UI_IC.users = useSvg('users');
+      UI_IC.coin = useSvg('coin'); UI_IC.shield = useSvg('shield'); UI_IC.check = useSvg('check'); UI_IC.x = useSvg('close'); UI_IC.info = useSvg('info');
+      UI_IC.trophy = useSvg('trophy', ' class="ic-gold" width="52" height="52"');
+      UI_TOAST_IC.success = UI_IC.check; UI_TOAST_IC.error = UI_IC.x; UI_TOAST_IC.info = UI_IC.info;
+    } catch (e) {}
+    let swapQ = 0;
+    const swap = () => {
+      swapQ = 0;
+      for (const u of document.querySelectorAll('use[href^="#ub-"]')) { const n = IC[u.getAttribute('href').slice(4)]; if (n) u.setAttribute('href', '#ic-' + n); }
+    };
+    const kick = () => { if (!swapQ) swapQ = requestAnimationFrame(swap); };
+    new MutationObserver(kick).observe(document.body, { childList: true, subtree: true });
+    kick();
+  })();
 
   requestAnimationFrame(frame);
 })();
