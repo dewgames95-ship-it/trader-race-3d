@@ -20,21 +20,37 @@
   //   bends    gentle S-waves in every race; most races add full left / right sweeps and S-curve sections
   //   hills    some races have slow rises and falls
   //   squeeze  some races close one outer lane for about five seconds (3 -> 2 -> 3 lanes, long tapers)
-//   city     some races drive through a street of tall buildings (one smooth S-turn, no flora)
-//   bridge   some races cross a gorge on a bridge (always on a straight)
+  //   city     some races drive through a street of tall buildings (one smooth S-turn, no flora)
+  //   bridge   some races cross a gorge on a bridge (always on a straight)
+  //   tunnel   about a third of the races (never on the lake) drive through a tunnel, near-straight
+  //   map      highway (all of the above), city (one long street), mountain (ghat road: cliff + valley), lake (long bridge over open water), desert
   // The simulation stays a straight strip; bends and hills are drawn by the vertex shader, cars feel a bend as drift.
-  let r3dRouteFor = null, r3dRoute = null, r3dPathCache = null;
+  let r3dRouteFor = null, r3dRoute = null, r3dPathCache = null, r3dRouteMap = '', r3dRouteEnd = 0, r3dRouteFlags = 0, r3dSeedFor = null, r3dSeed = 7;
   const SQ_TAPER = 230, SQ_HOLD = 440, SQ_SHIFT = 0.75; // track units; how far the wall moves the car limit inwards
   const BR_LEN = 250; // track units (about 72 m): the bridge over the gorge
+  const LAKE_MOD = 28; // metres: one repeating module of the long lake bridge
+  // Maps: the page says which one is selected (`currentMap`); tests can force one with window._trRouteForce.map.
+  const R3D_MAPS = ['highway', 'city', 'mountain', 'lake', 'desert'];
+  function r3dMapKey() {
+    let k = null;
+    try { const F = window._trRouteForce; k = (F && F.map) || (typeof currentMap !== 'undefined' ? currentMap : null); } catch (e) { k = null; }
+    return R3D_MAPS.indexOf(k) >= 0 ? k : 'highway';
+  }
+  function r3dEndZ() { try { if (typeof FINISH_LINE_Z === 'number') return FINISH_LINE_Z; } catch (e) {} return 4000; } // the race length changes with the timer: never cached
+  // smooth 0..1 "how close to a stretch" (1 inside it and `pad` around it, fading out over `fade` units)
+  function r3dNear(z, z0, z1, pad, fade) { const d = z < z0 - pad ? z0 - pad - z : (z > z1 + pad ? z - z1 - pad : 0), t = Math.max(0, 1 - d / fade); return t * t * (3 - 2 * t); }
   function raceRoute() {
-    if (r3dRouteFor === trackObjects && r3dRoute) return r3dRoute;
-    r3dRouteFor = trackObjects; r3dPathCache = null;
+    const mapK = r3dMapKey(), endZ = r3dEndZ(), F = window._trRouteForce || {};
+    const fl = (F.tunnel ? 1 : 0) | (F.city ? 2 : 0) | (F.bridge ? 4 : 0) | (F.twisty ? 8 : 0) | (F.hills ? 16 : 0) | (F.squeeze ? 32 : 0);
+    if (r3dRoute && r3dRouteFor === trackObjects && r3dRouteMap === mapK && r3dRouteEnd === endZ && r3dRouteFlags === fl) return r3dRoute;
+    r3dRouteFor = trackObjects; r3dPathCache = null; r3dRouteMap = mapK; r3dRouteEnd = endZ; r3dRouteFlags = fl;
     const hs = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
-    let sd = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) sd = (sd * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003;
+    // the seed comes from the obstacle layout as it was first seen (the squeeze below removes objects later)
+    if (r3dSeedFor !== trackObjects) { let q = 7; for (let i = 4; i < Math.min(trackObjects.length, 20); i++) q = (q * 31 + Math.round(trackObjects[i].z * 10) + trackObjects[i].lane * 7) % 100003; r3dSeedFor = trackObjects; r3dSeed = q; }
+    const sd = r3dSeed;
     let k = 0; const rnd = () => hs(sd * 0.731 + (++k) * 19.19);
-    const F = window._trRouteForce || {}; // test switch: { twisty, hills, squeeze, oncoming, city, bridge } force a feature on
-    const R = { base: { bias: (hs(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hs(sd + 2) * 0.0005, f1: 210 + hs(sd + 3) * 190, p1: hs(sd + 4) * 6.283, a2: 0.0004 + hs(sd + 5) * 0.0004, f2: 85 + hs(sd + 6) * 75, p2: hs(sd + 7) * 6.283 }, events: [], hills: null, squeeze: null, city: null, bridge: null, style: 'gentle' };
-    const endZ = (typeof FINISH_LINE_Z === 'number' ? FINISH_LINE_Z : 4000);
+    let k2 = 0; const rnd2 = () => hs(sd * 1.913 + (++k2) * 23.17 + 0.5); // map features only: the stream above stays the same on every map
+    const R = { map: mapK, base: { bias: (hs(sd + 1) - 0.5) * 0.0011, a1: 0.0007 + hs(sd + 2) * 0.0005, f1: 210 + hs(sd + 3) * 190, p1: hs(sd + 4) * 6.283, a2: 0.0004 + hs(sd + 5) * 0.0004, f2: 85 + hs(sd + 6) * 75, p2: hs(sd + 7) * 6.283 }, events: [], hills: null, squeeze: null, city: null, bridge: null, lake: null, tunnel: null, cliff: rnd2() < 0.5 ? -1 : 1, style: 'gentle' };
     if (rnd() < 0.75 || F.twisty) { // sweeps and S-curves, spaced out, never the same twice
       R.style = 'twisty';
       let z = 420 + rnd() * 380;
@@ -60,13 +76,13 @@
     {
       const cRoll = rnd(), cLen = rnd(), cPos = rnd(), cDir = rnd(), cAmp = rnd(), bRoll = rnd();
       const bTry = []; for (let i = 0; i < 12; i++) bTry.push(rnd());
-      if ((cRoll < 0.45 || F.city) && endZ > 2600) {
+      if (mapK === 'highway' && (cRoll < 0.45 || F.city) && endZ > 2600) {
         const len = 560 + cLen * 240, z0 = 700 + cPos * (endZ - 700 - len - 600), z1 = z0 + len;
         R.city = { z0, z1 };
         R.events = R.events.filter((ev) => !(ev.z0 < z1 + 120 && ev.z0 + ev.len > z0 - 120)); // the street gets its own S-turn
         R.events.push({ type: 's', z0: z0 + 50, len: len - 100, amp: (cDir < 0.5 ? -1 : 1) * (0.0019 + cAmp * 0.0005), waves: 1 });
       }
-      if ((bRoll < 0.4 || F.bridge) && endZ > 2600) {
+      if (mapK === 'highway' && (bRoll < 0.4 || F.bridge) && endZ > 2600) {
         for (const t of bTry) {
           const z0 = 600 + t * (endZ - 600 - BR_LEN - 450), z1 = z0 + BR_LEN;
           if (R.city && z1 > R.city.z0 - 260 && z0 < R.city.z1 + 260) continue;
@@ -82,6 +98,44 @@
         }
       }
     }
+    // ---- map routes (own random stream) ----
+    const sweepsAndS = (z, zEnd, o) => { // o: sweep chance, lenS [min, span], ampS, lenW, ampW, gap [min, span], waves
+      while (z < zEnd) {
+        const dir = rnd2() < 0.5 ? -1 : 1;
+        if (rnd2() < o.sweep) { const len = o.lenW[0] + rnd2() * o.lenW[1]; R.events.push({ type: 'sweep', z0: z, len, amp: dir * (o.ampW[0] + rnd2() * o.ampW[1]) }); z += len; }
+        else { const len = o.lenS[0] + rnd2() * o.lenS[1]; R.events.push({ type: 's', z0: z, len, amp: dir * (o.ampS[0] + rnd2() * o.ampS[1]), waves: o.waves[Math.floor(rnd2() * o.waves.length)] }); z += len; }
+        z += o.gap[0] + rnd2() * o.gap[1];
+      }
+    };
+    if (mapK === 'city') {
+      R.events = []; R.style = 'twisty';
+      sweepsAndS(380 + rnd2() * 200, endZ - 330, { sweep: 0.5, lenW: [520, 380], ampW: [0.0012, 0.0007], lenS: [700, 400], ampS: [0.0012, 0.0007], waves: [1, 1.5], gap: [60, 200] });
+      R.city = { z0: 250, z1: Math.max(900, endZ - 150) };
+    } else if (mapK === 'mountain') {
+      R.events = []; R.style = 'twisty';
+      sweepsAndS(260 + rnd2() * 120, endZ - 260, { sweep: 0.5, lenW: [340, 340], ampW: [0.0021, 0.0012], lenS: [520, 320], ampS: [0.0019, 0.0012], waves: [1, 1.5, 2], gap: [10, 90] });
+      R.hills = { a1: 0.00032 + rnd2() * 0.00014, f1: 200 + rnd2() * 120, p1: rnd2() * 6.283, a2: 0.00014 + rnd2() * 0.00012, f2: 90 + rnd2() * 60, p2: rnd2() * 6.283 };
+    } else if (mapK === 'lake') {
+      R.events = []; R.style = 'gentle'; R.hills = null;
+      sweepsAndS(520 + rnd2() * 200, endZ - 260, { sweep: 1, lenW: [800, 400], ampW: [0.0006, 0.0005], lenS: [800, 300], ampS: [0.0006, 0.0004], waves: [1], gap: [260, 400] });
+      const z0 = 250, lenM = Math.floor((Math.max(700, endZ - 200) - z0) * R3D_ZS / LAKE_MOD) * LAKE_MOD;
+      R.lake = { z0, z1: z0 + lenM / R3D_ZS };
+    }
+    {
+      // tunnel: some races, 200-300 units long, away from the street, the bridge, the squeeze and the lake
+      const tRoll = rnd2(), tLen = rnd2(), tTry = []; for (let i = 0; i < 12; i++) tTry.push(rnd2());
+      if ((tRoll < 0.35 || F.tunnel) && mapK !== 'lake' && endZ > 1500) {
+        const len = 200 + tLen * 100, free = (z0) => {
+          const z1 = z0 + len;
+          if (R.bridge && z1 > R.bridge.z0 - 260 && z0 < R.bridge.z1 + 260) return false;
+          if (R.squeeze && z1 > R.squeeze.z0 - 200 && z0 < R.squeeze.z1 + 200) return false;
+          if (mapK === 'highway' && R.city && z1 > R.city.z0 - 260 && z0 < R.city.z1 + 260) return false;
+          return true;
+        };
+        for (const t of tTry) { const z0 = 650 + t * (endZ - 650 - len - 420); if (free(z0)) { R.tunnel = { z0, z1: z0 + len }; break; } }
+        if (!R.tunnel && F.tunnel) for (let z0 = 600; z0 < endZ - len - 380 && !R.tunnel; z0 += 40) if (free(z0)) R.tunnel = { z0, z1: z0 + len };
+      }
+    }
     return (r3dRoute = R);
   }
   function trackBendAt(z) {
@@ -94,10 +148,9 @@
       else { const edge = Math.min(1, u / 0.14, (1 - u) / 0.14), w = edge * edge * (3 - 2 * edge); b += ev.amp * Math.sin(Math.PI * 2 * ev.waves * u) * w; }
     }
     const br = R.bridge; // the bridge always sits on a straight: the bend fades out well before it and back in after it
-    if (br) {
-      const d = z < br.z0 - 20 ? br.z0 - 20 - z : (z > br.z1 + 20 ? z - br.z1 - 20 : 0), t = Math.max(0, 1 - d / 140);
-      b *= 1 - t * t * (3 - 2 * t);
-    }
+    if (br) b *= 1 - r3dNear(z, br.z0, br.z1, 20, 140);
+    if (R.tunnel) b *= 1 - r3dNear(z, R.tunnel.z0, R.tunnel.z1, 20, 140); // near-straight through a tunnel
+    if (R.lake) b *= 1 - 0.6 * r3dNear(z, R.lake.z0, R.lake.z1, 0, 140); // open water: at most 40% of a bend
     return b;
   }
   // Vertical bend of the road ahead (rise > 0, crest < 0); 0 in races without hills.
@@ -405,6 +458,7 @@
     // Everything in backdrop follows the camera so it reads as "at the horizon".
     const backdrop = new T.Group();
     scene.add(backdrop);
+    const skylineObjs = []; // photo skyline pieces riding with the camera: hidden on the maps without a city on the horizon
     if (skyDome) backdrop.add(skyDome);
 
     const glowC = makeCanvas(128, 128);
@@ -506,7 +560,7 @@
       g.setAttribute('normal', new T.Float32BufferAttribute(N, 3));
       g.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
       g.setAttribute('color', new T.Float32BufferAttribute(C, 3));
-      if (!cityAScene && !cityBScene) backdrop.add(new T.Mesh(g, cityMat)); // built-in skyline only as a stand-in
+      if (!cityAScene && !cityBScene) { const bm = new T.Mesh(g, cityMat); backdrop.add(bm); skylineObjs.push(bm); } // built-in skyline only as a stand-in
     }
     // Owner's city models: one photo-textured skyline on the horizon, plus city blocks and glass towers
     // anchored in the world on both sides so they grow and pass by as you drive (recycled ahead).
@@ -572,11 +626,11 @@
     const MID_GAP = 380, WORLD_DRIFT = 0.8, midBlocks = []; let midBase = null;
     if (cityAScene) {
       const a = bakeModel(cityAScene, 0.0132), g = cityObject(a, true);
-      g.position.set(0, -1.5, -(410 + a.size.z / 2)); backdrop.add(g);
+      g.position.set(0, -1.5, -(410 + a.size.z / 2)); backdrop.add(g); skylineObjs.push(g);
     }
     if (cityBScene) {
       const b = bakeModel(cityBScene, 80, /^ground$/);
-      [[-265, -500, 0.4, 1], [280, -470, 0.5, 3], [-40, -640, 0.42, 2]].forEach(([x, z, sc, r]) => { const g = cityObject(b, true); g.scale.setScalar(sc); g.position.set(x, 0, z); g.rotation.y = r * Math.PI / 2; backdrop.add(g); });
+      [[-265, -500, 0.4, 1], [280, -470, 0.5, 3], [-40, -640, 0.42, 2]].forEach(([x, z, sc, r]) => { const g = cityObject(b, true); g.scale.setScalar(sc); g.position.set(x, 0, z); g.rotation.y = r * Math.PI / 2; backdrop.add(g); skylineObjs.push(g); });
       // mid-ground: an occasional small city block standing on the grass, well back from the road
       for (let i = 0; i < 4; i++) { const g = cityObject(b, false); scene.add(g); midBlocks.push(g); }
     }
@@ -593,7 +647,7 @@
     if (towerScene) {
       const t = fitModel(towerScene, 0.55);
       skylinePiece(t.group, true);
-      t.group.scale.setScalar(118 / (t.size.y || 1)); t.group.position.set(150, 0, -610); backdrop.add(t.group);
+      t.group.scale.setScalar(118 / (t.size.y || 1)); t.group.position.set(150, 0, -610); backdrop.add(t.group); skylineObjs.push(t.group);
     }
     const treeLineMat = new T.MeshBasicMaterial({ color: 0x2f8a3c, fog: true }); // (no tree-line mound at the end of the road any more)
 
@@ -602,6 +656,7 @@
     const grassTex = canvasTex(grassC, { wrapS: T.RepeatWrapping, wrapT: T.RepeatWrapping });
     const GRASS_LEN = 2600, GRASS_PERIOD = 46;
     grassTex.repeat.set(GRASS_LEN / GRASS_PERIOD, GRASS_LEN / GRASS_PERIOD);
+    let curMap = 'highway', cliffSide = 1, groundKind = 'grass'; // the map being drawn (see applyMap)
     const paintGrass = (a, b) => {
       const g = grassC.getContext('2d'), ca = col(a), cb = col(b);
       const S = 1024, hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString(), wrap = [-S, 0, S];
@@ -638,15 +693,63 @@
       }
       grassTex.needsUpdate = true;
     };
-    // The gorge under the bridge is a hole in the grass: fragments whose world z lies inside uTrGap.xy are discarded.
+    // Desert ground: soft dunes, wind ripples, pebbles and dry cracks (same canvas and the same 46 m tile as the grass)
+    const paintSand = (a, b) => {
+      const g = grassC.getContext('2d'), ca = col(a), cb = col(b), S = 1024, wrap = [-S, 0, S];
+      const hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString();
+      const each = (x, y, m, fn) => { for (const ox of wrap) for (const oy of wrap) { const X = x + ox, Y = y + oy; if (X > -m && X < S + m && Y > -m && Y < S + m) fn(X, Y); } };
+      g.fillStyle = a; g.fillRect(0, 0, S, S);
+      for (let i = 0; i < 70; i++) {                                           // dunes: long soft ridges, light crest and a darker lee
+        const x = hash(i * 1.37) * S, y = hash(i * 2.11) * S, rx = 80 + hash(i * 3.3) * 190, ry = 16 + hash(i * 4.7) * 42, rot = 0.5 + (hash(i * 6.5) - 0.5) * 0.7;
+        g.globalAlpha = 0.1 + hash(i * 5.9) * 0.1;
+        g.fillStyle = hash(i * 7.9) < 0.5 ? hx(ca, 1.1) : hx(cb, 0.86);
+        each(x, y, rx, (X, Y) => { g.beginPath(); g.ellipse(X, Y, rx, ry, rot, 0, 6.283); g.fill(); });
+      }
+      g.lineCap = 'round';
+      for (let i = 0; i < 1500; i++) {                                         // wind ripples
+        const x = hash(i * 1.71 + 2) * S, y = hash(i * 2.93 + 5) * S, len = 12 + hash(i * 3.3) * 34, bend = (hash(i * 4.9) - 0.5) * 10;
+        g.strokeStyle = hash(i * 5.7) < 0.5 ? hx(ca, 1.16) : hx(cb, 0.78); g.globalAlpha = 0.1 + hash(i * 6.1) * 0.13; g.lineWidth = 1 + hash(i * 7.3) * 1.2;
+        each(x, y, len, (X, Y) => { g.beginPath(); g.moveTo(X, Y); g.quadraticCurveTo(X + len / 2, Y + bend, X + len, Y + bend * 0.3); g.stroke(); });
+      }
+      for (let i = 0; i < 5500; i++) {                                         // grain
+        const x = hash(i * 1.93 + 7) * S, y = hash(i * 2.57 + 3) * S;
+        g.fillStyle = hash(i * 3.71) < 0.5 ? 'rgba(255,240,200,0.9)' : 'rgba(110,80,40,0.9)'; g.globalAlpha = 0.07 + hash(i * 4.9) * 0.08;
+        each(x, y, 2, (X, Y) => g.fillRect(X, Y, 2, 2));
+      }
+      g.globalAlpha = 0.28; g.strokeStyle = hx(cb, 0.5); g.lineWidth = 1.3;
+      for (let i = 0; i < 26; i++) {                                           // dry cracked patches
+        let x = hash(i * 9.1) * S, y = hash(i * 11.3) * S, ang = hash(i * 13.7) * 6.283;
+        for (let b = 0; b < 7; b++) {
+          let px = x, py = y, a2 = ang + b * 0.9;
+          for (let st = 0; st < 5; st++) { const nx = px + Math.cos(a2) * (6 + hash(i * 3 + b * 7 + st) * 9), ny = py + Math.sin(a2) * (6 + hash(i * 5 + b * 3 + st) * 9); each(px, py, 20, (X, Y) => { g.beginPath(); g.moveTo(X, Y); g.lineTo(X + nx - px, Y + ny - py); g.stroke(); }); px = nx; py = ny; a2 += (hash(i + b * 17 + st * 5) - 0.5) * 1.2; }
+        }
+      }
+      g.globalAlpha = 1;
+      const PEB = ['#9a7a55', '#b8956a', '#7d6347', '#c7a574'];
+      for (let i = 0; i < 150; i++) {                                          // pebbles
+        const x = hash(i * 7.7 + 1) * S, y = hash(i * 8.9 + 2) * S, r = 1.6 + hash(i * 9.1) * 4.2;
+        each(x, y, 14, (X, Y) => {
+          g.fillStyle = 'rgba(70,45,20,0.3)'; g.beginPath(); g.ellipse(X + r * 0.4, Y + r * 0.35, r, r * 0.65, 0, 0, 6.283); g.fill();
+          g.fillStyle = PEB[i % 4]; g.beginPath(); g.ellipse(X, Y, r, r * 0.7, 0.4, 0, 6.283); g.fill();
+          g.fillStyle = 'rgba(255,240,210,0.35)'; g.beginPath(); g.ellipse(X - r * 0.25, Y - r * 0.25, r * 0.5, r * 0.3, 0, 0, 6.283); g.fill();
+        });
+      }
+      grassTex.needsUpdate = true;
+    };
+    const paintGround = (a, b) => { if (groundKind === 'sand') paintSand(a, b); else paintGrass(a, b); };
+    // Holes in the ground: the gorge / lake under a bridge (fragments whose world z lies inside uTrGap.xy are discarded;
+    // with uTrWob the lake shore wobbles in x), and the valley side of the mountain road (everything beyond uTrCut.y on side uTrCut.x).
     const trGap = { value: new T.Vector2(1, 0) }; // (zMin, zMax); the default is an empty range
+    const trWob = { value: 0 }, trCut = { value: new T.Vector3(0, 0, 0) };
+    const shoreOff = (ax) => (Math.sin(ax * 0.045 + 1.3) * 9 + Math.sin(ax * 0.13) * 4 + 14) * smooth01(10, 60, ax); // metres the land reaches into the water, mirrored left / right
     const grassMat = new T.MeshLambertMaterial({ map: grassTex });
     grassMat.onBeforeCompile = (sh) => {
-      sh.uniforms.uTrGap = trGap;
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vTrZ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvTrZ = (modelMatrix * vec4(transformed, 1.0)).z;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vTrZ;\nuniform vec2 uTrGap;').replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (vTrZ > uTrGap.x && vTrZ < uTrGap.y) discard;');
+      sh.uniforms.uTrGap = trGap; sh.uniforms.uTrWob = trWob; sh.uniforms.uTrCut = trCut;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vTrXZ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvTrXZ = (modelMatrix * vec4(transformed, 1.0)).xz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vTrXZ;\nuniform vec2 uTrGap;\nuniform float uTrWob;\nuniform vec3 uTrCut;')
+        .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nfloat trAx = abs(vTrXZ.x);\nfloat trSo = uTrWob * (sin(trAx * 0.045 + 1.3) * 9.0 + sin(trAx * 0.13) * 4.0 + 14.0) * smoothstep(10.0, 60.0, trAx);\nif (vTrXZ.y > uTrGap.x + trSo && vTrXZ.y < uTrGap.y - trSo) discard;\nif (uTrCut.z > 0.5 && vTrXZ.x * uTrCut.x > uTrCut.y) discard;');
     };
-    grassMat.customProgramCacheKey = () => 'trGrassGap';
+    grassMat.customProgramCacheKey = () => 'trGrassGap2';
     const grass = new T.Mesh(flatOnRoad(GRASS_LEN, GRASS_LEN, 2), grassMat);
     grass.position.y = -0.03;
     scene.add(grass);
@@ -866,11 +969,11 @@
     makeKits(mapleScene, 'Acer_', 'leafy');
     makeKits(pineScene, 'Pine_', 'pine');
     const qy = new T.Quaternion(), upY = new T.Vector3(0, 1, 0), tmpTint = new T.Color();
-    const plant3d = (kind, x, z, h, seed) => {
+    const plant3d = (kind, x, z, h, seed, y = -0.05) => {
       const list = treeKits.filter((t) => t.kind === kind); if (!list.length) return false;
       const kit = list[Math.floor(hash(seed) * list.length)]; if (kit.n >= TREE_CAP) return false;
       qy.setFromAxisAngle(upY, hash(seed * 1.7) * Math.PI * 2);
-      m4.compose(v3a.set(x, -0.05, z), qy, v3b.set(h, h, h));
+      m4.compose(v3a.set(x, y, z), qy, v3b.set(h, h, h));
       // every tree gets its own leaf tone (fresh, deep, slightly yellow) so neighbours never look copied
       const tk = hash(seed * 2.9), tb = 0.86 + hash(seed * 4.3) * 0.24;
       tmpTint.setRGB((tk < 0.3 ? 0.84 : (tk < 0.6 ? 1.0 : 1.1)) * tb, tb, (tk < 0.3 ? 0.82 : (tk < 0.6 ? 0.9 : 0.72)) * tb);
@@ -899,28 +1002,30 @@
       for (const kit of grassKits) kit.n = 0;
       for (const k in species) species[k].n = 0;
       for (const kit of treeKits) kit.n = 0;
+      const MT = curMap === 'mountain', gY = (x) => (MT ? valleyY(Math.abs(x)) : 0); // on the valley slope everything stands on the falling ground
       const plant = (name, x, z, h, flip, shade) => {
         if (clearAt(z, Math.abs(x))) return;
         const sp = species[name]; if (sp.n >= FLORA_ROWS * 10) return;
         h *= 0.58 + hash(x * 3.7 + z * 1.3) * 0.42;
-        put(sp.mesh, sp.n++, x, -0.05, z, flip ? -h : h, h, h);
-        if (shade && si < FLORA_ROWS * 10) put(treeShade, si++, x + shade * 0.5, 0, z + shade * 0.2, shade * 1.5, 1, shade);
+        put(sp.mesh, sp.n++, x, -0.05 + gY(x), z, flip ? -h : h, h, h);
+        if (shade && !MT && si < FLORA_ROWS * 10) put(treeShade, si++, x + shade * 0.5, 0, z + shade * 0.2, shade * 1.5, 1, shade);
       };
       const FIRS = ['fir0', 'fir1', 'fir2'], LEAFY = ['leafy0', 'leafy2', 'leafy1'], ROCKS = ['rock0', 'rock1', 'rock2'];
       const segLen = FLORA_SEG * R3D_ZS, EDGE = RAIL_X + 3.4; // open verge between the rail and the first trees
       for (let k = 0; k < FLORA_ROWS; k++) {
         const s = base + k - 2, z = -(s * FLORA_SEG) * R3D_ZS;
         for (const side of [-1, 1]) {
+          if (MT && side === cliffSide) continue; // the rock wall stands there
           const n = s * 2 + (side > 0 ? 1 : 0), r = (q) => hash(n * q);
           // stretches of dense planting alternate with open gaps
-          const dens = hash(Math.floor(s / 4) * 7.13 + (side > 0 ? 3.1 : 0));
+          const dens = MT ? 0.4 + hash(Math.floor(s / 4) * 7.13 + (side > 0 ? 3.1 : 0)) * 0.6 : hash(Math.floor(s / 4) * 7.13 + (side > 0 ? 3.1 : 0));
           // real 3D trees everywhere (cut-out sprites only if the tree packs failed to load)
-          const pineZone = hash(Math.floor(s / 6) * 3.7 + (side > 0 ? 1.9 : 0)) < 0.32;
+          const pineZone = MT || hash(Math.floor(s / 6) * 3.7 + (side > 0 ? 1.9 : 0)) < 0.32;
           const tree = (x, zz, h, pineBias) => {
             if (clearAt(zz, Math.abs(x))) return;
-            const kind = r(2.7 + x) < (pineZone ? 0.75 : pineBias) ? 'pine' : 'leafy';
-            if (plant3d(kind, x, zz, kind === 'pine' ? h * 1.2 : h * 1.15, n * 3.3 + x) || plant3d(kind === 'pine' ? 'leafy' : 'pine', x, zz, h * 1.15, n * 3.3 + x)) {
-              if (si < FLORA_ROWS * 10) put(treeShade, si++, x + h * 0.14, 0, zz + 0.4, h * (kind === 'pine' ? 0.34 : 0.52), 1, h * (kind === 'pine' ? 0.26 : 0.38));
+            const kind = r(2.7 + x) < (pineZone ? (MT ? 0.94 : 0.75) : pineBias) ? 'pine' : 'leafy', gy = gY(x) - 0.05;
+            if (plant3d(kind, x, zz, kind === 'pine' ? h * 1.2 : h * 1.15, n * 3.3 + x, gy) || plant3d(kind === 'pine' ? 'leafy' : 'pine', x, zz, h * 1.15, n * 3.3 + x, gy)) {
+              if (!MT && si < FLORA_ROWS * 10) put(treeShade, si++, x + h * 0.14, 0, zz + 0.4, h * (kind === 'pine' ? 0.34 : 0.52), 1, h * (kind === 'pine' ? 0.26 : 0.38));
               return;
             }
             if (kind === 'pine') plant(FIRS[Math.floor(r(2.1 + x) * 3)], x, zz, h * 1.2, r(5.3 + x) < 0.5, h * 0.25);
@@ -942,10 +1047,10 @@
             const bx = side * (RAIL_X + 1.6 + r(24.7) * 7.5), bz = z - segLen * r(25.3), bs = 0.42 + r(25.9) * 0.34;
             for (let f = 0; f < 5 && !clearAt(bz, Math.abs(bx)); f++) {
               const a = f * 1.257 + r(26.1) * 6, rad = f ? bs * 0.62 : 0, fs = bs * (f ? 0.5 + hash(n * 29.3 + f) * 0.28 : 0.9);
-              put(blobs, bi, bx + Math.cos(a) * rad, fs * (f ? 0.62 : 0.8), bz + Math.sin(a) * rad * 0.8, fs, fs * (f ? 0.82 : 0.95), fs);
+              put(blobs, bi, bx + Math.cos(a) * rad, fs * (f ? 0.62 : 0.8) + gY(bx), bz + Math.sin(a) * rad * 0.8, fs, fs * (f ? 0.82 : 0.95), fs);
               blobs.setColorAt(bi++, f === 0 ? LEAF.bush3 : (f % 2 ? LEAF.bush2 : LEAF.bush));
             }
-            if (si < FLORA_ROWS * 10 && !clearAt(bz, Math.abs(bx))) put(treeShade, si++, bx + 0.25, 0, bz + 0.1, bs * 1.5, 1, bs * 1.15);
+            if (!MT && si < FLORA_ROWS * 10 && !clearAt(bz, Math.abs(bx))) put(treeShade, si++, bx + 0.25, 0, bz + 0.1, bs * 1.5, 1, bs * 1.15);
           }
           if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           if (r(26.3) < 0.55) plant(ROCKS[Math.floor(r(26.9) * 3)], side * (RAIL_X + 4 + r(27.1) * 9), z - segLen * r(27.7), 0.5 + r(28.3) * 0.6, r(28.9) < 0.5, 0); // pebbles further out
@@ -959,7 +1064,7 @@
                 const gs = f >= 30 ? 0.45 + hash(n * 43.7 + f) * 0.55 : (f % 5 === 0 ? 2.1 : 1.0) + hash(n * 43.7 + f) * 1.2; // every fifth one is a big patch; the extra ones are small tufts
                 qy.setFromAxisAngle(upY, hash(n * 45.1 + f) * 6.283);
                 kit.im.setColorAt(kit.n, GRASS_TINTS[Math.floor(hash(n * 51.7 + f * 1.3) * GRASS_TINTS.length)]);
-                kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * (8 + far * 20)), -0.02, z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
+                kit.im.setMatrixAt(kit.n++, m4.compose(v3a.set(side * (RAIL_X + 0.6 + far * (8 + far * 20)), -0.02 + gY(RAIL_X + 0.6 + far * (8 + far * 20)), z - segLen * hash(n * 35.3 + f)), qy, v3b.set(gs, gs * (0.55 + hash(n * 47.9 + f) * 0.35), gs)));
               }
               continue;
             }
@@ -970,7 +1075,7 @@
           const fc = FLOWER[Math.floor(r(21.1) * FLOWER.length)];
           for (let f = 0; f < 4; f++) {
             if (clearAt(z - segLen * hash(n * 23.9 + f), RAIL_X + 0.5 + hash(n * 22.3 + f) * 3.4)) continue;
-            put(dots, di, side * (RAIL_X + 0.5 + hash(n * 22.3 + f) * 3.4), 0.07, z - segLen * hash(n * 23.9 + f), 0.07, 0.07, 0.07);
+            put(dots, di, side * (RAIL_X + 0.5 + hash(n * 22.3 + f) * 3.4), 0.07 + gY(RAIL_X + 2), z - segLen * hash(n * 23.9 + f), 0.07, 0.07, 0.07);
             dots.setColorAt(di++, f % 2 ? fc : FLOWER[0]);
           }
         }
@@ -1014,7 +1119,7 @@
     };
     const START_TRACK_Z = 8.6; // just ahead of the car noses on the grid
     makeLine(START_TRACK_Z, 'START');
-    const finishGroup = makeLine(FINISH_LINE_Z, 'FINISH');
+    const finishGroup = makeLine(r3dEndZ(), 'FINISH'); // moved to the current race length every frame
     {
       const banC = makeCanvas(1024, 128), g = banC.getContext('2d');
       g.fillStyle = '#0f172a'; g.fillRect(0, 0, 1024, 128);
@@ -1058,8 +1163,8 @@
 
     // ---------- route features: city street + gorge bridge (laid out when the route changes, drawn only when near) ----------
     // clearAt(worldZ, |x|): true where no trees / bushes / grass may stand (inside the street, and over the gorge).
-    let cityM0 = Infinity, cityM1 = -Infinity, brM0 = Infinity, brM1 = -Infinity, sceneryFor = null, sceneryWarm = false;
-    const clearAt = (z, ax) => { const m = -z; return (m > cityM0 - 4 && m < cityM1 + 4 && ax < 78) || (m > brM0 - 4 && m < brM1 + 4); };
+    let cityM0 = Infinity, cityM1 = -Infinity, brM0 = Infinity, brM1 = -Infinity, tnM0 = Infinity, tnM1 = -Infinity, sceneryFor = null, sceneryWarm = false;
+    const clearAt = (z, ax) => { const m = -z; return (m > cityM0 - 4 && m < cityM1 + 4 && ax < 78) || (m > brM0 - 4 && m < brM1 + 4) || (m > tnM0 - 8 && m < tnM1 + 8 && ax < 42); };
     const smooth01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
     const rgbOf = (hex) => { const c = col(hex); return [c.r, c.g, c.b]; };
     const grey = (k) => [k, k, k];
@@ -1127,7 +1232,7 @@
       { w: 22.4, d: 16, h: 28.8, make: (b) => { body(b, 22.4, 16, 28.8); parapet(b, 22.4, 16, 28.8); b.solid(-7, 28.8, -4.5, -0.6, 31.8, 1.5, UNIT, false); b.solid(3.5, 28.8, -5.5, 8.5, 31.2, -0.5, UNIT, false); awnings(b, 22.4, 16, '#3a9d5d', '#d1432f'); } },
       { w: 16, d: 16, h: 70.4, make: (b) => { body(b, 16, 16, 70.4); b.solid(-6.4, 70.4, -6.4, 6.4, 76.8, 6.4, WALL, true, { top: ROOF }); b.solid(-0.5, 76.8, -0.5, 0.5, 84, 0.5, grey(0.92), false); b.solid(-0.22, 84, -0.22, 0.22, 91, 0.22, grey(0.92), false); awnings(b, 16, 16, '#7b4fb3', '#f2c230'); } }
     ];
-    const CITY_CAP = 40;
+    const CITY_CAP = 72, CITY_AHEAD = 720, CITY_BEHIND = 60; // buildings are laid out in a window around the camera (whole street for a short one)
     const cityMeshes = ARCH.map((a) => {
       const b = mkBuilder(); a.make(b);
       const m = new T.InstancedMesh(b.build(), bldMat, CITY_CAP);
@@ -1137,7 +1242,7 @@
     const CITY_TINTS = ['#ffffff', '#e6f2ff', '#dcf6f1', '#fff0da', '#e4e8ee', '#d6ecfb', '#f6f1ea'].map((h) => col(h));
 
     // pavement: two strips, unit length, scaled to the street (z segments stay under 6 m for the longest street)
-    const PAVE_X0 = ROAD_W / 2 - 0.05, PAVE_X1 = 75, PAVE_N = 48;
+    const PAVE_X0 = ROAD_W / 2 - 0.05, PAVE_X1 = 75, PAVE_N = 110, PAVE_LEN = 660;
     const payC = makeCanvas(128, 128);
     {
       const g = payC.getContext('2d');
@@ -1162,7 +1267,7 @@
       if (sign < 0) { const ix = g.index.array; for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } }
       return g;
     };
-    const paveMeshes = [-1, 1].map((sg) => { const m = new T.Mesh(paveGeo(sg), payMat); m.position.set(sg * PAVE_X0, -0.015, 0); m.scale.x = PAVE_X1 - PAVE_X0; m.frustumCulled = false; cityGroup.add(m); return m; });
+    const paveMeshes = [-1, 1].map((sg) => { const m = new T.Mesh(paveGeo(sg), payMat); m.position.set(sg * PAVE_X0, -0.015, 0); m.scale.x = PAVE_X1 - PAVE_X0; m.scale.z = PAVE_LEN; m.frustumCulled = false; cityGroup.add(m); return m; });
 
     // warm glow at the street-lamp heads inside the street (lamp positions follow the ones laid out in R3D.render)
     const CITY_LIGHT_MAX = 40, cityLightPos = new Float32Array(CITY_LIGHT_MAX * 3);
@@ -1171,24 +1276,27 @@
     cityLights.frustumCulled = false; cityGroup.add(cityLights);
 
     const qCityL = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), Math.PI / 2), qCityR = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), -Math.PI / 2);
-    const layoutCity = (city) => {
+    // Where the street is (metres); the buildings themselves are placed by layoutCity for the window around the camera.
+    const setCityRange = (city) => { if (!city) { cityM0 = Infinity; cityM1 = -Infinity; } else { cityM0 = city.z0 * R3D_ZS; cityM1 = city.z1 * R3D_ZS; } };
+    // Every row walks the street from its start with the same random numbers, so a building keeps its place and look
+    // as the window moves: only the ones inside [camM - CITY_BEHIND, camM + CITY_AHEAD] get an instance.
+    const layoutCity = (city, camM) => {
       for (const m of cityMeshes) m.count = 0;
-      cityLightGeo.setDrawRange(0, 0);
-      if (!city) { cityM0 = Infinity; cityM1 = -Infinity; return; }
+      if (!city) return;
       const m0 = city.z0 * R3D_ZS, m1 = city.z1 * R3D_ZS, seed = Math.floor(city.z0), n = [0, 0, 0, 0, 0];
-      cityM0 = m0; cityM1 = m1;
+      const wLo = camM - CITY_BEHIND, wHi = camM + CITY_AHEAD, rampLen = Math.min(0.16 * (m1 - m0), 40);
       for (let row = 0; row < 2; row++) for (const side of [-1, 1]) {
         const hs = (i, q) => hash(seed * 0.173 + row * 131.7 + (side > 0 ? 57.3 : 0) + i * 9.17 + q * 1.37);
         let m = m0 + 5 + hs(0, 0) * 6, i = 1;
-        while (m < m1 - 5) {
-          const u = (m - m0) / (m1 - m0), ramp = smooth01(0, 0.16, Math.min(u, 1 - u)), r = hs(i, 1);
+        while (m < m1 - 5 && m < wHi) {
+          const ramp = smooth01(0, rampLen, Math.min(m - m0, m1 - m)), r = hs(i, 1);
           let k;
           if (row === 0) k = ramp < 0.55 ? (r < 0.5 ? 0 : (r < 0.8 ? 3 : 1)) : (r < 0.22 ? 0 : (r < 0.44 ? 1 : (r < 0.62 ? 2 : (r < 0.82 ? 3 : 4))));
           else k = [1, 2, 4, 4, 2, 3][Math.floor(r * 6) % 6];
           const sx = 0.9 + hs(i, 2) * 0.25, sz = 0.9 + hs(i, 3) * 0.25;
           const sy = row === 0 ? (0.8 + hs(i, 4) * 0.45) * (0.5 + 0.5 * ramp) : (0.75 + hs(i, 4) * 0.75) * (0.3 + 0.7 * ramp);
           const a = ARCH[k], len = a.w * sx;
-          if ((row === 0 || hs(i, 6) > 0.35) && n[k] < CITY_CAP && m + len < m1 - 2) {
+          if (m + len > wLo && (row === 0 || hs(i, 6) > 0.35) && n[k] < CITY_CAP && m + len < m1 - 2) {
             const front = RAIL_X + 5.0 + hs(i, 5) * 1.5 + (row ? 23 + hs(i, 8) * 4 : 0);
             m4.compose(v3a.set(side * (front + a.d * sz / 2), 0, -(m + len / 2)), side < 0 ? qCityL : qCityR, v3b.set(sx, sy, sz));
             cityMeshes[k].setMatrixAt(n[k], m4); cityMeshes[k].setColorAt(n[k], CITY_TINTS[Math.floor(hs(i, 9) * CITY_TINTS.length)]); n[k]++;
@@ -1197,19 +1305,10 @@
         }
       }
       cityMeshes.forEach((mesh, k) => { mesh.count = n[k]; mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true; });
-      // pavement
-      const a0 = m0 - 8, a1 = m1 + 8, len = a1 - a0;
-      for (const m of paveMeshes) { m.position.z = -(a0 + a1) / 2; m.scale.z = len; }
-      payTex.repeat.set((PAVE_X1 - PAVE_X0) / 2.2, len / 2.2);
-      // lamp heads (right lamps at 34 k + 9 m, left lamps at 34 k - 8 m; heads 2.3 m in from the pole)
-      let nl = 0;
-      for (let k = 0; k < 40 && nl < CITY_LIGHT_MAX; k++) {
-        for (const [mm, sd] of [[LAMP_GAP * k + 9, 1], [LAMP_GAP * k - 8, -1]]) {
-          if (mm < m0 - 4 || mm > m1 + 4 || nl >= CITY_LIGHT_MAX) continue;
-          cityLightPos[nl * 3] = sd * (RAIL_X + 1.0 - 2.3); cityLightPos[nl * 3 + 1] = 7.2; cityLightPos[nl * 3 + 2] = -mm; nl++;
-        }
-      }
-      cityLightGeo.setDrawRange(0, nl); cityLightGeo.attributes.position.needsUpdate = true;
+      // pavement: a fixed strip that follows the window, clipped to the street; the tile stays pinned to the world
+      const a0 = Math.max(m0 - 8, wLo), a1 = Math.min(m1 + 8, a0 + PAVE_LEN), len = a1 - a0;
+      for (const m of paveMeshes) { m.visible = len > 1; m.position.z = -(a0 + a1) / 2; m.scale.z = Math.max(0.01, len); }
+      payTex.repeat.set((PAVE_X1 - PAVE_X0) / 2.2, len / 2.2); payTex.offset.y = (a0 / 2.2) % 1; // v = 0 is the near end (z = -a0)
     };
 
     // ---- bridge over a gorge: the grass has a hole (trGap), the banks fall away to a river, the deck carries road + pavements ----
@@ -1285,7 +1384,481 @@
       bridgeGroup.position.z = -brM0;
       trGap.value.set(-brM1, -brM0);
     };
-    window._trRouteInfo = () => { const R = raceRoute(), p = cars.find((c) => c.isPlayer) || cars[0]; return { city: R.city, bridge: R.bridge, z: p ? p.z : 0, state: gameState, frames: frameCount, quality }; };
+    // test hooks (used by the browser tests only): move every car so the player stands at track position z; pad positions
+    window._trTeleport = (z) => { const p = cars.find((c) => c.isPlayer) || cars[0]; if (!p) return false; const d = z - p.z; for (const c of cars) c.z += d; return true; };
+    window._trSetEnd = (z) => { try { FINISH_LINE_Z = z; return true; } catch (e) { return false; } }; // works once FINISH_LINE_Z is a `let`
+    window._trBoosts = () => trackObjects.filter((o) => o.type === 'boost').map((o) => o.z);
+    window._trRouteInfo = () => { const R = raceRoute(), p = cars.find((c) => c.isPlayer) || cars[0]; return { map: R.map, city: R.city, bridge: R.bridge, lake: R.lake, tunnel: R.tunnel, cliff: R.cliff, endZ: r3dEndZ(), z: p ? p.z : 0, state: gameState, frames: frameCount, quality }; };
+
+    // =====================================================================================================
+    // MAPS: tunnel (every map but the lake), mountain (rock wall + valley + ridges), lake (long bridge over
+    // open water), desert. Everything map-specific is built once here, laid out when the route changes and
+    // recycled in a window around the camera while driving; applyMap / applyWeather switch it on and off.
+    // =====================================================================================================
+    const tintMats = []; // materials that follow the climate tint (applyWeather sets .color from the climate's city tint)
+    const vcMat = (opts, tint = true) => { const m = new T.MeshLambertMaterial(Object.assign({ vertexColors: true }, opts)); if (tint) tintMats.push(m); return m; };
+    const basicVC = (opts) => { const m = new T.MeshBasicMaterial(Object.assign({ vertexColors: true, side: T.DoubleSide }, opts)); tintMats.push(m); return m; };
+    const indexed = (P, C, I, normals = true) => { // a plain vertex-coloured indexed mesh geometry
+      const g = new T.BufferGeometry();
+      g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setAttribute('color', new T.Float32BufferAttribute(C, 3)); g.setIndex(I);
+      if (normals) g.computeVertexNormals();
+      return g;
+    };
+
+    // ---------- tunnel ----------
+    // Half-ellipse bore, 13.2 m wide and 10.1 m under the crown (the chase camera sits 5.7 m up, 11.8 m behind the car), lined with
+    // concrete, a retro-reflective band on the walls, two rows of warm ceiling lights (emissive + glow points for the bloom). The inside
+    // is unlit vertex colour with the light pools baked in; while the camera is in the tunnel the scene lights dim (tunK).
+    const TN_A = 6.6, TN_B = 10.4, TN_Y0 = -0.3;
+    const TN_PHI = (() => { const A = [0, 0.0963, 0.1739, 0.2896, 0.4753, 0.7, 0.95, 1.2, 1.4], out = []; for (const a of A) out.push(Math.PI - a); out.push(Math.PI / 2); for (let i = A.length - 1; i >= 0; i--) out.push(A[i]); return out; })();
+    const TN_NP = TN_PHI.length;
+    const tnPt = (a, b, y0, k) => [a * Math.cos(TN_PHI[k]), y0 + b * Math.sin(TN_PHI[k])];
+    const tunnelGroup = new T.Group(); tunnelGroup.visible = false; scene.add(tunnelGroup);
+    const tnLining = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ vertexColors: true, side: T.DoubleSide }));
+    const tnOuterSmooth = vcMat({ side: T.DoubleSide }), tnOuterRock = vcMat({ side: T.DoubleSide, flatShading: true });
+    const tnOuter = new T.Mesh(new T.BufferGeometry(), tnOuterSmooth);
+    const tnDark = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
+    tnDark.renderOrder = 8;
+    const poolC = makeCanvas(128, 128);
+    {
+      const g = poolC.getContext('2d');
+      for (const cx of [43, 85]) { const gr = g.createRadialGradient(cx, 64, 2, cx, 64, 54); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.save(); g.translate(cx, 64); g.scale(0.55, 1); g.translate(-cx, -64); g.fillRect(0, 0, 128, 128); g.restore(); }
+    }
+    const poolTex = canvasTex(poolC, { wrapT: T.RepeatWrapping });
+    const tnPool = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ map: poolTex, color: 0xffc98a, transparent: true, opacity: 0.42, depthWrite: false, blending: T.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 }));
+    tnPool.renderOrder = 9;
+    const tnFloorMat = new T.MeshBasicMaterial({ color: 0x4d5258, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+    const tnFloors = [new T.Mesh(new T.BufferGeometry(), tnFloorMat), new T.Mesh(new T.BufferGeometry(), tnFloorMat)];
+    const tnFix = new T.InstancedMesh(new T.BoxGeometry(0.34, 0.1, 1.9), new T.MeshBasicMaterial({ color: new T.Color(2.8, 2.3, 1.5), fog: false }), 64);
+    const tnGlowPos = new Float32Array(64 * 3), tnGlowGeo = new T.BufferGeometry(); tnGlowGeo.setAttribute('position', new T.BufferAttribute(tnGlowPos, 3)); tnGlowGeo.setDrawRange(0, 0);
+    const tnGlow = new T.Points(tnGlowGeo, new T.PointsMaterial({ color: 0xffc27a, size: 5.5, map: glowTex, transparent: true, opacity: 0.85, depthWrite: false, blending: T.AdditiveBlending, fog: false }));
+    for (const o of [tnLining, tnOuter, tnDark, tnPool, tnFloors[0], tnFloors[1], tnFix, tnGlow]) { o.frustumCulled = false; tunnelGroup.add(o); }
+    tnFix.count = 0;
+    const TN_CFG = {
+      highway:  { a0: 9.8, a1: 24, h0: 12.8, h1: 19, y0: -0.8, skirt: 0, c: ['#3f8a2c', '#6db447'], lump: 0.05 },
+      desert:   { a0: 9.8, a1: 26, h0: 12.8, h1: 17, y0: -0.8, skirt: 0, c: ['#c19859', '#e0bc82'], lump: 0.05 },
+      mountain: { a0: 11, a1: 30, h0: 14.5, h1: 27, y0: -1.0, skirt: 26, c: ['#5f574e', '#9d907f'], lump: 0.13 },
+      city:     { a0: 8.0, a1: 8.0, h0: 11.4, h1: 11.4, y0: -0.8, skirt: 0, c: ['#868a91', '#b3b7bd'], lump: 0 }
+    };
+    const buildTunnel = (tn, mapK) => {
+      tnM0 = tn ? tn.z0 * R3D_ZS : Infinity; tnM1 = tn ? tn.z1 * R3D_ZS : -Infinity;
+      tnFix.count = 0; tnGlowGeo.setDrawRange(0, 0);
+      if (!tn) { tunnelGroup.visible = false; return; }
+      const L = (tn.z1 - tn.z0) * R3D_ZS, nr = Math.round(L), step = L / nr, cfg = TN_CFG[mapK] || TN_CFG.highway, sd = Math.floor(tn.z0);
+      // lining: a ring every metre so the light pools bake into the vertex colours
+      {
+        const P = [], C = [], I = [];
+        for (let j = 0; j <= nr; j++) {
+          const s = j * step, d0 = ((s - 3) % 6 + 6) % 6, d = Math.min(d0, 6 - d0), pool = 0.45 + 0.55 * Math.exp(-(d * d) / 2.6);
+          for (let k = 0; k < TN_NP; k++) {
+            const [x, y] = tnPt(TN_A, TN_B, TN_Y0, k), tone = 0.075 + 0.07 * Math.min(1, Math.max(0, y) / 9), bnd = smooth01(0.3, 0.7, y) * (1 - smooth01(1.5, 1.9, y));
+            const r = (tone * 0.97 * (1 - bnd) + 0.5 * bnd) * pool, g2 = (tone * 0.99 * (1 - bnd) + 0.27 * bnd) * pool, b2 = (tone * 1.03 * (1 - bnd) + 0.05 * bnd) * pool;
+            P.push(x, y, -s); C.push(r, g2, b2);
+          }
+        }
+        for (let j = 0; j < nr; j++) for (let k = 0; k < TN_NP - 1; k++) { const a = j * TN_NP + k, b = a + 1, c = a + TN_NP, d = c + 1; I.push(a, b, d, a, d, c); }
+        tnLining.geometry.dispose(); tnLining.geometry = indexed(P, C, I, false);
+      }
+      // outer shell: a hill (or a thin concrete box in the city) with tapering ends, and the two portal faces
+      {
+        const P = [], C = [], I = [], NP2 = TN_NP + 2, mr = Math.max(2, Math.round(L / 2)), sk = cfg.skirt, c0 = col(cfg.c[0]), c1 = col(cfg.c[1]), cc = new T.Color();
+        for (let j = 0; j <= mr; j++) {
+          const s = L * j / mr, e = smooth01(0, 24, Math.min(s, L - s)), a = cfg.a0 + (cfg.a1 - cfg.a0) * e, h = cfg.h0 + (cfg.h1 - cfg.h0) * e;
+          const ring = [];
+          for (let k = 0; k < TN_NP; k++) {
+            let [x, y] = tnPt(a, h, cfg.y0, k);
+            if (cfg.lump && k > 0 && k < TN_NP - 1) { const f = 1 + cfg.lump * e * (hash(sd * 0.01 + j * 13.7 + k * 5.1) - 0.5) * 2; x *= f; y = cfg.y0 + (y - cfg.y0) * f; }
+            ring.push([x, y]);
+          }
+          const put2 = (x, y) => { cc.copy(c0).lerp(c1, Math.min(1, Math.max(0, (y - cfg.y0) / h))).multiplyScalar(0.88 + hash(sd * 0.03 + j * 3.3 + x * 0.7) * 0.24); P.push(x, y, -s); C.push(cc.r, cc.g, cc.b); };
+          put2(ring[0][0], cfg.y0 - sk); for (const [x, y] of ring) put2(x, y); put2(ring[TN_NP - 1][0], cfg.y0 - sk);
+        }
+        for (let j = 0; j < mr; j++) for (let k = 0; k < NP2 - 1; k++) { const a = j * NP2 + k, b = a + 1, c = a + NP2, d = c + 1; I.push(a, b, d, a, d, c); }
+        // portal frames (concrete): ring between the bore and the shell outline at both ends
+        const conc = col('#a9acb1'), conD = col('#6f7378');
+        for (const s of [0, L]) {
+          const base = P.length / 3;
+          for (let k = 0; k < TN_NP; k++) {
+            const [xi, yi] = tnPt(TN_A, TN_B, TN_Y0, k), [xo, yo] = tnPt(cfg.a0, cfg.h0, cfg.y0, k), sh = 0.92 + hash(k * 2.3 + (s ? 5 : 0)) * 0.12;
+            P.push(xi, yi, -s, xo, yo, -s); C.push(conD.r, conD.g, conD.b, conc.r * sh, conc.g * sh, conc.b * sh);
+          }
+          for (let k = 0; k < TN_NP - 1; k++) { const a = base + k * 2, b = a + 1, c = a + 2, d = a + 3; I.push(a, b, d, a, d, c); }
+        }
+        tnOuter.geometry.dispose(); tnOuter.geometry = indexed(P, C, I, true);
+        tnOuter.material = mapK === 'mountain' ? tnOuterRock : tnOuterSmooth;
+      }
+      // dark + pooled light overlay on the road, floor strips beside the rails
+      {
+        const slab = (w, y, rows) => { const g = new T.PlaneGeometry(w, L, 1, rows); g.rotateX(-Math.PI / 2); g.translate(0, y, -L / 2); return g; };
+        tnDark.geometry.dispose(); tnDark.geometry = slab(13.4, 0.03, Math.ceil(L / 5));
+        tnPool.geometry.dispose(); tnPool.geometry = slab(13.4, 0.034, Math.ceil(L / 5));
+        poolTex.repeat.set(1, L / 6); poolTex.offset.set(0, (1 - ((L / 6) % 1)) % 1);
+        tnFloors.forEach((m, i) => { m.geometry.dispose(); const g = new T.PlaneGeometry(2.3, L, 1, Math.ceil(L / 6)); g.rotateX(-Math.PI / 2); g.translate((i ? 1 : -1) * 5.6, 0.004, -L / 2); m.geometry = g; });
+      }
+      // ceiling lights: two rows, one fixture every 6 m
+      {
+        let n = 0, nl = 0; const lx = 2.2, ly = TN_Y0 + TN_B * Math.sqrt(1 - (lx / TN_A) * (lx / TN_A)) - 0.16;
+        for (let s = 3; s < L - 1 && n < 62; s += 6) for (const sg of [-1, 1]) {
+          tnFix.setMatrixAt(n++, m4.compose(v3a.set(sg * lx, ly, -s), q0, v3b.set(1, 1, 1)));
+          tnGlowPos[nl * 3] = sg * lx; tnGlowPos[nl * 3 + 1] = ly - 0.3; tnGlowPos[nl * 3 + 2] = -s; nl++;
+        }
+        tnFix.count = n; tnFix.instanceMatrix.needsUpdate = true; tnGlowGeo.setDrawRange(0, nl); tnGlowGeo.attributes.position.needsUpdate = true;
+      }
+      tunnelGroup.position.z = -tnM0;
+    };
+
+    // scene light level: 1 in the open, lower inside the tunnel (applyWeather stores the climate's own values)
+    let tunK = 1, tunKApplied = 1, baseHemi = 1.35, baseSun = 2.5, baseEnv = 1;
+    const applyLightK = () => { hemi.intensity = baseHemi * tunK; sun.intensity = baseSun * tunK; scene.environmentIntensity = baseEnv * (0.35 + 0.65 * tunK); tunKApplied = tunK; };
+
+    // ---------- mountain: rock wall on one side, valley on the other, ridges on the horizon ----------
+    const CLIFF_MOD = 40, CLIFF_AHEAD = 760, CLIFF_BEHIND = 70, CLIFF_VAR = 4, CLIFF_CAP = 24;
+    const mtGroup = new T.Group(); mtGroup.visible = false; scene.add(mtGroup);
+    const ROCK_TONES = ['#7d7166', '#8f8272', '#6b6259', '#9b8f7e', '#5f5750', '#85796b'].map((h) => col(h));
+    const cliffMat = vcMat({ flatShading: true, side: T.DoubleSide });
+    // one 40 m wall module: a faceted face with strata bands, a ledge on top and a back that drops to the ground; both ends are 13 m
+    // high with a plain profile, so any two modules (also mirrored) meet without a seam
+    const buildCliff = (v) => {
+      const NZ = 10, NY = 6, NR = NY + 4, DZ = CLIFF_MOD / NZ, X0 = RAIL_X + 2.6, P = [], C = [], I = [], hh = [];
+      for (let i = 0; i <= NZ; i++) hh.push(i === 0 || i === NZ ? 13 : 8 + Math.pow(hash(v * 17.3 + i * 3.71), 1.2) * 17);
+      for (let i = 1; i < NZ; i++) hh[i] = hh[i] * 0.75 + (hh[i - 1] + hh[i + 1]) * 0.125;
+      const cc = new T.Color(), moss = col('#657f48');
+      for (let r = 0; r < NR; r++) for (let i = 0; i <= NZ; i++) {
+        const end = i === 0 || i === NZ, hv = (q) => hash(v * 31.7 + i * 5.3 + r * 1.7 + q);
+        let x, y;
+        if (r <= NY) {
+          y = r === 0 ? -0.3 : hh[i] * r / NY * (end ? 1 : 1 + (hv(1.3) - 0.5) * 0.14);
+          x = 0.2 * y + (end || r === 0 ? 0 : (hv(0) - 0.5) * 1.9);
+        } else {
+          const xf = 0.2 * hh[i];
+          if (r === NY + 1) { x = xf + 3.2 + (end ? 0 : hv(2.1) * 2); y = hh[i] + (end ? 0 : (hv(3.1) - 0.4) * 1.5); }
+          else if (r === NY + 2) { x = xf + 9 + (end ? 0 : hv(4.1) * 4); y = hh[i] * 0.85 + (end ? 0 : hv(5.1) * 1.5); }
+          else { x = xf + 16; y = -0.5; }
+        }
+        P.push(X0 + x, y, -i * DZ);
+        cc.copy(ROCK_TONES[(r + Math.floor(hash(v * 7.1 + i * 0.5) * 3)) % 6]).multiplyScalar((r === 0 ? 0.55 : 0.82) + hv(6.7) * 0.4);
+        if (r >= NY + 1) cc.lerp(moss, r === NY + 1 ? 0.5 : 0.3);
+        C.push(cc.r, cc.g, cc.b);
+      }
+      for (let r = 0; r < NR - 1; r++) for (let i = 0; i < NZ; i++) { const a = r * (NZ + 1) + i, b = a + 1, c = a + NZ + 1, d = c + 1; I.push(a, c, b, b, c, d); }
+      return indexed(P, C, I, false); // flat shading derives the normals
+    };
+    const cliffMeshes = Array.from({ length: CLIFF_VAR }, (_, v) => { const m = new T.InstancedMesh(buildCliff(v), cliffMat, CLIFF_CAP); m.frustumCulled = false; m.count = 0; mtGroup.add(m); return m; });
+    // valley: the ground beyond the rail falls away (the grass plane is cut there, see trCut); one extruded profile, no noise, so it can follow the camera in 6 m steps
+    const VAL_X = [0, 1.2, 3.5, 8, 15, 26, 44, 80, 150, 300, 600, 1000], VAL_Y = [-0.03, -0.12, -1.0, -5.5, -13, -26, -44, -60, -68, -64, -50, -40];
+    const VAL_COL = ['#5d8f3e', '#6b8a46', '#7a6a52', '#6e665c', '#5f5a52', '#3f5d3c', '#35553a', '#44664a', '#6f8f8c', '#86a3a3', '#9ab4b8', '#a9c0c6'];
+    const valleyY = (ax) => {
+      const d = ax - (RAIL_X + 0.45);
+      if (d <= 0) return -0.03;
+      for (let i = 1; i < VAL_X.length; i++) if (d <= VAL_X[i]) { const t = (d - VAL_X[i - 1]) / (VAL_X[i] - VAL_X[i - 1]); return VAL_Y[i - 1] + (VAL_Y[i] - VAL_Y[i - 1]) * t; }
+      return VAL_Y[VAL_Y.length - 1];
+    };
+    const VAL_ROWS = 124, VAL_BACK = 100;
+    const valleyMat = vcMat({ side: T.DoubleSide });
+    const valley = (() => {
+      const P = [], C = [], I = [], NPV = VAL_X.length;
+      for (let j = 0; j <= VAL_ROWS; j++) for (let i = 0; i < NPV; i++) { P.push(RAIL_X + 0.45 + VAL_X[i], VAL_Y[i], VAL_BACK - j * 6); const c = col(VAL_COL[i]); C.push(c.r, c.g, c.b); }
+      for (let j = 0; j < VAL_ROWS; j++) for (let i = 0; i < NPV - 1; i++) { const a = j * NPV + i, b = a + 1, c = a + NPV, d = c + 1; I.push(a, b, d, a, d, c); }
+      const m = new T.Mesh(indexed(P, C, I, true), valleyMat); m.frustumCulled = false; mtGroup.add(m); return m;
+    })();
+    // low parapet stones along the valley edge (every 10th one painted)
+    const STONE_GAP = 2.4, STONE_ROWS = 170;
+    const stones = new T.InstancedMesh(merge([part(new T.BoxGeometry(0.9, 0.62, 1.5), '#a8a59d', 0, 0.31, 0), part(new T.BoxGeometry(0.96, 0.08, 1.56), '#c9c6bd', 0, 0.64, 0)]), vcMat(), STONE_ROWS);
+    stones.frustumCulled = false; stones.count = 0; mtGroup.add(stones);
+    const STONE_TINTS = [col('#ffffff'), col('#e9e6df'), col('#d6d2c8'), col('#f6f3ec')], STONE_RED = col('#e2484a');
+    let stoneBase = null;
+    const layoutStones = (base) => {
+      const side = -cliffSide;
+      for (let r = 0; r < STONE_ROWS; r++) {
+        const i = base + r - 6, z = -i * STONE_GAP, hv = hash(i * 1.7 + 3);
+        m4.compose(v3a.set(side * (RAIL_X + 0.9 + hv * 0.12), -0.02, z), q0, (-z > tnM0 - 2 && -z < tnM1 + 2) ? v3b.set(0, 0, 0) : v3b.set(1, 0.9 + hash(i * 2.9) * 0.3, 1)); // none inside the tunnel
+        stones.setMatrixAt(r, m4); stones.setColorAt(r, i % 10 === 0 ? STONE_RED : STONE_TINTS[Math.floor(hash(i * 4.3) * 4)]);
+      }
+      stones.count = STONE_ROWS; stones.instanceMatrix.needsUpdate = true; stones.instanceColor.needsUpdate = true;
+    };
+    // rocks (shared by the cliff foot and the desert): low-poly boulders with a flat-shaded jitter
+    const rockGeo = (() => { const g = new T.IcosahedronGeometry(1, 1), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const k = 0.8 + hash(p.getX(i) * 9.1 + p.getY(i) * 7.7 + p.getZ(i) * 5.3) * 0.4; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.72, p.getZ(i) * k * 0.9); } g.computeVertexNormals(); return g; })();
+    const rockMat = new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }); tintMats.push(rockMat);
+    const ROCK_CAP = FLORA_ROWS * 8;
+    const scree = new T.InstancedMesh(rockGeo, rockMat, 160); scree.frustumCulled = false; scree.count = 0; mtGroup.add(scree);
+    const SCREE_TINTS = ['#8d8478', '#756d63', '#a09686', '#6a625a'].map((h) => col(h));
+    let cliffBase = null;
+    const layoutCliff = (camM) => {
+      const i0 = Math.floor((camM - CLIFF_BEHIND) / CLIFF_MOD), i1 = Math.floor((camM + CLIFF_AHEAD) / CLIFF_MOD), n = [0, 0, 0, 0];
+      let ns = 0;
+      for (let i = i0; i <= i1; i++) {
+        const z0 = i * CLIFF_MOD, v = Math.min(CLIFF_VAR - 1, Math.floor(hash(i * 3.17 + 0.4) * CLIFF_VAR)), mir = hash(i * 5.9 + 1.1) < 0.5 ? -1 : 1;
+        if (n[v] < CLIFF_CAP) { m4.compose(v3a.set(0, 0, -z0 - (mir < 0 ? CLIFF_MOD : 0)), q0, v3b.set(cliffSide, 1, mir)); cliffMeshes[v].setMatrixAt(n[v]++, m4); }
+        for (let q = 0; q < 8 && ns < 160; q++) { // boulders at the foot of the wall
+          const hv = (w) => hash(i * 13.1 + q * 4.7 + w), sc = 0.35 + Math.pow(hv(1), 2) * 1.5;
+          if (hv(2) < 0.55) continue;
+          qy.setFromAxisAngle(upY, hv(3) * 6.28);
+          m4.compose(v3a.set(cliffSide * (RAIL_X + 1.7 + hv(4) * 2.4), sc * 0.25 - 0.1, -(z0 + hv(5) * CLIFF_MOD)), qy, v3b.set(sc * 1.2, sc, sc));
+          scree.setMatrixAt(ns, m4); scree.setColorAt(ns++, SCREE_TINTS[Math.floor(hv(6) * 4)]);
+        }
+      }
+      cliffMeshes.forEach((m, v) => { m.count = n[v]; m.instanceMatrix.needsUpdate = true; });
+      scree.count = ns; scree.instanceMatrix.needsUpdate = true; if (scree.instanceColor) scree.instanceColor.needsUpdate = true;
+    };
+    // layered ridges (with snow caps) on the horizon: ride with the camera like the skyline, hazed by their own vertex colours
+    const ridgeMat = basicVC({ fog: false });
+    const ridgeMesh = (() => {
+      const P = [], C = [], I = [], fogc = col('#c3d0e2'), snow = col('#f5f8fc');
+      [{ z: -560, base: 55, amp: 80, sn: 9999, c: '#4f6f69', haze: 0.2 }, { z: -700, base: 95, amp: 120, sn: 165, c: '#6a8aa2', haze: 0.42 }, { z: -850, base: 140, amp: 160, sn: 205, c: '#8fadc6', haze: 0.62 }].forEach((L, li) => {
+        const N = 150, rock = col(L.c).lerp(fogc, L.haze), deep = col(L.c).lerp(fogc, Math.min(1, L.haze + 0.3));
+        for (let i = 0; i <= N; i++) {
+          const x = -900 + i * 12, ph = li * 1.7;
+          const r1 = 1 - Math.abs(Math.sin(x * 0.0061 + ph)), r2 = 1 - Math.abs(Math.sin(x * 0.0143 + ph * 2.3)), r3 = 1 - Math.abs(Math.sin(x * 0.0331 + ph * 0.7));
+          const h = L.base * 0.35 + L.amp * (0.55 * Math.pow(r1, 1.4) + 0.3 * Math.pow(r2, 1.6) + 0.15 * r3) + hash(i * 1.9 + li) * 7, capped = h > L.sn;
+          const base = P.length / 3;
+          P.push(x, h, L.z, x, capped ? L.sn - 5 : h - 14, L.z, x, -95, L.z);
+          const tc = capped ? snow : rock;
+          C.push(tc.r, tc.g, tc.b, rock.r, rock.g, rock.b, deep.r, deep.g, deep.b);
+          if (i > 0) { const a = base - 3; I.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
+        }
+      });
+      const m = new T.Mesh(indexed(P, C, I, false), ridgeMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(ridgeMat); return m;
+    })();
+
+    // ---------- lake: a long bridge over open water (modules recycled around the camera), shore, islands, far shore ----------
+    const LAKE_WY = -6.2, LAKE_AHEAD = 560, LAKE_BEHIND = 56, LAKE_NMOD = Math.ceil((LAKE_AHEAD + LAKE_BEHIND) / LAKE_MOD) + 1;
+    const lakeGroup = new T.Group(); lakeGroup.visible = false; scene.add(lakeGroup);
+    const lakeDeckMat = vcMat({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    // one 28 m module: slab, pavements, parapet, a red arch with hangers on each side, and a pier (cross-beam + two columns into the water)
+    const lakeDeck = (() => {
+      const parts = [], MOD = LAKE_MOD, RW = ROAD_W / 2;
+      const box = (x0, x1, y0, y1, s0, s1, hex) => parts.push(part(new T.BoxGeometry(x1 - x0, y1 - y0, s1 - s0, 1, 1, Math.max(1, Math.ceil((s1 - s0) / 6))), hex, (x0 + x1) / 2, (y0 + y1) / 2, -(s0 + s1) / 2));
+      box(-RW, RW, -1.2, -0.3, 0, MOD, '#80868f');
+      for (const sg of [-1, 1]) {
+        box(sg > 0 ? RW : -DECK_HW, sg > 0 ? DECK_HW : -RW, -1.22, -0.02, 0, MOD, '#b6bac1');
+        const px = sg * (DECK_HW - 0.3);
+        for (let i = 0; i < 6; i++) { const s = i * MOD / 6; box(px - 0.09, px + 0.09, -0.02, 1.1, s, s + 0.18, '#d9dde3'); }
+        box(px - 0.07, px + 0.07, 0.5, 0.62, 0, MOD, '#d9dde3'); box(px - 0.07, px + 0.07, 0.98, 1.1, 0, MOD, '#d9dde3');
+        const ax = sg * (DECK_HW - 1.0), N = 10, arch = (u) => 0.35 + 5.0 * 4 * u * (1 - u);
+        for (let i = 0; i < N; i++) {
+          const ua = i / N, ub = (i + 1) / N, sa = ua * MOD, sb = ub * MOD, ya = arch(ua), yb = arch(ub), len = Math.hypot(sb - sa, yb - ya) * 1.08;
+          parts.push(part(new T.BoxGeometry(0.42, 0.42, len), '#c94f3a', ax, (ya + yb) / 2, -(sa + sb) / 2, Math.atan2(yb - ya, sb - sa), 0, 0));
+        }
+        for (let s = 2.8; s < MOD - 1; s += 2.8) { const top = arch(s / MOD) - 0.2; box(ax - 0.05, ax + 0.05, -0.02, top, s - 0.05, s + 0.05, '#e4e1dc'); }
+        box(sg * 6 - 0.65, sg * 6 + 0.65, -9.8, -2.4, MOD / 2 - 0.65, MOD / 2 + 0.65, '#a7adb5');
+      }
+      box(-7.4, 7.4, -2.4, -1.2, MOD / 2 - 0.9, MOD / 2 + 0.9, '#9ea4ac');
+      const m = new T.InstancedMesh(merge(parts), lakeDeckMat, LAKE_NMOD); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m;
+    })();
+    // water: one big plane that follows the camera (the grass has a hole over the water stretch), ripples scroll slowly
+    const lakeTex = rippleTex.clone(); lakeTex.needsUpdate = true;
+    const lakeWaterMat = new T.MeshStandardMaterial({ color: 0x1f78a0, map: lakeTex, roughness: 0.12, metalness: 0.3, envMapIntensity: 1.4 });
+    const lakeWater = (() => {
+      const g = new T.PlaneGeometry(2600, 2600, 2, Math.round(2600 / 6)); g.rotateX(-Math.PI / 2);
+      const pos = g.attributes.position, uv = g.attributes.uv;
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / 9, pos.getZ(i) / 9);
+      const m = new T.Mesh(g, lakeWaterMat); m.position.y = LAKE_WY; m.frustumCulled = false; lakeGroup.add(m); return m;
+    })();
+    // shore: slopes at both ends of the water stretch, following the wobbling edge of the grass hole (shoreOff)
+    const shoreMat = vcMat({ side: T.DoubleSide });
+    const shoreGeo = (() => {
+      const XS = []; for (let x = 0; x <= 400; x += x < 16 ? 8 : 10) XS.push(x); for (let x = 440; x <= 1300; x += 40) XS.push(x);
+      const full = []; for (let i = XS.length - 1; i > 0; i--) full.push(-XS[i]); for (const x of XS) full.push(x);
+      const TT = [-2, 0, 3, 6, 10, 14, 19], P = [], C = [], I = [], cg = col('#5a9a3c'), cs = col('#dac690'), cw = col('#7e8a72'), tc = new T.Color();
+      for (const x of full) {
+        const off = shoreOff(Math.abs(x));
+        for (const t of TT) {
+          const y = t <= 0 ? -0.1 : -0.1 + (LAKE_WY - 0.4 + 0.1) * smooth01(0, 16, t);
+          P.push(x, y, -(off + t));
+          if (t <= 0) tc.copy(cg); else if (t < 5) tc.copy(cg).lerp(cs, t / 5); else if (t < 11) tc.copy(cs).lerp(cw, (t - 5) / 6); else tc.copy(cw);
+          const jit = 0.94 + hash(x * 0.37 + t) * 0.12; C.push(tc.r * jit, tc.g * jit, tc.b * jit);
+        }
+      }
+      const NT = TT.length;
+      for (let c = 0; c < full.length - 1; c++) for (let r = 0; r < NT - 1; r++) { const a = c * NT + r, b = a + 1, d = a + NT, e = d + 1; I.push(a, b, e, a, e, d); }
+      return indexed(P, C, I, true);
+    })();
+    const shores = [new T.Mesh(shoreGeo, shoreMat), new T.Mesh(shoreGeo, shoreMat)];
+    for (const m of shores) { m.frustumCulled = false; lakeGroup.add(m); }
+    // islands (two shapes, scattered over the water, recycled by segment)
+    const islandMat = vcMat({ side: T.DoubleSide });
+    const buildIsland = (v) => {
+      const RN = 6, AN = 16, R = 38, H = 7 + v * 5, P = [0, H, 0], C = [], I = [], tc = new T.Color();
+      const cols = ['#4a8a3a', '#5f9a40', '#7aa24c', '#dcc992', '#b0a37a', '#8a8f78'].map((h) => col(h));
+      C.push(cols[0].r, cols[0].g, cols[0].b);
+      const yAt = (r) => (r >= RN ? -2.2 : H * (1 - Math.pow(r / RN, 2.3)) - 0.2);
+      for (let r = 1; r <= RN; r++) for (let a = 0; a < AN; a++) {
+        const ang = a / AN * 6.2832, rad = R * (r / RN) * (1 + (hash(v * 7.7 + a * 3.3 + r * 1.1) - 0.5) * 0.3 * (r / RN)), y = yAt(r) + (r < RN ? (hash(v * 3.1 + a * 2.7 + r) - 0.5) * 0.8 : 0);
+        P.push(Math.cos(ang) * rad, y, Math.sin(ang) * rad); tc.copy(cols[Math.min(5, r - 1 + (r > 2 ? 1 : 0))]).multiplyScalar(0.92 + hash(a * 1.3 + r * 0.7 + v) * 0.16); C.push(tc.r, tc.g, tc.b);
+      }
+      for (let a = 0; a < AN; a++) I.push(0, 1 + (a + 1) % AN, 1 + a);
+      for (let r = 1; r < RN; r++) for (let a = 0; a < AN; a++) { const a0 = 1 + (r - 1) * AN + a, a1 = 1 + (r - 1) * AN + (a + 1) % AN, b0 = a0 + AN, b1 = a1 + AN; I.push(a0, a1, b1, a0, b1, b0); }
+      const body = indexed(P, C, I, true).toNonIndexed(), trees = [];
+      for (let i = 0; i < 9; i++) {
+        const r = 0.8 + hash(v * 5.1 + i * 2.3) * 2.0, ang = hash(v * 8.3 + i * 4.1) * 6.283, rad = R * r / RN, y = yAt(r), s = 0.8 + hash(i * 3.3 + v) * 0.7;
+        trees.push(part(new T.CylinderGeometry(0.25, 0.35, 1.6 * s, 6), '#6b4a2a', Math.cos(ang) * rad, y + 0.8 * s, Math.sin(ang) * rad));
+        trees.push(part(new T.ConeGeometry(1.9 * s, 6.2 * s, 7), i % 3 ? '#2f6f3c' : '#3a8444', Math.cos(ang) * rad, y + 4.4 * s, Math.sin(ang) * rad));
+      }
+      return merge([body, ...trees]);
+    };
+    const islandMeshes = [0, 1].map((v) => { const m = new T.InstancedMesh(buildIsland(v), islandMat, 8); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m; });
+    // far shore: a low hazy bank riding with the camera in front of the skyline, so the city stands on land across the water
+    const shoreFarMat = basicVC({ fog: false });
+    const shoreFar = (() => {
+      const P = [], C = [], I = [], top = col('#5f8f62').lerp(col('#c3d6e4'), 0.25), low = col('#cbbf8c').lerp(col('#c3d6e4'), 0.22), deep = col('#7fa6ad');
+      for (let i = 0; i <= 130; i++) {
+        const x = -900 + i * 14, h = 2.6 + 7 * Math.pow(Math.abs(Math.sin(x * 0.011 + 1)), 1.3) + 4 * Math.pow(Math.sin(x * 0.027 + 0.3), 2) + hash(i * 1.7) * 1.2, base = P.length / 3;
+        P.push(x, h, -380, x, 0.4, -380, x, -8, -380); C.push(top.r, top.g, top.b, low.r, low.g, low.b, deep.r, deep.g, deep.b);
+        if (i > 0) { const a = base - 3; I.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
+      }
+      const m = new T.Mesh(indexed(P, C, I, false), shoreFarMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(shoreFarMat); return m;
+    })();
+    let lakeM0 = Infinity, lakeM1 = -Infinity, lakeNMod = 0, lakeBase = null, islBase = null;
+    const placeLake = (lake) => {
+      if (!lake) { trWob.value = 0; lakeNMod = 0; lakeM0 = Infinity; lakeM1 = -Infinity; return; }
+      lakeM0 = lake.z0 * R3D_ZS; lakeM1 = lake.z1 * R3D_ZS; lakeNMod = Math.round((lakeM1 - lakeM0) / LAKE_MOD);
+      brM0 = lakeM0; brM1 = lakeM1; trGap.value.set(-lakeM1, -lakeM0); trWob.value = 1;
+      shores[0].position.z = -lakeM0; shores[0].scale.z = 1;
+      shores[1].position.z = -lakeM1; shores[1].scale.z = -1;
+    };
+    const layoutLake = (camM) => {
+      const i0 = Math.max(0, Math.floor((camM - LAKE_BEHIND - lakeM0) / LAKE_MOD)), i1 = Math.min(lakeNMod - 1, Math.floor((camM + LAKE_AHEAD - lakeM0) / LAKE_MOD));
+      let n = 0;
+      for (let i = i0; i <= i1 && n < LAKE_NMOD; i++) lakeDeck.setMatrixAt(n++, m4.compose(v3a.set(0, 0, -(lakeM0 + i * LAKE_MOD)), q0, v3b.set(1, 1, 1)));
+      lakeDeck.count = n; lakeDeck.instanceMatrix.needsUpdate = true;
+    };
+    const ISL_SEG = 190;
+    const layoutIslands = (camM) => {
+      const s0 = Math.floor((camM - 120) / ISL_SEG), s1 = Math.floor((camM + 680) / ISL_SEG), n = [0, 0];
+      for (let s = s0; s <= s1; s++) for (const side of [-1, 1]) {
+        if (hash(s * 3.1 + side * 7.7) > 0.58) continue;
+        const zc = s * ISL_SEG + hash(s * 9.7 + side * 2.1) * 150;
+        if (zc < lakeM0 + 40 || zc > lakeM1 - 40) continue;
+        const v = hash(s * 1.9 + side) < 0.5 ? 0 : 1, sc = 0.7 + hash(s * 5.3 + side) * 0.8;
+        if (n[v] >= 8) continue;
+        qy.setFromAxisAngle(upY, hash(s * 2.3 + side * 5) * 6.28);
+        islandMeshes[v].setMatrixAt(n[v]++, m4.compose(v3a.set(side * (100 + hash(s * 5.3 + side * 3) * 320), LAKE_WY, -zc), qy, v3b.set(sc, sc * (0.8 + hash(s * 6.1) * 0.5), sc)));
+      }
+      islandMeshes.forEach((m, v) => { m.count = n[v]; m.instanceMatrix.needsUpdate = true; });
+    };
+
+    // ---------- desert: cacti, rocks, dry bushes, dunes, mesas ----------
+    const desertGroup = new T.Group(); desertGroup.visible = false; scene.add(desertGroup);
+    const cactusMat = vcMat();
+    const cactusGeos = (() => {
+      const sph = (r, sx, sy, sz) => new T.SphereGeometry(r, 8, 6).scale(sx, sy, sz), cyl = (r, h) => new T.CylinderGeometry(r, r, h, 8);
+      const saguaro = merge([
+        part(cyl(0.36, 4.2), '#3f7a3c', 0, 2.1, 0), part(sph(0.36, 1, 1, 1), '#4a8a44', 0, 4.2, 0),
+        part(cyl(0.22, 1.0), '#437f40', 0.62, 1.8, 0, 0, 0, Math.PI / 2), part(cyl(0.22, 1.5), '#4a8a44', 1.12, 2.55, 0), part(sph(0.22, 1, 1, 1), '#4f9048', 1.12, 3.3, 0),
+        part(cyl(0.2, 0.9), '#437f40', -0.55, 2.6, 0, 0, 0, Math.PI / 2), part(cyl(0.2, 1.1), '#4a8a44', -1.0, 3.15, 0), part(sph(0.2, 1, 1, 1), '#4f9048', -1.0, 3.7, 0)
+      ]);
+      const barrel = merge([part(sph(0.55, 1, 0.9, 1), '#4a8a44', 0, 0.5, 0), part(sph(0.5, 1, 0.5, 1), '#3f7a3c', 0, 0.9, 0), part(sph(0.12, 1, 0.7, 1), '#e8628c', 0, 1.18, 0)]);
+      const pear = merge([
+        part(sph(0.55, 1, 1.15, 0.2), '#5a8f46', 0, 0.55, 0), part(sph(0.5, 1, 1.15, 0.2), '#64994c', 0.42, 1.2, 0, 0, 0, -0.45), part(sph(0.46, 1, 1.15, 0.2), '#5a8f46', -0.38, 1.15, 0, 0, 0, 0.5),
+        part(sph(0.12, 1, 1, 1), '#c43a52', 0.75, 1.75, 0.05), part(sph(0.12, 1, 1, 1), '#c43a52', -0.7, 1.65, 0.05)
+      ]);
+      return [saguaro, barrel, pear];
+    })();
+    const CACTUS_CAP = FLORA_ROWS * 3;
+    const cactusMeshes = cactusGeos.map((g) => { const m = new T.InstancedMesh(g, cactusMat, CACTUS_CAP); m.frustumCulled = false; m.count = 0; desertGroup.add(m); return m; });
+    const desertRocks = new T.InstancedMesh(rockGeo, rockMat, ROCK_CAP); desertRocks.frustumCulled = false; desertRocks.count = 0; desertGroup.add(desertRocks);
+    const duneMat = vcMat();
+    const duneGeo = (() => {
+      const g = new T.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2), p = g.attributes.position, c = new Float32Array(p.count * 3), lo = col('#cfa468'), hi = col('#ecca90'), tc = new T.Color();
+      for (let i = 0; i < p.count; i++) { tc.copy(lo).lerp(hi, Math.min(1, p.getY(i) * 1.3)); c[i * 3] = tc.r; c[i * 3 + 1] = tc.g; c[i * 3 + 2] = tc.b; }
+      g.setAttribute('color', new T.BufferAttribute(c, 3)); return g;
+    })();
+    const dunes = new T.InstancedMesh(duneGeo, duneMat, FLORA_ROWS * 2); dunes.frustumCulled = false; dunes.count = 0; desertGroup.add(dunes);
+    const DRY = ['#8c7a45', '#a08d52', '#6d6a3a', '#b59a5c'].map((h) => col(h)), SANDROCK = ['#b88a5c', '#a06f48', '#c9a070', '#8f6a4a', '#d3b184'].map((h) => col(h));
+    const layoutFloraDesert = (base) => {
+      for (const k in species) species[k].mesh.count = 0;
+      for (const kit of treeKits) for (const im of kit.parts) im.count = 0;
+      for (const kit of grassKits) kit.im.count = 0;
+      tufts.count = 0; treeShade.count = 0; trunks.count = cones.count = dots.count = 0;
+      const cn = [0, 0, 0]; let rn = 0, bi = 0, dn = 0;
+      const segLen = FLORA_SEG * R3D_ZS;
+      for (let k = 0; k < FLORA_ROWS; k++) {
+        const s = base + k - 2, z = -(s * FLORA_SEG) * R3D_ZS;
+        for (const side of [-1, 1]) {
+          const n = s * 2 + (side > 0 ? 1 : 0), r = (q) => hash(n * q);
+          const cactus = (x, zz, sc) => {
+            if (clearAt(zz, Math.abs(x))) return;
+            const v = r(5.3 + x) < 0.4 ? 0 : (r(5.9 + x) < 0.6 ? 1 : 2);
+            if (cn[v] >= CACTUS_CAP) return;
+            qy.setFromAxisAngle(upY, r(6.7 + x) * 6.28); cactusMeshes[v].setMatrixAt(cn[v]++, m4.compose(v3a.set(x, -0.03, zz), qy, v3b.set(sc, sc, sc)));
+          };
+          if (r(3.1) < 0.5) cactus(side * (RAIL_X + 3.4 + r(3.7) * 14), z - segLen * r(4.1), 0.8 + r(6.1) * 0.7);
+          if (r(7.7) < 0.35) cactus(side * (RAIL_X + 18 + r(8.3) * 40), z - segLen * r(8.9), 1.0 + r(9.5) * 0.9);
+          const rock = (x, zz, sc, flat) => {
+            if (clearAt(zz, Math.abs(x)) || rn >= ROCK_CAP) return;
+            qy.setFromAxisAngle(upY, r(21.7 + x) * 6.28);
+            desertRocks.setMatrixAt(rn, m4.compose(v3a.set(x, sc * 0.3 - 0.08, zz), qy, v3b.set(sc * 1.25, sc * flat, sc)));
+            desertRocks.setColorAt(rn++, SANDROCK[Math.floor(r(22.3 + x) * 5)]);
+          };
+          if (r(9.1) < 0.55) rock(side * (RAIL_X + 1.5 + r(9.7) * 10), z - segLen * r(10.3), 0.4 + r(10.9) * 1.1, 0.8);
+          if (r(11.3) < 0.14) rock(side * (RAIL_X + 10 + r(12.1) * 30), z - segLen * r(12.7), 2.2 + r(13.3) * 2.6, 1.15);
+          if (r(14.1) < 0.7 && bi + 3 <= FLORA_ROWS * 16) { // dry bushes
+            const bx = side * (RAIL_X + 1.2 + r(14.7) * 18), bz = z - segLen * r(15.3), bs = 0.35 + r(15.9) * 0.45;
+            if (!clearAt(bz, Math.abs(bx))) for (let f = 0; f < 3; f++) { const fs = bs * (f ? 0.6 + hash(n * 7.1 + f) * 0.3 : 1); put(blobs, bi, bx + (f ? (f - 1.5) * bs * 0.9 : 0), fs * 0.55, bz + (f ? hash(n * 3.3 + f) * bs : 0), fs * 1.2, fs * 0.8, fs * 1.1); blobs.setColorAt(bi++, DRY[Math.floor(hash(n * 9.9 + f) * 4)]); }
+          }
+          if (!(s & 1) && r(16.3) < 0.7 && dn < FLORA_ROWS * 2) { // far dunes
+            const sx = 30 + r(17.5) * 55, dx = side * (sx + 24 + r(16.9) * 140); // the whole mound stays at least 24 m from the road
+            if (!clearAt(z, Math.abs(dx) - sx)) { qy.setFromAxisAngle(upY, (r(18.1) - 0.5) * 0.6); dunes.setMatrixAt(dn++, m4.compose(v3a.set(dx, -0.4, z - segLen * r(18.7)), qy, v3b.set(sx, 2.5 + r(19.3) * 6, sx * (0.5 + r(19.9) * 0.4)))); }
+          }
+        }
+      }
+      cactusMeshes.forEach((m, v) => { m.count = cn[v]; m.instanceMatrix.needsUpdate = true; });
+      desertRocks.count = rn; desertRocks.instanceMatrix.needsUpdate = true; if (desertRocks.instanceColor) desertRocks.instanceColor.needsUpdate = true;
+      dunes.count = dn; dunes.instanceMatrix.needsUpdate = true;
+      blobs.count = bi; blobs.instanceMatrix.needsUpdate = true; if (blobs.instanceColor) blobs.instanceColor.needsUpdate = true;
+    };
+    // mesas and buttes on the horizon (three hazy layers, strata colours)
+    const mesaMat = basicVC({ fog: false });
+    const mesaMesh = (() => {
+      const P = [], C = [], I = [], hz = col('#ecc89a'), STR = ['#b87a4e', '#c9845a', '#b0623a', '#d4915f', '#a8552f', '#d79a68'].map((h) => col(h)), tc = new T.Color();
+      let g = 0;
+      [{ z: -520, hm: 1, haze: 0.18 }, { z: -650, hm: 1.25, haze: 0.38 }, { z: -790, hm: 1.5, haze: 0.56 }].forEach((L, li) => {
+        for (let m = 0; m < 6; m++) {
+          const ix = li * 9 + m, w = 70 + hash(ix * 2.3) * 140, h = (26 + hash(ix * 3.7) * 70) * L.hm, cx = -520 + (m + hash(ix * 5.1) * 0.7) * 175 + li * 40;
+          const ys = [-8, 0.12 * h, 0.3 * h, 0.5 * h, 0.72 * h, 0.9 * h, h], hw = [0.9, 0.62, 0.5, 0.48, 0.47, 0.46, 0.4];
+          for (let j = 0; j < 7; j++) for (const sg of [-1, 1]) {
+            P.push(cx + sg * w * hw[j] * (1 + (hash(ix * 7.7 + j + sg) - 0.5) * 0.05), ys[j], L.z);
+            tc.copy(STR[(j + m) % 6]).lerp(hz, L.haze + (j === 0 ? 0.1 : 0)).multiplyScalar(0.92 + j * 0.03); C.push(tc.r, tc.g, tc.b);
+          }
+          for (let j = 0; j < 6; j++) { const a = g + j * 2, b = a + 1, c = a + 2, d = a + 3; I.push(a, b, d, a, d, c); }
+          g += 14;
+        }
+      });
+      const m = new T.Mesh(indexed(P, C, I, false), mesaMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(mesaMat); return m;
+    })();
+
+    // ---------- per-map switches ----------
+    const MAPS = {
+      highway:  { ground: null, fog: [120, 1900], haze: null, hazeK: 0 },
+      city:     { ground: null, fog: [100, 1100], haze: null, hazeK: 0 },
+      mountain: { ground: ['#5a8a43', '#477a37'], fog: [60, 1000], haze: '#a9bdd0', hazeK: 0.4 },
+      lake:     { ground: null, fog: [100, 1300], haze: '#bfe0ee', hazeK: 0.3 },
+      desert:   { ground: ['#dcb77c', '#c69a5e'], sand: true, fog: [110, 1500], haze: '#efca94', hazeK: 0.5 }
+    };
+    const GTINT = { rain: { m: [0.62, 0.68, 0.74] }, snow: { mix: '#eef3f8', k: 0.72 }, sunset: { m: [1.1, 0.8, 0.6] } };
+    let mapApplied = '', cityBase = null;
+    const applyMap = (key) => {
+      mapApplied = key; curMap = key; groundKind = MAPS[key].sand ? 'sand' : 'grass';
+      const sky = key === 'highway' || key === 'city' || key === 'lake';
+      for (const o of skylineObjs) o.visible = sky;
+      mtGroup.visible = ridgeMesh.visible = key === 'mountain';
+      desertGroup.visible = mesaMesh.visible = key === 'desert';
+      lakeGroup.visible = shoreFar.visible = key === 'lake';
+      lamps.visible = key !== 'mountain' && key !== 'desert';
+      if (key !== 'lake') { trWob.value = 0; lakeNMod = 0; }
+      cityBase = null; cliffBase = null; stoneBase = null; lakeBase = null; islBase = null;
+      floraBase = null; lampBase = null; weatherApplied = null;
+    };
+    // everything that depends on this race's route (new trackObjects, another map, another race length)
+    const setRouteScenery = (RT) => {
+      cliffSide = RT.cliff;
+      setCityRange(RT.city); cityBase = null;
+      brM0 = Infinity; brM1 = -Infinity; placeBridge(RT.bridge); placeLake(RT.lake);
+      buildTunnel(RT.tunnel, RT.map);
+      valley.scale.x = -cliffSide;
+      trCut.value.set(-cliffSide, RAIL_X + 0.45, RT.map === 'mountain' ? 1 : 0);
+      cliffBase = null; stoneBase = null; lakeBase = null; islBase = null; floraBase = null; lampBase = null;
+    };
 
     const CAR_L = 4.5;
     const buildCarBody = () => {
@@ -1702,6 +2275,20 @@
       g.add(glow, base, chev);
       return g;
     };
+    // Nitro strips (visual only): a neon chevron strip painted on the road, leading ~25 m into about half of the boost pads
+    // (chosen by the pad's position, so every player sees the same ones). Pooled meshes, one shared pulsing material.
+    const NITRO_L = 25, NITRO_N = 10;
+    const nitroC = makeCanvas(128, 512);
+    {
+      const g = nitroC.getContext('2d');
+      g.lineJoin = 'miter'; g.lineCap = 'butt';
+      g.shadowColor = '#22d3ee'; g.shadowBlur = 14; g.strokeStyle = '#d9fbff'; g.lineWidth = 13;
+      for (let i = 0; i < 5; i++) { const y = 28 + i * 102.4; g.beginPath(); g.moveTo(22, y + 40); g.lineTo(64, y); g.lineTo(106, y + 40); g.stroke(); }
+      g.shadowBlur = 8; g.fillStyle = '#7ee8ff'; g.fillRect(4, 0, 5, 512); g.fillRect(119, 0, 5, 512);
+    }
+    const nitroTex = canvasTex(nitroC, { wrapT: T.RepeatWrapping });
+    const nitroMat = new T.MeshBasicMaterial({ map: nitroTex, transparent: true, depthWrite: false, opacity: 0.85, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5 });
+    const nitroStrips = Array.from({ length: NITRO_N }, () => { const m = new T.Mesh(flatOnRoad(PAD_W * 0.8, NITRO_L), nitroMat); m.position.y = 0.02; m.renderOrder = 6; m.visible = false; m.frustumCulled = false; scene.add(m); return m; });
     const stripeTex = (() => {
       const c = makeCanvas(128, 32), g = c.getContext('2d');
       g.fillStyle = '#facc15'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#111827';
@@ -1869,11 +2456,19 @@
         if (key === 'sunny') m.color.multiplyScalar(clump ? 1.34 : 1.15);
         if (m.emissive) { m.emissive.set(key === 'sunny' ? (clump ? '#3f8a28' : '#2c651c') : '#000000'); m.emissiveIntensity = clump ? 0.6 : 0.4; }
       }
-      scene.environmentIntensity = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
       scene.fog.color.set(w.fog);
-      paintGrass(w.grass, w.grass2);
-      hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); hemi.intensity = w.hemi[2];
-      sun.color.set(w.sun[0]); sun.intensity = w.sun[1];
+      const mp = MAPS[mapApplied] || MAPS.highway;
+      if (mp.ground) { // per-map ground palette, tinted by the climate (the climate keeps its own tint on every map)
+        const gt = GTINT[key], cols = mp.ground.map((hex) => { const c = col(hex); if (gt) { if (gt.mix) c.lerp(tmpColor.set(gt.mix), gt.k); else c.multiply(tmpColor.setRGB(gt.m[0], gt.m[1], gt.m[2])); } return '#' + c.getHexString(); });
+        paintGround(cols[0], cols[1]);
+      } else paintGround(w.grass, w.grass2);
+      if (mp.haze) scene.fog.color.lerp(tmpColor.set(mp.haze), mp.hazeK * (key === 'rain' ? 0.5 : 1));
+      scene.fog.near = mp.fog[0]; scene.fog.far = mp.fog[1];
+      hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); baseHemi = w.hemi[2];
+      sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
+      applyLightK();
+      tmpColor.set(w.city); for (const m of tintMats) m.color.copy(tmpColor);
+      lakeWaterMat.color.set(0x1f78a0).multiply(tmpColor);
       cityMat.color.set(w.city); bldMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
       tmpColor.set(w.city); for (const c of cityMats) c.m.color.copy(c.base).multiply(tmpColor);
       roadMat.roughness = key === 'rain' ? 0.1 : (key === 'snow' ? 0.75 : 0.34); roadMat.envMapIntensity = key === 'rain' ? 1.5 : 1.0; // wet / snowy / dry
@@ -1944,7 +2539,10 @@
       const now = performance.now(), dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
       const tSec = now * 0.001;
       resize();
-      if (weatherApplied !== currentWeather) applyWeather(currentWeather);
+      const RT = raceRoute(); // the map and the route of this race (re-rolled whenever the map, the obstacle layout or the race length changes)
+      if (mapApplied !== RT.map) applyMap(RT.map);
+      if (RT !== sceneryFor) { sceneryFor = RT; setRouteScenery(RT); }
+      if (weatherApplied !== currentWeather) applyWeather(currentWeather); // an unknown climate key falls back to the sunny table
 
       // adaptive resolution: step down once if the phone cannot hold the frame rate
       frameCount++;
@@ -2004,12 +2602,33 @@
 
       // lane dashes + rail posts (world-anchored, wrapped ahead of the camera)
       const camTrack = -cz / R3D_ZS;
-      // city street and bridge: laid out once per route, drawn only while the camera is within reach of them
-      const RT = raceRoute();
-      if (RT !== sceneryFor) { sceneryFor = RT; layoutCity(RT.city); placeBridge(RT.bridge); floraBase = null; lampBase = null; }
+      // street, bridge, tunnel and the map extras: laid out when the route changes, windows re-laid every few tens of metres, drawn only while in reach
+      const camM = -cz;
       cityGroup.visible = !!RT.city && camTrack > RT.city.z0 - 1500 && camTrack < RT.city.z1 + 80;
+      if (cityGroup.visible) { const cb = Math.floor(camM / 40); if (cb !== cityBase) { cityBase = cb; layoutCity(RT.city, cb * 40); } }
       bridgeGroup.visible = !!RT.bridge && camTrack > RT.bridge.z0 - 1700 && camTrack < RT.bridge.z1 + 120;
       if (bridgeGroup.visible) { rippleTex.offset.set((tSec * 0.011) % 1, (tSec * 0.017) % 1); }
+      tunnelGroup.visible = !!RT.tunnel && camTrack > RT.tunnel.z0 - 1500 && camTrack < RT.tunnel.z1 + 100;
+      if (curMap === 'mountain') {
+        const cb = Math.floor(camM / CLIFF_MOD); if (cb !== cliffBase) { cliffBase = cb; layoutCliff(cb * CLIFF_MOD); }
+        const sb = Math.floor(camM / STONE_GAP); if (sb !== stoneBase) { stoneBase = sb; layoutStones(sb); }
+        valley.position.z = Math.floor(cz / 6) * 6;
+      } else if (curMap === 'lake' && RT.lake) {
+        lakeGroup.visible = camM > lakeM0 - 1700 && camM < lakeM1 + 200;
+        if (lakeGroup.visible) {
+          const lb = Math.floor((camM - LAKE_BEHIND - lakeM0) / LAKE_MOD); if (lb !== lakeBase) { lakeBase = lb; layoutLake(camM); }
+          const ib = Math.floor(camM / 60); if (ib !== islBase) { islBase = ib; layoutIslands(camM); }
+          lakeWater.position.z = grass.position.z;
+          lakeTex.offset.set((tSec * 0.011) % 1, (lakeWater.position.z / 9 + tSec * 0.017) % 1);
+        }
+      }
+      // the finish gantry follows the race length (30 s / 1 min / 2 min races differ); the light level eases down inside a tunnel
+      finishGroup.position.z = -r3dEndZ() * R3D_ZS;
+      {
+        const want = (!!RT.tunnel && player.z > RT.tunnel.z0 + 12 && player.z < RT.tunnel.z1 + 26) ? 0.5 : 1;
+        tunK += (want - tunK) * Math.min(1, dt * 3.2); if (Math.abs(want - tunK) < 0.004) tunK = want;
+        if (tunK !== tunKApplied) applyLightK();
+      }
       const dBase = Math.floor(camTrack / DASH_PERIOD);
       for (let r = 0; r < DASH_ROWS; r++) {
         const tz = (dBase + r - 2) * DASH_PERIOD + DASH_PERIOD * 0.23, z = -tz * R3D_ZS;
@@ -2032,20 +2651,25 @@
       railLightGeo.attributes.position.needsUpdate = true;
       const lBaseL = Math.floor(-cz / LAMP_GAP);
       if (lBaseL !== lampBase) {
-        lampBase = lBaseL;
+        lampBase = lBaseL; let nl = 0;
         for (let r = 0; r < LAMP_ROWS; r++) {
-          const z = -(lBaseL + r - 1) * LAMP_GAP - 9;
-          lamps.setMatrixAt(r * 2, m4.compose(v3a.set(RAIL_X + 1.0, 0, z), q0, v3b.set(1, 1, 1)));
-          lamps.setMatrixAt(r * 2 + 1, m4.compose(v3a.set(-RAIL_X - 1.0, 0, z + LAMP_GAP / 2), qFlip, v3b.set(1, 1, 1)));
+          const z = -(lBaseL + r - 1) * LAMP_GAP - 9, zL = z + LAMP_GAP / 2;
+          const hideR = -z > tnM0 - 2 && -z < tnM1 + 2, hideL = -zL > tnM0 - 2 && -zL < tnM1 + 2; // no lamp posts inside the tunnel
+          lamps.setMatrixAt(r * 2, m4.compose(v3a.set(RAIL_X + 1.0, 0, z), q0, hideR ? v3b.set(0, 0, 0) : v3b.set(1, 1, 1)));
+          lamps.setMatrixAt(r * 2 + 1, m4.compose(v3a.set(-RAIL_X - 1.0, 0, zL), qFlip, hideL ? v3b.set(0, 0, 0) : v3b.set(1, 1, 1)));
+          // warm glow at the lamp heads inside the street (heads are 2.3 m in from the poles)
+          if (!hideR && -z > cityM0 - 4 && -z < cityM1 + 4 && nl < CITY_LIGHT_MAX) { cityLightPos[nl * 3] = RAIL_X + 1.0 - 2.3; cityLightPos[nl * 3 + 1] = 7.2; cityLightPos[nl * 3 + 2] = z; nl++; }
+          if (!hideL && -zL > cityM0 - 4 && -zL < cityM1 + 4 && nl < CITY_LIGHT_MAX) { cityLightPos[nl * 3] = -(RAIL_X + 1.0 - 2.3); cityLightPos[nl * 3 + 1] = 7.2; cityLightPos[nl * 3 + 2] = zL; nl++; }
         }
         lamps.instanceMatrix.needsUpdate = true;
+        cityLightGeo.setDrawRange(0, nl); cityLightGeo.attributes.position.needsUpdate = true;
       }
       // the passing city blocks scroll at 80% of the road speed (they follow the camera by 20%)
       const mBase = Math.floor(-cz * WORLD_DRIFT / MID_GAP); if (mBase !== midBase) { midBase = mBase; layoutMidBlocks(mBase); }
-      for (const g of midBlocks) { g.position.z = g.userData.z0 + cz * (1 - WORLD_DRIFT); g.visible = !(brM0 < Infinity && -g.position.z > brM0 - 50 && -g.position.z < brM1 + 50); } // none over the gorge
+      for (const g of midBlocks) { g.position.z = g.userData.z0 + cz * (1 - WORLD_DRIFT); g.visible = curMap === 'highway' && !(brM0 < Infinity && -g.position.z > brM0 - 50 && -g.position.z < brM1 + 50); } // highway only, none over the gorge
       // flora is re-laid in 4-segment steps (about once a second at speed), never every segment
       const fBase = Math.floor(camTrack / (FLORA_SEG * 4)) * 4;
-      if (fBase !== floraBase) { floraBase = fBase; layoutFlora(fBase); }
+      if (fBase !== floraBase) { floraBase = fBase; if (curMap === 'desert') layoutFloraDesert(fBase); else layoutFlora(fBase); }
 
       // cars
       // Track distance is compressed for the scenery, so cars nose-to-tail in the simulation would
@@ -2159,6 +2783,7 @@
 
       // track objects
       const used = {};
+      let nitroN = 0;
       for (const obj of trackObjects) {
         const dzTrack = obj.z - player.z;
         if (dzTrack < -40 || dzTrack > 600) continue;
@@ -2167,6 +2792,7 @@
         m.visible = true;
         if (obj.type === 'boost') {
           m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
+          if (nitroN < NITRO_N && hash(obj.z * 0.0371 + 0.5) < 0.5) { const st = nitroStrips[nitroN++]; st.visible = true; st.position.set(obj.x * R3D_XS, 0.02, -obj.z * R3D_ZS + PAD_L / 2 + NITRO_L / 2); } // about half of the pads get a lead-in strip
         } else if (obj.type === 'jump' || obj.type === 'oil' || obj.type === 'bump') {
           m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
         } else {
@@ -2188,6 +2814,8 @@
         const t = (m.userData.t += dt); m.visible = t < 0.8;
         if (m.visible) { const k = t < 0.09 ? t / 0.09 : Math.max(0, 1 - (t - 0.09) / 0.71); m.rotation.y = m.userData.side > 0 ? Math.PI : 0; m.scale.set(0.15 + 0.95 * k * (2 - k), 1, 1); }
       }
+      for (let i = nitroN; i < NITRO_N; i++) nitroStrips[i].visible = false;
+      nitroMat.opacity = 0.62 + Math.sin(tSec * 7) * 0.3; nitroTex.offset.y = -(tSec * 1.4) % 1;
       chevTex.offset.y = -(tSec * 1.6) % 1;
       padGlowMat.opacity = 0.7 + Math.sin(tSec * 5) * 0.18;
 
@@ -2217,6 +2845,7 @@
       }
       if (fast) { streakMat.color.set(player.boostTimer > 0 ? 0x38bdf8 : 0xffffff); streakMat.opacity = player.boostTimer > 0 ? 0.3 : 0.12; }
 
+      rain.visible = weatherApplied === 'rain' && tunK > 0.9; snow.visible = weatherApplied === 'snow' && tunK > 0.9; // dry inside a tunnel
       if (rain.visible) {
         for (let i = 0; i < PRECIP_N; i++) {
           const s = seed[i]; s.y -= 34 * s.v * dt; if (s.y < 0) s.y += 22;
@@ -2235,10 +2864,14 @@
       sun.target.position.set(camX, 0, pz - 6); sun.position.copy(sun.target.position).addScaledVector(SUN_DIR, 60);
       // one warm-up frame draws the street and bridge far behind the camera, so their shaders are built in the lobby, not mid-race
       const warm = !sceneryWarm && (sceneryWarm = true);
-      if (warm) { cityGroup.visible = bridgeGroup.visible = true; cityGroup.position.z += 6000; bridgeGroup.position.z += 6000; for (const m of cityMeshes) m.count = 1; }
+      if (warm) {
+        if (!RT.tunnel) buildTunnel({ z0: 600, z1: 830 }, RT.map); // a stand-in, only so the tunnel shaders get built now
+        cityGroup.visible = bridgeGroup.visible = tunnelGroup.visible = true; cityGroup.position.z += 6000; bridgeGroup.position.z += 6000; tunnelGroup.position.z += 6000;
+        for (const m of cityMeshes) m.count = 1; nitroStrips[0].visible = true; nitroStrips[0].position.z += 6000;
+      }
       if (composer) { if (composerW !== viewW || composerH !== viewH || composerPR !== pixelCap) { composerW = viewW; composerH = viewH; composerPR = pixelCap; composer.setSize(viewW, viewH); } composer.render(dt); }
       else renderer.render(scene, camera);
-      if (warm) { cityGroup.position.z -= 6000; bridgeGroup.position.z -= 6000; for (let k = 0; k < cityMeshes.length; k++) cityMeshes[k].count = 0; cityGroup.visible = bridgeGroup.visible = false; sceneryFor = null; }
+      if (warm) { cityGroup.position.z -= 6000; bridgeGroup.position.z -= 6000; tunnelGroup.position.z -= 6000; for (let k = 0; k < cityMeshes.length; k++) cityMeshes[k].count = 0; cityGroup.visible = bridgeGroup.visible = tunnelGroup.visible = false; sceneryFor = null; }
 
       // #raceCanvas stays on top as a transparent layer for the route / position mini-map only.
       if (racing) { ctx.clearRect(0, 0, cw, ch); drawRightMiniMap(); R3D.overlayDirty = true; }
