@@ -4519,13 +4519,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #leaderboardBtn { color: #ffc83d; } #modeSelectHudBtn { color: #5fb4ff; } #raceInfoBtn { color: #7fb2ff; } #howToPlayBtn { color: #8ec5ff; } .speed-pill { color: #22e07a; }
 .hud-pill .hud-pill-label { color: #fff; }
 /* right chip stack */
-.right-hud-stack { top: 36px; right: 3px; gap: 7px; align-items: stretch; width: 92px; zoom: 1 !important; opacity: 1 !important; }
+.right-hud-stack { top: 36px; right: 3px; gap: 6px; align-items: stretch; width: 82px; zoom: 1 !important; opacity: 1 !important; }
 .right-hud-stack .icon-toggle-btn { zoom: 1 !important; }
 .right-hud-stack .mini-utility-row { justify-content: flex-end; }
 #weatherCycleBtn, #weatherChip { --acc: #ffc83d; }
 #mapChip { --acc: #22e07a; } #timerChip { --acc: #2f7bff; } #cameraToggleBtn { --acc: #5fe3ff; }
 .right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip {
-  width: 92px; height: 26px; box-sizing: border-box; border-radius: 10px; padding: 0 6px; position: relative; font-size: 8.6px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
+  width: 82px; height: 24px; box-sizing: border-box; border-radius: 10px; padding: 0 6px; position: relative; font-size: 8px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
   border: 1px solid color-mix(in srgb, var(--acc) 65%, transparent); background: linear-gradient(180deg, rgba(16,28,54,.92), rgba(7,13,28,.94)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 28%, transparent), inset 0 1px 0 rgba(255,255,255,.08); }
 .right-hud-stack #weatherChip { padding: 0; display: block; border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -4535,12 +4535,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 .right-hud-stack .icon-toggle-btn::before { content: ''; position: absolute; left: 0; right: 0; top: -5px; bottom: -5px; }
 .right-hud-stack .hud-chip::before { pointer-events: none; }
 .right-hud-stack .hud-chip .chip-main::before { content: ''; position: absolute; left: 0; right: 30px; top: -5px; bottom: -5px; }
-.right-hud-stack .icon-toggle-btn .ic, .right-hud-stack .hud-chip .ic { width: 13px; height: 13px; color: var(--acc); }
+.right-hud-stack .icon-toggle-btn .ic, .right-hud-stack .hud-chip .ic { width: 12px; height: 12px; color: var(--acc); }
 .right-hud-stack #weatherBtnText, .right-hud-stack #cameraBtnText, .right-hud-stack .chip-main > span { gap: 5px; }
 .right-hud-stack #cameraToggleBtn { justify-content: flex-start; }
-.hud-chip .chip-q, .right-hud-stack .chip-q { width: 16px; height: 16px; margin: 0 4px 0 2px; font-size: 9.5px; font-weight: 900; color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); background: color-mix(in srgb, var(--acc) 14%, transparent); }
+.hud-chip .chip-q, .right-hud-stack .chip-q { width: 14px; height: 14px; margin: 0 4px 0 2px; font-size: 8.5px; font-weight: 900; color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); background: color-mix(in srgb, var(--acc) 14%, transparent); }
 .hud-chip .chip-q::after { inset: -11px; }
-.right-hud-stack #weatherChip > .chip-q { position: absolute; right: 5px; top: 5.5px; margin: 0; z-index: 2; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
+.right-hud-stack #weatherChip > .chip-q { position: absolute; right: 4px; top: 4.5px; margin: 0; z-index: 2; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
 .right-hud-stack #weatherChip > .chip-q::after { content: ''; position: absolute; inset: -11px; }
 .right-hud-stack #weatherChip > .chip-q:active, .hud-chip .chip-q:active { transform: scale(.88); }
 /* locked while racing: dimmed, same shape */
@@ -4606,6 +4606,13 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-av { width: 46px; height: 46px; font-size: 18px; }
 .result-modal:has(.ui-podium) .ui-pd-av { width: 38px; height: 38px; font-size: 15px; }
 .result-modal:has(.ui-podium) #modalSvgHolder { display: none !important; }
+.result-modal:has(.ui-podium) .ui-pd-name { font-size: 10px; } .result-modal:has(.ui-podium) .ui-pd-profit { font-size: 9px; margin-bottom: 4px; }
+.result-modal:has(.ui-podium) .ui-pd-base { height: 22px !important; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 32px !important; }
+.result-modal:has(.ui-podium) .ui-pd-av { width: 32px; height: 32px; font-size: 13px; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-av { width: 40px; height: 40px; font-size: 16px; }
+.result-modal:has(.ui-podium) .modal-title { font-size: 20px; } .result-modal:has(.ui-podium) .modal-subtitle { margin-bottom: 4px; font-size: 11px; }
+.result-modal:has(.ui-podium) .ui-pop-sec { margin: 4px 0 4px; font-size: 10px; }
+.result-modal:has(.ui-podium) .ui-lb-row { padding: 5px 8px; } .result-modal:has(.ui-podium) .vl-av { width: 24px; height: 24px; font-size: 9.5px; }
+.result-modal:has(.ui-podium) .ui-lb-list { max-height: none; gap: 4px; } .result-modal:has(.ui-podium) .claim-btn { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -6127,7 +6134,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const av = (r) => `<span class="vl-av" style="--vc:${uiEsc(r.color || '#94a3b8')}">${uiEsc(idOf(r).slice(-2))}</span>`;
     const col = (r, n) => {
       if (!r) return `<div class="ui-pd p${n} empty"><div class="ui-pd-av">?</div><div class="ui-pd-name">&mdash;</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
-      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av vl-pav">${uiEsc(idOf(r).slice(-2))}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-wins">Vol ${volOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
+      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av vl-pav">${uiEsc(idOf(r).slice(-2))}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
     };
     let me = racers.find(r => r.isMe);
     if (!me) {
@@ -6138,7 +6145,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const rest = racers.filter(r => !pod.includes(r) && !r.isMe);
     const row = (r, pin) => `
           <div class="ui-lb-row vl-row${r.isMe ? ' me' : ''}${pin ? ' vl-pin' : ''}">
-            <div class="ui-lb-l">${uiRk(r.rank)}${av(r)}<div style="min-width:0"><div class="ui-lb-name">${uiEsc(idOf(r))}${r.isMe ? '<span class="ui-you">YOU</span>' : ''}</div><div class="ui-lb-sub">Volume ${volOf(r)} USDT</div></div></div>
+            <div class="ui-lb-l">${uiRk(r.rank)}${av(r)}<div style="min-width:0"><div class="ui-lb-name">${uiEsc(idOf(r))}${r.isMe ? '<span class="ui-you">YOU</span>' : ''}</div></div></div>
             <div class="ui-lb-r"><span class="ui-lb-amt">${winOf(r)}</span></div>
           </div>`;
     let h = '';
@@ -6151,16 +6158,6 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     if (rest.length) {
       h += `<div class="ui-pop-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS</div><div class="ui-lb-list">` + rest.map(r => row(r, false)).join('') + '</div>';
     }
-    h += `<div class="ui-pop-sec" style="color:#38bdf8">${UI_IC.flag}LIVE RACE GRID</div><div class="ui-grid-list">` + sortedCars.map((c, i) => {
-      const pct = Math.min(100, Math.round((c.z / finishZ) * 100));
-      const col2 = i === 0 ? '#22E07A' : (i === 1 ? '#FFC83D' : '#FF5C6C');
-      const who = c.isPlayer ? 'You' : (c.displayName || c.floatLabel || '');
-      return `<div class="ui-grid-row vc-t vc-t-${uiEsc(c.themeKey)}">
-        <div class="ui-lb-l"><span class="ui-rk" style="background:${col2};color:#07101f">#${i + 1}</span><img class="ui-car vc-pic" src="${uiEsc(c.imgUrl)}" alt="">
-          <div style="min-width:0"><div class="ui-lb-name">${uiEsc(c.carTitle)}</div><div class="ui-lb-sub">${uiEsc(who)} &bull; Lane ${c.lane + 1}</div></div></div>
-        <div class="ui-lb-r" style="flex-direction:column;align-items:flex-end;gap:1px"><span class="ui-lb-pct" style="color:${col2}">${pct}%</span><span class="ui-lb-sub">${Math.round(c.speed)} KM/H</span></div>
-      </div>`;
-    }).join('') + '</div>';
     return h;
   }
 
@@ -7092,8 +7089,8 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     try { skip = !!window._trRouteForce || /[?&]norandom=1/.test(location.search) || lsGetSafe('tr_norandom') === '1' || WEATHER_THEMES.includes(lsGetSafe('tr_weather')); } catch (e) { skip = true; }
     if (skip) return;
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
-    const map = pick(MAP_KEYS);
-    const wx = 'sunny';   // owner's choice: every fresh open starts Sunny in 3-car mode; only the map is random
+    const map = 'highway';
+    const wx = 'sunny';   // owner's choice: every fresh open starts Highway + Sunny in 3-car mode
     const cars3 = 3;
     localMapChoice = map; currentMap = map; currentWeather = wx;
     try { selectRaceMode(cars3); } catch (e) {}
