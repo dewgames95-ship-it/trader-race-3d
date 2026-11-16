@@ -3709,6 +3709,59 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     -webkit-user-select: text;
     user-select: text;
   }
+/* ===== V17: MAP / RACE TIME chips, popups, FINAL 5s, speed card lock ===== */
+/* speed card: every part has a fixed box, so 0 / 99 / 236 / 250 sit at identical positions in every climate and screen size */
+.speed-pill { width: 96px !important; min-width: 96px; max-width: 96px; box-sizing: border-box; grid-template-columns: 21px 56px !important; column-gap: 6px !important; justify-content: start !important; overflow: visible; }
+.speed-pill > svg { grid-column: 1; width: 21px !important; height: 21px !important; justify-self: start; align-self: center; flex: none; }
+.speed-pill > .speed-value-row { display: flex !important; align-items: baseline; justify-content: flex-start; width: 56px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.speed-pill #speedNum { display: inline-block; flex: none; width: 3ch; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.speed-pill .speed-unit { flex: none; margin-left: 3px; white-space: nowrap; }
+.right-hud-stack .hud-chip { display: inline-flex; align-items: center; padding: 0; gap: 0; justify-content: space-between; }
+.right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip { width: 114px; box-sizing: border-box; }
+.right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn { justify-content: center; }
+.hud-chip .chip-main { background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; padding: 6px 4px 6px 12px; display: inline-flex; align-items: center; flex: 1; text-align: left; -webkit-tap-highlight-color: transparent; }
+.hud-chip .chip-main > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.hud-chip .chip-q { position: relative; flex-shrink: 0; width: 15px; height: 15px; margin: 0 8px 0 4px; padding: 0; border-radius: 50%; border: 1px solid rgba(255,255,255,0.55); background: rgba(255,255,255,0.1);
+  color: #d8fbe6; font-size: 9px; font-weight: 900; line-height: 1; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
+.hud-chip .chip-q::after { content: ''; position: absolute; inset: -9px; }
+.hud-chip .chip-q:active { transform: scale(0.88); background: rgba(34,224,122,0.35); }
+.hud-chip.locked-weather .chip-q { border-color: rgba(148,163,184,0.5); color: #94a3b8; }
+
+.hud-pop-card { position: relative; width: min(340px, 94%); margin: auto; padding: 16px 14px 16px; border-radius: 18px; text-align: center;
+  background: linear-gradient(180deg, rgba(19,28,46,0.97) 0%, rgba(7,11,20,0.98) 100%); border: 1.5px solid rgba(96,165,250,0.55);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 18px rgba(47,123,255,0.28); animation: hudPopIn .2s ease-out; }
+@keyframes hudPopIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+.hud-pop-title { font-size: 16px; font-weight: 900; font-style: italic; letter-spacing: 0.6px; color: #fff; }
+.hud-pop-sub { font-size: 10.500px; font-weight: 800; color: #94a3b8; margin: 2px 0 10px; }
+.hud-pop-ico { width: 40px; height: 40px; margin: 0 auto 6px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(47,123,255,0.18); border: 1px solid rgba(96,165,250,0.55); }
+.hud-pop-ico svg { width: 24px; height: 24px; }
+.hud-pop-info p { margin: 8px 4px 0; font-size: 12px; font-weight: 700; line-height: 1.4; color: #dbe6f7; text-align: left; }
+.hud-pop-info p b { color: #22e07a; }
+.hud-pop-info .hud-pop-note { color: #ffc83d; font-weight: 800; font-size: 11px; }
+.map-opt-list { display: flex; flex-direction: column; gap: 7px; }
+.map-opt { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 13px; cursor: pointer; text-align: left; color: #fff;
+  background: rgba(10,18,36,0.85); border: 1.5px solid rgba(110,160,235,0.35); transition: border-color .18s ease, box-shadow .18s ease, transform .15s ease; font-family: inherit; }
+.map-opt:active { transform: scale(0.985); }
+.map-opt.sel { border-color: #22e07a; box-shadow: 0 0 12px rgba(34,224,122,0.4), inset 0 0 10px rgba(34,224,122,0.1); background: linear-gradient(180deg, rgba(14,40,28,0.9), rgba(6,20,14,0.9)); }
+.map-opt-art { width: 64px; height: 40px; border-radius: 9px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.25); display: block; }
+.map-opt-art svg { width: 100%; height: 100%; display: block; }
+.map-opt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.map-opt-txt b { font-size: 12.500px; font-weight: 900; font-style: italic; letter-spacing: 0.4px; }
+.map-opt-txt i { font-style: normal; font-size: 10px; font-weight: 700; color: #9db0cf; line-height: 1.25; }
+.map-opt-check { width: 22px; height: 22px; flex-shrink: 0; opacity: 0; transform: scale(0.6); transition: opacity .18s ease, transform .18s ease; }
+.map-opt.sel .map-opt-check { opacity: 1; transform: none; }
+.map-opt-check svg { width: 100%; height: 100%; display: block; }
+
+.final-five { position: absolute; top: 70px; left: 48%; transform: translateX(-50%); z-index: 24; pointer-events: none; display: none; flex-direction: column; align-items: center; line-height: 1; text-align: center; }
+.final-five.show { display: flex; animation: ffIn .2s ease-out; }
+@keyframes ffIn { from { opacity: 0; } to { opacity: 1; } }
+.final-five .ff-label { font-size: 13px; font-weight: 900; font-style: italic; letter-spacing: 3px; color: #ffc83d; text-shadow: 0 0 10px rgba(255,200,61,0.85), 0 2px 8px rgba(0,0,0,0.9); animation: ffSlow 1.8s ease-in-out infinite; }
+.final-five .ff-num { margin-top: 2px; font-size: 44px; font-weight: 900; font-style: italic; color: #fff; text-shadow: 0 0 14px rgba(255,200,61,0.95), 0 0 28px rgba(255,200,61,0.55), 0 3px 10px rgba(0,0,0,0.9); animation: ffSlow 1.8s ease-in-out infinite; }
+.final-five.tick .ff-num { animation: ffSlow 1.8s ease-in-out infinite, ffTick .25s ease-out; }
+@keyframes ffSlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes ffTick { from { opacity: 0.2; } to { opacity: 1; } }
+.final-five .ff-label { animation-name: ffSlowL; }
+@keyframes ffSlowL { 0%, 100% { transform: scale(1); letter-spacing: 3px; } 50% { transform: scale(1.06); letter-spacing: 5px; } }
 </style>
 <style id="uiPolishB">
 /* uiPolishB: Invest / Invite / Profile screens. Scoped to the three screen ids only. */
@@ -4126,6 +4179,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     <div class="top-position-banner pos-1 hidden-banner" id="topPosBanner">
       YOU ARE IN 1ST POSITION
     </div>
+    <div class="final-five" id="finalFive" aria-hidden="true"><div class="ff-label">FINAL 5s</div><div class="ff-num" id="finalFiveNum">5</div></div>
 
     <div class="left-hud-stack">
       <div class="hud-pill" id="leaderboardBtn">
@@ -4210,6 +4264,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <button class="icon-toggle-btn active" id="weatherCycleBtn" title="Change Weather/Climate">
         <span id="weatherBtnText"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.4" fill="#ffc928"/><path d="M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800" stroke="#ffc928" stroke-width="2" stroke-linecap="round"/></svg>SUNNY</span>
       </button>
+      <div class="icon-toggle-btn active hud-chip" id="mapChip">
+        <button type="button" class="chip-main" id="mapChipBtn" title="Choose the race map"><span id="mapBtnText"></span></button>
+        <button type="button" class="chip-q" id="mapInfoBtn" aria-label="About maps">?</button>
+      </div>
+      <div class="icon-toggle-btn active hud-chip" id="timerChip">
+        <button type="button" class="chip-main" id="timerChipBtn" title="Race time: tap to change"><span id="timerBtnText"></span></button>
+        <button type="button" class="chip-q" id="timerInfoBtn" aria-label="About race time">?</button>
+      </div>
       <button class="icon-toggle-btn active" id="cameraToggleBtn" title="Switch camera: behind the car / driver's seat">
         <span id="cameraBtnText"><svg viewBox="0 0 24 24" fill="none"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500" fill="#ffffff"/><path d="M15.500 10.500l5.500-3.200v9.400l-5.500-3.200z" fill="#ffffff"/><circle cx="9" cy="12" r="2.300" fill="#0e2a1c"/></svg>CAMERA</span>
       </button>
@@ -4948,6 +5010,36 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     </div>
   </div>
 
+  <!-- MAP POPUP, MAP INFO, RACE TIME INFO -->
+  <div class="modal-backdrop" id="mapModalBackdrop">
+    <div class="hud-pop-card">
+      <button class="modal-close pop-close" aria-label="Close">✕</button>
+      <div class="hud-pop-title">CHOOSE MAP</div>
+      <div class="hud-pop-sub">Pick where you race</div>
+      <div class="map-opt-list" id="mapPopupList"></div>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="mapInfoBackdrop">
+    <div class="hud-pop-card hud-pop-info">
+      <button class="modal-close pop-close" aria-label="Close">✕</button>
+      <div class="hud-pop-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6.200l5.600-2.200 6.800 2.200L21 4v13.800l-5.600 2.200-6.800-2.200L3 20z" fill="#dff5e8" stroke="#dff5e8" stroke-width="1" stroke-linejoin="round"/><path d="M8.600 4v13.800M15.400 6.200V20" stroke="#0e2a1c" stroke-width="1.400" opacity=".55"/><path d="M10.500 14.500c1.500-2.600 3-1 4.500-3.800" stroke="#2f7bff" stroke-width="1.700" stroke-linecap="round"/></svg></div>
+      <div class="hud-pop-title">RACE MAPS</div>
+      <p>A map is the place you race: <b>Highway, City, Mountain, Lake</b> or <b>Desert</b>. It changes the road, the scenery and the bends, never the rules or the payout.</p>
+      <p>In a race with other players, <b>everyone races on the same map</b>.</p>
+      <p class="hud-pop-note">You can change it before you start a race.</p>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="timerInfoBackdrop">
+    <div class="hud-pop-card hud-pop-info">
+      <button class="modal-close pop-close" aria-label="Close">✕</button>
+      <div class="hud-pop-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13.200" r="7.800" stroke="#ffffff" stroke-width="2"/><path d="M9.500 2.800h5M12 2.800v2.600M18.400 6.200l1.500-1.500" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><path d="M12 13.200V8.800" stroke="#ffc83d" stroke-width="2.200" stroke-linecap="round"/><circle cx="12" cy="13.200" r="1.300" fill="#ffc83d"/></svg></div>
+      <div class="hud-pop-title">RACE TIME</div>
+      <p>Choose how long the race lasts: <b>30 sec</b>, <b>1 min</b> or <b>2 min</b>. Tap the chip to switch. The bet round and the race use the same time.</p>
+      <p>Cars always drive at the same speed, so a longer race is simply a longer track. The first car over the line wins; if the time ends first, the car in front wins.</p>
+      <p class="hud-pop-note">Races with other players use the time of the room.</p>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="modeModalBackdrop">
     <div class="mode-modal-card">
       <button class="modal-close" id="closeModeModalBtn">✕</button>
@@ -5332,8 +5424,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // =========================================================================
   // 2. GAME STATE, PRE-RACE ONLY WEATHER & RACE PHYSICS ENGINE
   // =========================================================================
-  const RACE_DURATION_SEC = 60.0;
-  const FINISH_LINE_Z = 3980; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration
+  // Race length is player-selectable (30 s / 1 min / 2 min). Speeds stay the same, so the track length and every
+  // time-based threshold scale with RACE_K = duration / 60 (see applyRaceDuration further down).
+  const RACE_BASE_Z = 3980; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration (60 s race)
+  const TIMER_CHOICES = [30, 60, 120];
+  const MAP_KEYS = ['highway', 'city', 'mountain', 'lake', 'desert'];
+  function lsGetSafe(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSetSafe(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  let localTimerChoice = TIMER_CHOICES.includes(+lsGetSafe('tr_timer')) ? +lsGetSafe('tr_timer') : 60; // the player's own choice
+  let RACE_DURATION_SEC = localTimerChoice;
+  let RACE_K = RACE_DURATION_SEC / 60;
+  let FINISH_LINE_Z = RACE_BASE_Z * RACE_K;
+  let PACK_SECONDS = 35 * RACE_K;
   const LANE_CENTERS = [-0.75, -0.25, 0.25, 0.75];
 
   let balanceUsdt = 100.00;
@@ -5347,16 +5449,24 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // False = Manual Drive Mode (User steers with Left/Right/Accelerate/Brake)
   let isAutoBetMode = true;
 
-  const WEATHER_THEMES = ['sunny', 'rain', 'snow'];
+  const WEATHER_THEMES = ['sunny', 'rain', 'night', 'snow'];
   const WEATHER_LABELS = {
     sunny: '☀️ SUNNY',
     rain: '🌧️ RAIN',
+    night: '🌙 NIGHT',
     snow: '❄️ SNOW',
     sunset: '🌅 SUNSET'
   };
-  let currentWeather = 'sunny';
+  // test override: localStorage.tr_weather = one of the keys pins the climate (the per-race randomiser leaves it alone)
+  const FORCED_WEATHER = (() => { const w = lsGetSafe('tr_weather'); return WEATHER_THEMES.includes(w) ? w : null; })();
+  let currentWeather = FORCED_WEATHER || 'sunny';
+  window.TR_ICONS = window.TR_ICONS || {};
+  window.TR_ICONS.night = '<svg viewBox="0 0 24 24" fill="none"><path d="M19.500 14.600A8 8 0 0 1 9.400 4.500a8.200 8.200 0 1 0 10.100 10.100z" fill="#cdd9ff"/><path d="M17.200 3.200v3M15.700 4.700h3" stroke="#ffd45a" stroke-width="1.600" stroke-linecap="round"/></svg>';
+  window.TR_ICONS.map = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 6.200l5.600-2.200 6.800 2.200L21 4v13.800l-5.600 2.200-6.800-2.200L3 20z" fill="#dff5e8" stroke="#dff5e8" stroke-width="1" stroke-linejoin="round"/><path d="M8.600 4v13.800M15.400 6.200V20" stroke="#0e2a1c" stroke-width="1.400" opacity=".55"/><path d="M10.500 14.500c1.500-2.600 3-1 4.500-3.800" stroke="#2f7bff" stroke-width="1.700" stroke-linecap="round"/></svg>';
+  window.TR_ICONS.timer = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13.200" r="7.800" stroke="#ffffff" stroke-width="2"/><path d="M9.500 2.800h5M12 2.800v2.600M18.400 6.200l1.500-1.500" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><path d="M12 13.200V8.800" stroke="#ffc83d" stroke-width="2.200" stroke-linecap="round"/><circle cx="12" cy="13.200" r="1.300" fill="#ffc83d"/></svg>';
 
   function pickRandomDifferentWeather() {
+    if (FORCED_WEATHER) { currentWeather = FORCED_WEATHER; updateWeatherButtonLabel(); return; }
     const others = WEATHER_THEMES.filter(w => w !== currentWeather);
     currentWeather = others[Math.floor(Math.random() * others.length)];
     updateWeatherButtonLabel();
@@ -5437,7 +5547,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const EQUAL_ACCEL_RATE = 83;
   const EQUAL_BRAKE_RATE = 140;
   const JUMP_DUR = 0.9, JUMP_PEAK = 2.1, JUMP_LAND_BOOST = 14;
-  const STEER_MAX_V = 1.25, STEER_PLAYER_V = 2.4, PACK_SECONDS = 35, RAIL_LIMIT_X = 0.86, CURVE_DRIFT = 0.2; // lateral units/s, asphalt edge for the car centre, outward push per 0.001 of bend
+  const STEER_MAX_V = 1.25, STEER_PLAYER_V = 2.4, RAIL_LIMIT_X = 0.86, CURVE_DRIFT = 0.2; // lateral units/s, asphalt edge for the car centre, outward push per 0.001 of bend
   const nearestLane = (x) => { let b = 0; for (let i = 1; i < LANE_CENTERS.length; i++) if (Math.abs(LANE_CENTERS[i] - x) < Math.abs(LANE_CENTERS[b] - x)) b = i; return b; };
   // A car that is not steered keeps going straight, so on a bend it slides toward the outside rail.
   let packGangNext = 0, packGangUntil = 0;
@@ -5696,10 +5806,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (btnTxt) {
       btnTxt.innerHTML = (window.TR_ICONS[currentWeather] || '') + WEATHER_LABELS[currentWeather].replace(/^\S+\s+/, '');
     }
+    if (typeof updateMapTimerChips === 'function') updateMapTimerChips();
   }
 
   function resetToIdleState() {
     gameState = 'IDLE';
+    restoreLocalRaceSettings();
+    updateFinalFive();
     cameraShake = 0;
     if (typeof cars !== 'undefined' && Array.isArray(cars)) {
       for (const c of cars) { c.hitRoll = 0; c.hitSlowTimer = 0; c.boostTimer = 0; c.bumpCooldown = 0; c.speed = 0; }
@@ -5797,6 +5910,136 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     playTone(540, 680, 0.07, 'sine', 0.09);
     triggerHaptic(20);
   });
+
+  // =========================================================================
+  // MAP + RACE TIMER chips (right HUD stack), FINAL 5s overlay
+  // =========================================================================
+  const MAP_DEFS = {
+    highway: { name: 'HIGHWAY', desc: 'Fast open road, long straights',
+      svg: '<svg viewBox="0 0 64 40"><defs><linearGradient id="mpH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa9ff"/><stop offset="1" stop-color="#cfe6ff"/></linearGradient></defs><rect width="64" height="40" fill="url(#mpH)"/><path d="M0 24l12-5 10 4 14-6 14 5 14-3v25H0z" fill="#3f8f5a"/><path d="M26 20h12l16 20H10z" fill="#2a3446"/><path d="M32 22v3M32 28v4M32 35v5" stroke="#fff" stroke-width="1.600" stroke-linecap="round"/><path d="M27 20L11 40M37 20l16 20" stroke="#e8eef8" stroke-width="1"/></svg>' },
+    city: { name: 'CITY', desc: 'Tall towers and neon streets',
+      svg: '<svg viewBox="0 0 64 40"><rect width="64" height="40" fill="#1c2a55"/><path d="M3 40V16h9v24M14 40V8h10v32M26 40V18h8v22M36 40V11h11v29M49 40V19h12v21" fill="#3a4d86"/><path d="M6 20h2M6 25h2M6 30h2M17 12h2M21 12h1M17 18h2M21 18h1M17 24h2M17 30h2M39 15h2M43 15h2M39 21h2M43 27h2M52 24h2M56 24h2M52 30h2" stroke="#ffd45a" stroke-width="1.500"/><path d="M0 40h64v-3H0z" fill="#10172e"/><path d="M16 40l16-3 16 3" stroke="#22e07a" stroke-width="1" opacity=".8"/></svg>' },
+    mountain: { name: 'MOUNTAIN', desc: 'Winding curves between peaks',
+      svg: '<svg viewBox="0 0 64 40"><defs><linearGradient id="mpM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa8e8"/><stop offset="1" stop-color="#e3eefb"/></linearGradient></defs><rect width="64" height="40" fill="url(#mpM)"/><path d="M-2 34L16 9l9 12 8-10 20 23z" fill="#6b7a99"/><path d="M16 9l-4.500 6.500 3-1.500 2 2 2-2 3 1.500zM33 11l-4 6 3-1 1.500 1.500 1.500-1.500 3 1z" fill="#fff"/><path d="M0 40V34c14-2 22 3 34-1l30 2v5z" fill="#3f7a52"/><path d="M20 40c4-4 14-3 18-6s8-3 12-3" stroke="#2a3446" stroke-width="3.200" stroke-linecap="round" fill="none"/></svg>' },
+    lake: { name: 'LAKE', desc: 'Calm waters and sweeping bends',
+      svg: '<svg viewBox="0 0 64 40"><defs><linearGradient id="mpL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd8a0"/><stop offset="1" stop-color="#8cc8ff"/></linearGradient></defs><rect width="64" height="40" fill="url(#mpL)"/><circle cx="44" cy="13" r="5" fill="#fff3c8"/><path d="M0 20c8-5 14-1 22-4s16-2 24 0 14 3 18 2v6H0z" fill="#3c7f68"/><rect y="21" width="64" height="19" fill="#2f7bff"/><path d="M38 24h12M41 28h8M36 33h16" stroke="#fff3c8" stroke-width="1.400" stroke-linecap="round" opacity=".8"/><path d="M0 36c14-3 30 0 64-5v9H0z" fill="#2a3446"/></svg>' },
+    desert: { name: 'DESERT', desc: 'Hot dunes and wide dusty road',
+      svg: '<svg viewBox="0 0 64 40"><defs><linearGradient id="mpD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb45a"/><stop offset="1" stop-color="#ffe3a8"/></linearGradient></defs><rect width="64" height="40" fill="url(#mpD)"/><circle cx="14" cy="12" r="6" fill="#fff0b8"/><path d="M0 28c10-8 20-8 30-2 10-6 22-5 34 1v13H0z" fill="#d9944a"/><path d="M0 34c14-5 28-2 64-6v12H0z" fill="#c07a38"/><path d="M26 40l8-8h6l10 8z" fill="#3a3340"/><path d="M52 24v-7M52 20h-3v-3M52 21h3v-3" stroke="#2e7d4f" stroke-width="1.800" stroke-linecap="round" fill="none"/></svg>' }
+  };
+  let localMapChoice = (() => { const m = lsGetSafe('tr_map'); return MAP_KEYS.includes(m) ? m : 'highway'; })();
+  let currentMap = localMapChoice; // the map of the race being set up; the renderer reads this global every frame
+
+  function chipToast(msg) {
+    try { if (window.trToast) { window.trToast(msg, 'info', 1800); return; } } catch (e) {}
+    showCrToast(msg);
+  }
+  function timerLabel(sec) { return sec === 30 ? '30 SEC' : sec === 120 ? '2 MIN' : '1 MIN'; }
+
+  function updateMapTimerChips() {
+    const locked = gameState !== 'IDLE';
+    const mt = document.getElementById('mapBtnText'), tt = document.getElementById('timerBtnText');
+    if (mt) mt.innerHTML = window.TR_ICONS.map + MAP_DEFS[currentMap].name;
+    if (tt) tt.innerHTML = window.TR_ICONS.timer + timerLabel(RACE_DURATION_SEC);
+    ['mapChip', 'timerChip'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('locked-weather', locked); });
+    document.querySelectorAll('#mapPopupList .map-opt').forEach(el => el.classList.toggle('sel', el.dataset.map === currentMap));
+  }
+
+  // Track length and every time-based threshold scale with the chosen duration; speeds stay the same.
+  function applyRaceDuration(sec, regen) {
+    if (!TIMER_CHOICES.includes(sec)) sec = 60;
+    RACE_DURATION_SEC = sec;
+    RACE_K = sec / 60;
+    FINISH_LINE_Z = RACE_BASE_Z * RACE_K;
+    PACK_SECONDS = 35 * RACE_K;
+    if (gameState !== 'RACING' && gameState !== 'FINISHED') {
+      timeRemaining = RACE_DURATION_SEC;
+      const fmtT = formatTime(timeRemaining);
+      if (timerText) { timerText.textContent = fmtT; timerText._lastVal = fmtT; }
+    }
+    if (regen !== false) { try { generateTrackObjects(); } catch (e) {} }
+    updateMapTimerChips();
+  }
+
+  // back to the player's own choices (bots / demo / offline, and every new lobby)
+  function restoreLocalRaceSettings() {
+    currentMap = localMapChoice;
+    if (RACE_DURATION_SEC !== localTimerChoice) applyRaceDuration(localTimerChoice, false);
+  }
+
+  // Races with real opponents: map and timer come from the room id, so every client derives the same values without a backend change.
+  function hashStr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function roomHumanCount(room) {
+    if (!room) return 0;
+    if (Array.isArray(room.slots) && room.slots.length) return room.slots.filter(sl => sl && !sl.is_bot && sl.uid).length;
+    return 0;
+  }
+  function resolveRoomRaceSettings(room) {
+    if (!room || !room.room_id || roomHumanCount(room) < 2) return;
+    if (gameState !== 'MATCHMAKING' && gameState !== 'COUNTDOWN') return;
+    const map = MAP_KEYS[hashStr(String(room.room_id)) % MAP_KEYS.length];
+    const rs = +(room.race_duration_sec || room.duration_sec);
+    const sec = TIMER_CHOICES.includes(rs) ? rs : 60;
+    const changed = currentMap !== map || RACE_DURATION_SEC !== sec;
+    currentMap = map;
+    if (RACE_DURATION_SEC !== sec) applyRaceDuration(sec, false);
+    if (changed) { try { generateTrackObjects(String(room.room_id)); } catch (e) {} updateMapTimerChips(); }
+  }
+
+  function openPop(id) { const el = document.getElementById(id); if (el) el.classList.add('open'); }
+  function closePop(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
+  (function initMapTimerChips() {
+    const list = document.getElementById('mapPopupList');
+    if (list) list.innerHTML = MAP_KEYS.map(k => `<button type="button" class="map-opt" data-map="${k}">
+      <span class="map-opt-art">${MAP_DEFS[k].svg}</span>
+      <span class="map-opt-txt"><b>${MAP_DEFS[k].name}</b><i>${MAP_DEFS[k].desc}</i></span>
+      <span class="map-opt-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.500l4.500 4.500L19 7.500" stroke="#22e07a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>`).join('');
+    document.getElementById('mapChipBtn').addEventListener('click', () => {
+      if (gameState !== 'IDLE') { chipToast('Map can only be changed before the race starts'); triggerHaptic(30); return; }
+      updateMapTimerChips(); openPop('mapModalBackdrop');
+    });
+    list.addEventListener('click', (e) => {
+      const b = e.target.closest('.map-opt'); if (!b || gameState !== 'IDLE') return;
+      localMapChoice = b.dataset.map; currentMap = localMapChoice; lsSetSafe('tr_map', localMapChoice);
+      updateMapTimerChips(); playTone(540, 680, 0.07, 'sine', 0.09); triggerHaptic(20);
+      setTimeout(() => closePop('mapModalBackdrop'), 160);
+    });
+    document.getElementById('mapInfoBtn').addEventListener('click', () => openPop('mapInfoBackdrop'));
+    document.getElementById('timerInfoBtn').addEventListener('click', () => openPop('timerInfoBackdrop'));
+    document.getElementById('timerChipBtn').addEventListener('click', () => {
+      if (gameState !== 'IDLE') { chipToast('Race time can only be changed before the race starts'); triggerHaptic(30); return; }
+      localTimerChoice = TIMER_CHOICES[(TIMER_CHOICES.indexOf(localTimerChoice) + 1) % TIMER_CHOICES.length];
+      lsSetSafe('tr_timer', String(localTimerChoice));
+      applyRaceDuration(localTimerChoice, true);
+      playTone(540, 680, 0.07, 'sine', 0.09); triggerHaptic(20);
+    });
+    document.querySelectorAll('.pop-close').forEach(b => b.addEventListener('click', () => { const bd = b.closest('.modal-backdrop'); if (bd) bd.classList.remove('open'); }));
+  })();
+
+  // FINAL 5s: non-blocking overlay for the last five seconds of the race (display only, the simulation is untouched).
+  // A race ends when the clock runs out OR the leader crosses the line, whichever comes first, so "5 s left" is the earlier of
+  // the clock and the leader's arrival time at the current speed. Once started it counts 5..1 by race time and goes at the finish.
+  let _finalFiveShown = 0, _ffStart = null;
+  function updateFinalFive() {
+    const el = document.getElementById('finalFive'); if (!el) return;
+    let n = 0;
+    if (gameState === 'RACING') {
+      const elapsed = RACE_DURATION_SEC - timeRemaining;
+      if (_ffStart === null) {
+        let eta = timeRemaining;
+        let lead = null; for (const c of cars) if (!lead || c.z > lead.z) lead = c;
+        if (lead) eta = Math.min(eta, (FINISH_LINE_Z - lead.z) / (Math.max(lead.speed, 140) * WORLD_SPEED_SCALE));
+        if (eta <= 5) _ffStart = elapsed;
+      }
+      if (_ffStart !== null) n = Math.max(1, 5 - Math.floor(elapsed - _ffStart));
+    } else { _ffStart = null; }
+    if (n === _finalFiveShown) return;
+    _finalFiveShown = n;
+    if (!n) { el.classList.remove('show'); return; }
+    document.getElementById('finalFiveNum').textContent = String(n);
+    el.classList.add('show');
+    el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+  }
 
   function formatTime(sec) {
     const s = Math.ceil(Math.max(0, sec));
@@ -7038,7 +7281,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const mult = getMultiplier();
     const payout = +(currentBet * mult).toFixed(2);
     const netProfit = +(payout - currentBet).toFixed(2);
-    const winnerTimeNum = Math.max(48.2, +(RACE_DURATION_SEC - timeRemaining).toFixed(2));
+    const winnerTimeNum = Math.max(48.2 * RACE_K, +(RACE_DURATION_SEC - timeRemaining).toFixed(2));
 
     // Calculate realistic finish time & time gap for every car in sortedCars
     const standings = sortedCars.map((c, idx) => {
@@ -7230,6 +7473,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         centerStartCircle.classList.add('hidden');
         standaloneCountdown.classList.add('show');
         gameState = 'COUNTDOWN';
+        if (window._trActiveRoom) resolveRoomRaceSettings(window._trActiveRoom);
         countdownTimer = 3.2;
         lastCountdownInt = 4;
         if (window._trMusicRate) window._trMusicRate(0.7); // music drops to 70% tempo from 3-2-1 until the race is over
@@ -7282,6 +7526,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
+      updateFinalFive();
       cameraShake = 0;
       debrisParticles = [];
       tireSmokeParticles = [];
@@ -7302,7 +7547,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
 
     const raceProgress = leaderZ / FINISH_LINE_Z;
-    const inFinalStretch = raceProgress > 0.65 || timeRemaining <= 20.0;
+    const inFinalStretch = raceProgress > 0.65 || timeRemaining <= 20.0 * RACE_K;
 
     // Update each car's speed, steering & position (NO artificial bot speed cheats!)
     // (steering helpers are defined once below the loop)
@@ -7669,6 +7914,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       speedNum._lastVal = roundedSpd;
       speedNum.textContent = roundedSpd;
     }
+    updateFinalFive();
     const fmtT = formatTime(timeRemaining);
     if (timerText._lastVal !== fmtT) {
       timerText._lastVal = fmtT;
@@ -7687,8 +7933,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const forced = !!(window._trRouteForce && window._trRouteForce.oncoming);
     if (!forced && Math.random() < 0.28) return;
     const n = forced ? 5 : 2 + Math.floor(Math.random() * 4);
-    let t = 5 + Math.random() * 7;
-    for (let i = 0; i < n && t < 46; i++) { oncomingPlan.push(t); t += 6.5 + Math.random() * 6; }
+    let t = (5 + Math.random() * 7) * RACE_K;
+    for (let i = 0; i < n && t < 46 * RACE_K; i++) { oncomingPlan.push(t); t += (6.5 + Math.random() * 6) * RACE_K; }
   }
   function sfxHorn() {
     playTone(466, 466, 0.3, 'square', 0.08); playTone(370, 370, 0.3, 'square', 0.07);
@@ -7700,7 +7946,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (!oncoming && oncomingPlan.length && el >= oncomingPlan[0]) {
       const lead = Math.max(...cars.map(c => c.z)), q = (typeof raceRoute === 'function') ? raceRoute().squeeze : null;
       if (raceProgress > 0.8) oncomingPlan = [];
-      else if (q && lead + 520 > q.z0 - 60 && lead - 60 < q.z1) oncomingPlan[0] = el + 1.5; // wait until the squeeze is behind
+      else if (q && lead + 520 > q.z0 - 60 && lead - 60 < q.z1) oncomingPlan[0] = el + 1.5 * RACE_K; // wait until the squeeze is behind
       else {
         oncomingPlan.shift();
         const pool = cars.filter(c => !(raceFavId && c.id === raceFavId && raceProgress > 0.5));
@@ -7809,7 +8055,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
 
     // Sudden Rival Side-Hit Maneuver ("kabhi suddenly ek car tumhe hit karta hai jise dusra win ho jata hai")
-    if (!isDesignatedWinner && sideSlamEventsTriggered < 2 && timeRemaining < 48 && timeRemaining > 8) {
+    if (!isDesignatedWinner && sideSlamEventsTriggered < 2 && timeRemaining < 48 * RACE_K && timeRemaining > 8 * RACE_K) {
       for (const other of cars) {
         if (other !== bot && other.id !== raceFavId) {
           const dz = Math.abs(other.z - bot.z);
@@ -7876,7 +8122,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     // Top-down map of the actual route: the line follows the same bends the player drives.
     const cardW = Math.max(62, Math.floor(cw * 0.17));
     const cardX = cw - cardW - Math.floor(cw * 0.016);
-    const mapTop = Math.floor(ch * 0.215), mapBot = Math.floor(ch * 0.615), mapH = mapBot - mapTop;
+    // the card starts below the right HUD chip stack (climate / map / race time / camera), whatever the screen size
+    const _nowMm = performance.now();
+    if (!drawRightMiniMap._t || _nowMm - drawRightMiniMap._t > 400) {
+      drawRightMiniMap._t = _nowMm;
+      const st = document.querySelector('.right-hud-stack'), cr = canvas.getBoundingClientRect();
+      drawRightMiniMap._sb = st && cr.height ? (st.getBoundingClientRect().bottom - cr.top) * (ch / cr.height) : 0;
+    }
+    const mapTop = Math.max(Math.floor(ch * 0.215), Math.ceil(drawRightMiniMap._sb || 0) + 32);
+    const mapBot = Math.max(Math.floor(ch * 0.615), mapTop + Math.floor(ch * 0.3)), mapH = mapBot - mapTop;
     ctx.fillStyle = 'rgba(8, 13, 24, 0.86)';
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
     ctx.lineWidth = 1.5;
@@ -8504,6 +8758,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       }
     }
 
+    resolveRoomRaceSettings(room);
     syncCarsAndLabelsWithRoom();
   }
 
