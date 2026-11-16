@@ -6102,7 +6102,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   // =========================================================================
   // Race length is player-selectable (30 s / 1 min / 2 min). Speeds stay the same, so the track length and every
   // time-based threshold scale with RACE_K = duration / 60 (see applyRaceDuration further down).
-  const RACE_BASE_Z = 3980; // 4850 * 0.8: speeds are 20% lower, so race length scales to keep the same duration (60 s race)
+  const RACE_BASE_Z = 4700; // v17: sized so the winner crosses the line at ~0.9-0.96 of the chosen timer (speeds unchanged)
   const TIMER_CHOICES = [30, 60, 120];
   const MAP_KEYS = ['highway', 'city', 'mountain', 'lake', 'desert'];
   function lsGetSafe(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -6149,10 +6149,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   Object.assign(window.TR_ICONS, { sunny: '<svg class="ic"><use href="#ic-sun"/></svg>', sunset: '<svg class="ic"><use href="#ic-sun"/></svg>', rain: '<svg class="ic"><use href="#ic-rain"/></svg>', snow: '<svg class="ic"><use href="#ic-snow"/></svg>', night: '<svg class="ic"><use href="#ic-moon"/></svg>', map: '<svg class="ic"><use href="#ic-map"/></svg>', timer: '<svg class="ic"><use href="#ic-timer"/></svg>' });
   document.getElementById('weatherInfoBtn')?.addEventListener('click', (ev) => { ev.stopPropagation(); if (window.openClimateInfo) window.openClimateInfo(); });
 
+  // v17 flow: the climate changes only on open (random) or when the player taps the chip: Sunny -> Rain -> Night -> Snow -> Sunny (Snow skipped on Desert)
   function pickRandomDifferentWeather() {
-    if (FORCED_WEATHER) { currentWeather = FORCED_WEATHER; updateWeatherButtonLabel(); return; }
-    const others = WEATHER_THEMES.filter(w => w !== currentWeather);
-    currentWeather = others[Math.floor(Math.random() * others.length)];
+    let i = WEATHER_THEMES.indexOf(currentWeather);
+    let w = WEATHER_THEMES[(i + 1) % WEATHER_THEMES.length];
+    if (w === 'snow' && typeof currentMap !== 'undefined' && currentMap === 'desert') w = 'sunny';
+    currentWeather = w;
     updateWeatherButtonLabel();
   }
 
@@ -6509,11 +6511,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     debrisParticles = [];
     tireSmokeParticles = [];
 
-    if (raceCount > 0) {
-      pickRandomDifferentWeather();
-    } else {
-      updateWeatherButtonLabel();
-    }
+    updateWeatherButtonLabel();
 
     setupCarsForRace();
     try { varyPlayerTheme(); } catch (e) {}
@@ -6685,6 +6683,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     list.addEventListener('click', (e) => {
       const b = e.target.closest('.map-opt'); if (!b || gameState !== 'IDLE') return;
       localMapChoice = b.dataset.map; currentMap = localMapChoice; lsSetSafe('tr_map', localMapChoice);
+      if (currentMap === 'desert' && currentWeather === 'snow') { currentWeather = 'sunny'; updateWeatherButtonLabel(); }
       updateMapTimerChips(); playTone(540, 680, 0.07, 'sine', 0.09); triggerHaptic(20);
       setTimeout(() => closePop('mapModalBackdrop'), 160);
     });
@@ -7019,6 +7018,40 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   }
   document.getElementById('selectMode2Btn').addEventListener('click', () => selectRaceMode(2));
   document.getElementById('selectMode3Btn').addEventListener('click', () => selectRaceMode(3));
+
+  // ---- v17 flow: RANDOM ON OPEN (once per page load, not per race) ----
+  (function randomOnOpen() {
+    let skip = false;
+    try { skip = !!window._trRouteForce || /[?&]norandom=1/.test(location.search) || lsGetSafe('tr_norandom') === '1' || WEATHER_THEMES.includes(lsGetSafe('tr_weather')); } catch (e) { skip = true; }
+    if (skip) return;
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const map = pick(MAP_KEYS);
+    let wx = pick(WEATHER_THEMES); if (map === 'desert' && wx === 'snow') wx = pick(['sunny', 'rain', 'night']);
+    const cars3 = Math.random() < 0.5 ? 2 : 3;
+    localMapChoice = map; currentMap = map; currentWeather = wx;
+    try { selectRaceMode(cars3); } catch (e) {}
+    try { updateWeatherButtonLabel(); updateMapTimerChips(); } catch (e) {}
+    window._trOpenRandom = { cars: cars3, map, weather: wx };
+    // one small own toast below the status strip
+    const ICW = { sunny: 'sun', rain: 'rain', night: 'moon', snow: 'snow' };
+    const nm = (m) => (MAP_DEFS[m] ? MAP_DEFS[m].name : m.toUpperCase());
+    const svg = (id) => '<svg class="ic" viewBox="0 0 24 24"><use href="#ic-' + id + '"/></svg>';
+    const st = document.createElement('style'); st.id = 'v17Flow';
+    st.textContent = '#openRandToast{position:fixed;left:68px;right:128px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease;padding:7px 10px;border-radius:12px;background:rgba(10,18,36,.88);border:1px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);color:#fff;font-family:inherit;text-align:center}'
+      + '#openRandToast.show{opacity:1}#openRandToast .ort-l1{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;font-size:12px;font-weight:900;font-style:italic;letter-spacing:.04em;text-transform:uppercase;line-height:1.3}'
+      + '#openRandToast .ic{width:15px;height:15px;color:#22E07A}#openRandToast .ort-w .ic{color:#FFC83D}#openRandToast .ort-d{opacity:.6}#openRandToast .ort-l2{margin-top:2px;font-size:9.5px;opacity:.72;line-height:1.25}';
+    document.head.appendChild(st);
+    setTimeout(() => {
+      const el = document.createElement('div'); el.id = 'openRandToast';
+      el.innerHTML = '<div class="ort-l1"><span>' + svg(map) + ' ' + nm(map) + '</span><span class="ort-d">\u2022</span><span class="ort-w">' + svg(ICW[wx]) + ' ' + wx.toUpperCase() + '</span></div><div class="ort-l2">change map &amp; climate from the top-right</div>';
+      document.body.appendChild(el);
+      const ss = document.querySelector('.status-strip'); const r = ss ? ss.getBoundingClientRect() : null;
+      el.style.top = ((r && r.bottom > 0 ? r.bottom : 56) + 8) + 'px';
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+      setTimeout(() => el.classList.remove('show'), 2200);
+      setTimeout(() => el.remove(), 2600);
+    }, 700);
+  })();
 
   const resultModalBackdrop = document.getElementById('resultModalBackdrop');
   const modalSvgHolder = document.getElementById('modalSvgHolder');
@@ -8163,6 +8196,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       updateTopPositionBanner();
       const sorted = [...cars].sort((a, b) => b.z - a.z);
       const playerRank = sorted.findIndex(c => c.isPlayer) + 1;
+      if (window._trRaceDbg) { window._trRaceDbg.finish = +(RACE_DURATION_SEC - timeRemaining).toFixed(2); window._trRaceDbg.winner = sorted[0].id; } // read-only test info
       showRaceResultModal(playerRank, sorted);
       return;
     }
@@ -8175,6 +8209,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     for (const car of cars) {
       if (car.bumpCooldown > 0) car.bumpCooldown = Math.max(0, car.bumpCooldown - dt);
       if (car.boostTimer > 0) car.boostTimer = Math.max(0, car.boostTimer - dt);
+      if (car.hopT > 0) car.hopT = Math.max(0, car.hopT - dt); // cosmetic pad hop (renderer lifts the car; never airborne for collisions)
+      if (car.kickT > 0) { car.kickT = Math.max(0, car.kickT - dt); car.speed = Math.min(BOOST_TOP_SPEED, car.speed * (1 + 0.28 * dt)); } // pad kick: about +11% over 0.4 s, same for every car
       if (car.hitSlowTimer > 0) car.hitSlowTimer = Math.max(0, car.hitSlowTimer - dt);
       if (Math.abs(car.hitRoll) > 0.001) car.hitRoll *= Math.pow(0.08, dt);
       else car.hitRoll = 0;
@@ -8384,6 +8420,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
               car.boostTimer = 1.30;
               car.hitSlowTimer = 0;
               car.speed = Math.min(BOOST_TOP_SPEED, car.speed + 38);
+              car.hopT = car.hopDur = 0.38; car.kickT = 0.4;
+              if (car.isPlayer) triggerHaptic(12);
+              if (window._trBoostLog) window._trBoostLog.push({ id: car.id, t: +(RACE_DURATION_SEC - timeRemaining).toFixed(2), v0: Math.round(car.speed), hopT: car.hopT });
               if (car.isPlayer || Math.abs(car.z - player.z) < 25) sfxBoost();
             }
             continue;

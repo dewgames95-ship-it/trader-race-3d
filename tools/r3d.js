@@ -124,7 +124,7 @@
     {
       // tunnel: some races, 200-300 units long, away from the street, the bridge, the squeeze and the lake
       const tRoll = rnd2(), tLen = rnd2(), tTry = []; for (let i = 0; i < 12; i++) tTry.push(rnd2());
-      if ((tRoll < 0.35 || F.tunnel) && mapK !== 'lake' && endZ > 1500) {
+      if ((tRoll < (mapK === 'highway' ? 0.10 : 0.35) || F.tunnel) && mapK !== 'lake' && endZ > 1500) {
         const len = 200 + tLen * 100, free = (z0) => {
           const z1 = z0 + len;
           if (R.bridge && z1 > R.bridge.z0 - 260 && z0 < R.bridge.z1 + 260) return false;
@@ -773,7 +773,7 @@
     scene.add(grass);
 
     const ROAD_W = 2.2 * R3D_XS; // asphalt + both shoulders
-    const ROAD_LEN = 1400, ROAD_PERIOD = 14;
+    const ROAD_LEN = 3000, ROAD_PERIOD = 14;
     const roadC = makeCanvas(1024, 256);
     {
       const g = roadC.getContext('2d'), W = 1024, Hh = 256, u = (x) => (x + 1.1) / 2.2 * W;
@@ -800,7 +800,7 @@
     scene.add(road);
 
     // Lane dashes: world-anchored instances re-used as the camera moves.
-    const DASH_PERIOD = 19, DASH_ROWS = 46;
+    const DASH_PERIOD = 19, DASH_ROWS = 160;
     const dashGeo = flatOnRoad(0.26, DASH_PERIOD * 0.5 * R3D_ZS);
     const dashes = new T.InstancedMesh(dashGeo, new T.MeshBasicMaterial({ color: 0xffffff }), DASH_ROWS * 3);
     dashes.frustumCulled = false; dashes.position.y = 0.012;
@@ -830,12 +830,12 @@
       for (const sd of [-1, 1]) { const k = new T.Mesh(new T.BoxGeometry(0.34, 0.16, ROAD_LEN, 1, 1, Math.round(ROAD_LEN / 6)), kerbMat); k.position.set(sd * (RAIL_X - 0.02), 0.06, 0); rails.add(k); }
     }
     scene.add(rails);
-    const POST_GAP = 2.6, POST_ROWS = 150;
+    const POST_GAP = 2.6, POST_ROWS = 400;
     const posts = new T.InstancedMesh(new T.BoxGeometry(0.13, 0.86, 0.16), new T.MeshStandardMaterial({ color: 0x9aa3ae, metalness: 0.8, roughness: 0.4 }), POST_ROWS * 2);
     posts.frustumCulled = false;
     scene.add(posts);
     // blue marker lights along both rails
-    const LIGHT_GAP = POST_GAP * 3, LIGHT_ROWS = 44;
+    const LIGHT_GAP = POST_GAP * 3, LIGHT_ROWS = 130;
     const railLightPos = new Float32Array(LIGHT_ROWS * 2 * 3);
     const railLightGeo = new T.BufferGeometry(); railLightGeo.setAttribute('position', new T.BufferAttribute(railLightPos, 3));
     const railLights = new T.Points(railLightGeo, new T.PointsMaterial({ color: 0x4fb4ff, size: 1.5, map: glowTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false }));
@@ -851,7 +851,7 @@
     const railSpikes = [0, 1, 2, 3].map(() => { const m = new T.Mesh(spikeGeo, matVC); m.visible = false; m.userData.t = 9; scene.add(m); return m; });
 
     // street lights (one merged lamp post, instanced along both sides)
-    const LAMP_GAP = 34, LAMP_ROWS = 16;
+    const LAMP_GAP = 34, LAMP_ROWS = 32;
     const lampGeo = merge([
       part(new T.CylinderGeometry(0.07, 0.11, 7.2, 8), '#59626e', 0, 3.6, 0),
       part(new T.CylinderGeometry(0.16, 0.2, 0.5, 8), '#3f4650', 0, 0.25, 0),
@@ -865,7 +865,7 @@
     let lampBase = null;
 
     // ---------- roadside flora (instanced, world-anchored by segment index) ----------
-    const FLORA_SEG = 22, FLORA_ROWS = 48;
+    const FLORA_SEG = 22, FLORA_ROWS = 120; // v17: window about 770 m (was 48 rows / 306 m)
     const trunkGeo = new T.CylinderGeometry(0.15, 0.22, 1, 6); trunkGeo.translate(0, 0.5, 0);
     const trunks = new T.InstancedMesh(trunkGeo, new T.MeshLambertMaterial({ color: 0x7a4a26 }), FLORA_ROWS * 6);
     const leafMat = new T.MeshLambertMaterial({ color: 0xffffff });
@@ -952,14 +952,14 @@
       for (const q of [[[-1, 0, 0], [1, 0, 0], [1, 1, 0], [-1, 1, 0]], [[0, 0, -1], [0, 0, 1], [0, 1, 1], [0, 1, -1]]]) for (const i of [0, 1, 2, 0, 2, 3]) { P.push(...q[i]); U.push([0, 1, 1, 0][i], [0, 0, 1, 1][i]); }
       tuftGeo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); tuftGeo.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
     }
-    const GRASS_PER_SIDE = 64, TUFT_CAP = FLORA_ROWS * 2 * GRASS_PER_SIDE;
+    const GRASS_PER_SIDE = 64, TUFT_CAP = 48 * 2 * GRASS_PER_SIDE; // grass tufts stay near the camera (cap as before)
     const TUFT_TINTS = ['#ffffff', '#d9f2b0', '#a8d68a', '#f0e6a0', '#7fbf6a', '#c8f0c0'].map((c) => col(c));
     const tuftMat = new T.MeshBasicMaterial({ map: canvasTex(tuftC), alphaTest: 0.4, side: T.DoubleSide });
     const tufts = new T.InstancedMesh(tuftGeo, tuftMat, TUFT_CAP);
     tufts.frustumCulled = false; tufts.count = 0; scene.add(tufts);
     // Real 3D trees (maple + pine LOD2 meshes from the owner's packs) for the rows nearest the road.
     const treeKits = [], leafMats = [];
-    const TREE_CAP = 150;
+    const TREE_CAP = 320;
     const makeKits = (root, prefix, kind) => {
       if (!root) return;
       root.updateMatrixWorld(true);
@@ -1000,7 +1000,7 @@
       return true;
     };
     // Owner's grass pack: every patch/clump mesh becomes an instanced kit.
-    const grassKits = [], GRASS_CAP = 1500;
+    const grassKits = [], GRASS_CAP = 3000;
     // natural mix of grass tones: fresh, deep, olive, dry-yellow, blue-green
     const GRASS_TINTS = ['#ffffff', '#dff2c4', '#b9dc96', '#93c47a', '#c9cf86', '#e6dc9a', '#a7d3a0', '#86b566', '#d6e8a8'].map((c) => col(c));
     if (grassScene) {
@@ -1072,7 +1072,7 @@
           }
           if (r(18.1) < 0.9) plant(ROCKS[Math.floor(r(18.7) * 3)], side * (RAIL_X + 0.9 + r(19.3) * 2.6), z - segLen * 0.3, 0.55 + r(19.9) * 0.75, r(20.3) < 0.5, 0);
           if (r(26.3) < 0.55) plant(ROCKS[Math.floor(r(26.9) * 3)], side * (RAIL_X + 4 + r(27.1) * 9), z - segLen * r(27.7), 0.5 + r(28.3) * 0.6, r(28.9) < 0.5, 0); // pebbles further out
-          for (let f = 0; f < GRASS_PER_SIDE && gi < TUFT_CAP; f++) {
+          for (let f = 0; f < GRASS_PER_SIDE && gi < TUFT_CAP && k < 56; f++) {
             const far = hash(n * 31.7 + f), sz = 0.16 + hash(n * 33.1 + f) * 0.18;
             const kind = hash(n * 37.9 + f), tall = kind > 0.85 ? 1.25 : (kind < 0.3 ? 0.6 : 0.85);
             if (clearAt(z - segLen * hash(n * 35.3 + f), grassKits.length ? RAIL_X + 0.6 + far * (8 + far * 20) : RAIL_X + 0.5 + far * far * 16)) continue;
@@ -1250,7 +1250,7 @@
       { w: 22.4, d: 16, h: 28.8, make: (b) => { body(b, 22.4, 16, 28.8); parapet(b, 22.4, 16, 28.8); b.solid(-7, 28.8, -4.5, -0.6, 31.8, 1.5, UNIT, false); b.solid(3.5, 28.8, -5.5, 8.5, 31.2, -0.5, UNIT, false); awnings(b, 22.4, 16, '#3a9d5d', '#d1432f'); } },
       { w: 16, d: 16, h: 70.4, make: (b) => { body(b, 16, 16, 70.4); b.solid(-6.4, 70.4, -6.4, 6.4, 76.8, 6.4, WALL, true, { top: ROOF }); b.solid(-0.5, 76.8, -0.5, 0.5, 84, 0.5, grey(0.92), false); b.solid(-0.22, 84, -0.22, 0.22, 91, 0.22, grey(0.92), false); awnings(b, 16, 16, '#7b4fb3', '#f2c230'); } }
     ];
-    const CITY_CAP = 72, CITY_AHEAD = 720, CITY_BEHIND = 60; // buildings are laid out in a window around the camera (whole street for a short one)
+    const CITY_CAP = 110, CITY_AHEAD = 1100, CITY_BEHIND = 60; // buildings are laid out in a window around the camera (whole street for a short one)
     const cityMeshes = ARCH.map((a) => {
       const b = mkBuilder(); a.make(b);
       const m = new T.InstancedMesh(b.build(), bldMat, CITY_CAP);
@@ -1403,6 +1403,7 @@
       trGap.value.set(-brM1, -brM0);
     };
     // test hooks (used by the browser tests only): move every car so the player stands at track position z; pad positions
+    window._trObjList = (type) => trackObjects.filter((o) => !type || o.type === type).map((o) => ({ type: o.type, z: o.z, x: o.x })); // test hook
     window._trTeleport = (z) => { const p = cars.find((c) => c.isPlayer) || cars[0]; if (!p) return false; const d = z - p.z; for (const c of cars) c.z += d; return true; };
     window._trSetEnd = (z) => { try { FINISH_LINE_Z = z; return true; } catch (e) { return false; } }; // works once FINISH_LINE_Z is a `let`
     window._trBoosts = () => trackObjects.filter((o) => o.type === 'boost').map((o) => o.z);
@@ -1428,7 +1429,7 @@
     // concrete, a retro-reflective band on the walls, two rows of warm ceiling lights (emissive + glow points for the bloom). The inside
     // is unlit vertex colour with the light pools baked in; while the camera is in the tunnel the scene lights dim (tunK).
     const TN_A = 6.6, TN_B = 10.4, TN_Y0 = -0.3;
-    const TN_PHI = (() => { const A = [0, 0.0963, 0.1739, 0.2896, 0.4753, 0.7, 0.95, 1.2, 1.4], out = []; for (const a of A) out.push(Math.PI - a); out.push(Math.PI / 2); for (let i = A.length - 1; i >= 0; i--) out.push(A[i]); return out; })();
+    const TN_PHI = (() => { const A = [0, 0.0963, 0.1205, 0.1272, 0.1568, 0.1628, 0.1739, 0.2896, 0.4753, 0.7, 0.95, 1.2, 1.4], out = []; for (const a of A) out.push(Math.PI - a); out.push(Math.PI / 2); for (let i = A.length - 1; i >= 0; i--) out.push(A[i]); return out; })();
     const TN_NP = TN_PHI.length;
     const tnPt = (a, b, y0, k) => [a * Math.cos(TN_PHI[k]), y0 + b * Math.sin(TN_PHI[k])];
     const tunnelGroup = new T.Group(); tunnelGroup.visible = false; scene.add(tunnelGroup);
@@ -1469,7 +1470,7 @@
         for (let j = 0; j <= nr; j++) {
           const s = j * step, d0 = ((s - 3) % 6 + 6) % 6, d = Math.min(d0, 6 - d0), pool = 0.45 + 0.55 * Math.exp(-(d * d) / 2.6);
           for (let k = 0; k < TN_NP; k++) {
-            const [x, y] = tnPt(TN_A, TN_B, TN_Y0, k), tone = 0.075 + 0.07 * Math.min(1, Math.max(0, y) / 9), bnd = smooth01(0.3, 0.7, y) * (1 - smooth01(1.5, 1.9, y));
+            const [x, y] = tnPt(TN_A, TN_B, TN_Y0, k), tone = 0.075 + 0.07 * Math.min(1, Math.max(0, y) / 9), bnd = y > 1.0 && y < 1.35 ? 1 : 0; // v17: thin wall stripe (about 0.3 m) between extra profile rings, dark fine edge either side
             const r = (tone * 0.97 * (1 - bnd) + 0.5 * bnd) * pool, g2 = (tone * 0.99 * (1 - bnd) + 0.27 * bnd) * pool, b2 = (tone * 1.03 * (1 - bnd) + 0.05 * bnd) * pool;
             P.push(x, y, -s); C.push(r, g2, b2);
           }
@@ -1676,7 +1677,7 @@
     })();
 
     // ---------- lake: a long bridge over open water (modules recycled around the camera), shore, islands, far shore ----------
-    const LAKE_WY = -6.2, LAKE_AHEAD = 560, LAKE_BEHIND = 56, LAKE_NMOD = Math.ceil((LAKE_AHEAD + LAKE_BEHIND) / LAKE_MOD) + 1;
+    const LAKE_WY = -6.2, LAKE_AHEAD = 1000, LAKE_BEHIND = 56, LAKE_NMOD = Math.ceil((LAKE_AHEAD + LAKE_BEHIND) / LAKE_MOD) + 1;
     const lakeGroup = new T.Group(); lakeGroup.visible = false; scene.add(lakeGroup);
     const lakeDeckMat = vcMat({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     // one 28 m module: slab, pavements, parapet, a red arch with hangers on each side, and a pier (cross-beam + two columns into the water)
@@ -2302,12 +2303,12 @@
     const boostC = makeCanvas(128, 512);
     {
       const g = boostC.getContext('2d');
-      const bg = g.createLinearGradient(0, 0, 0, 512); bg.addColorStop(0, '#0f62c9'); bg.addColorStop(1, '#0a3f8f');
+      const bg = g.createLinearGradient(0, 0, 0, 512); bg.addColorStop(0, '#1b7bff'); bg.addColorStop(1, '#0d55c4');
       g.fillStyle = bg; rr(g, 5, 5, 118, 502, 12); g.fill();
       g.shadowColor = '#5eead4'; g.shadowBlur = 14; g.strokeStyle = '#67e8f9'; g.lineWidth = 8; g.stroke(); g.shadowBlur = 0;
       g.fillStyle = '#082f6b'; rr(g, 14, 20, 100, 74, 8); g.fill(); g.strokeStyle = '#7dd3fc'; g.lineWidth = 3; g.stroke();
-      g.fillStyle = '#ffffff'; g.font = '900 italic 30px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText('BOOST', 70, 59);
+      g.font = '900 italic 31px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineJoin = 'round'; g.lineWidth = 6; g.strokeStyle = '#03204f'; g.strokeText('BOOST', 72, 59); g.fillStyle = '#ffffff'; g.fillText('BOOST', 72, 59);
       g.fillStyle = '#fde047'; g.beginPath(); g.moveTo(26, 40); g.lineTo(16, 62); g.lineTo(24, 62); g.lineTo(19, 80); g.lineTo(33, 54); g.lineTo(25, 54); g.closePath(); g.fill();
     }
     const chevC = makeCanvas(128, 128);
@@ -2322,28 +2323,20 @@
     const padMat = new T.MeshBasicMaterial({ map: canvasTex(boostC), transparent: true, depthWrite: false });
     const chevMat = new T.MeshBasicMaterial({ map: chevTex, transparent: true, depthWrite: false });
     const padGlowMat = new T.MeshBasicMaterial({ map: glowTex, color: 0x38bdf8, transparent: true, opacity: 0.85, depthWrite: false, blending: T.AdditiveBlending });
+    // v17: the pad is a low wedge (about 7 cm high at the exit end, no collision change) with a lit edge, bold BOOST text and moving chevrons
+    const PAD_RISE = 0.07;
+    const sloped = (w, d, y0, zOff = 0) => { const g = flatOnRoad(w, d); const pa = g.attributes.position; for (let i = 0; i < pa.count; i++) pa.setY(i, y0 + PAD_RISE * (0.5 - (pa.getZ(i) + zOff) / PAD_L)); pa.needsUpdate = true; return g; };
+    const padEdgeMat = new T.MeshBasicMaterial({ color: 0x7ef0ff, transparent: true, opacity: 0.95, depthWrite: false, blending: T.AdditiveBlending });
     const makePad = () => {
       const g = new T.Group();
       const glow = new T.Mesh(flatOnRoad(PAD_W * 2.1, PAD_L * 1.35), padGlowMat); glow.position.y = 0.017; glow.renderOrder = 4;
-      const base = new T.Mesh(flatOnRoad(PAD_W, PAD_L), padMat); base.position.y = 0.02; base.renderOrder = 5;
-      const chev = new T.Mesh(flatOnRoad(PAD_W * 0.8, PAD_L * 0.76), chevMat); chev.position.set(0, 0.024, PAD_L * 0.09); chev.renderOrder = 6;
+      const base = new T.Mesh(sloped(PAD_W, PAD_L, 0.02), padMat); base.renderOrder = 5;
+      const chev = new T.Mesh(sloped(PAD_W * 0.8, PAD_L * 0.76, 0.024, -PAD_L * 0.09), chevMat); chev.position.z = -PAD_L * 0.09; chev.renderOrder = 6;
       g.add(glow, base, chev);
+      for (const sx of [-1, 1]) { const e = new T.Mesh(sloped(0.07, PAD_L, 0.03), padEdgeMat); e.position.x = sx * (PAD_W / 2 - 0.035); e.renderOrder = 7; g.add(e); }
+      const bar = new T.Mesh(sloped(PAD_W, 0.12, 0.03, -(PAD_L / 2 - 0.06)), padEdgeMat); bar.position.z = -(PAD_L / 2 - 0.06); bar.renderOrder = 7; g.add(bar);
       return g;
     };
-    // Nitro strips (visual only): a neon chevron strip painted on the road, leading ~25 m into about half of the boost pads
-    // (chosen by the pad's position, so every player sees the same ones). Pooled meshes, one shared pulsing material.
-    const NITRO_L = 25, NITRO_N = 10;
-    const nitroC = makeCanvas(128, 512);
-    {
-      const g = nitroC.getContext('2d');
-      g.lineJoin = 'miter'; g.lineCap = 'butt';
-      g.shadowColor = '#22d3ee'; g.shadowBlur = 14; g.strokeStyle = '#d9fbff'; g.lineWidth = 13;
-      for (let i = 0; i < 5; i++) { const y = 28 + i * 102.4; g.beginPath(); g.moveTo(22, y + 40); g.lineTo(64, y); g.lineTo(106, y + 40); g.stroke(); }
-      g.shadowBlur = 8; g.fillStyle = '#7ee8ff'; g.fillRect(4, 0, 5, 512); g.fillRect(119, 0, 5, 512);
-    }
-    const nitroTex = canvasTex(nitroC, { wrapT: T.RepeatWrapping });
-    const nitroMat = new T.MeshBasicMaterial({ map: nitroTex, transparent: true, depthWrite: false, opacity: 0.85, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5 });
-    const nitroStrips = Array.from({ length: NITRO_N }, () => { const m = new T.Mesh(flatOnRoad(PAD_W * 0.8, NITRO_L), nitroMat); m.position.y = 0.02; m.renderOrder = 6; m.visible = false; m.frustumCulled = false; scene.add(m); return m; });
     const stripeTex = (() => {
       const c = makeCanvas(128, 32), g = c.getContext('2d');
       g.fillStyle = '#facc15'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#111827';
@@ -2387,13 +2380,6 @@
     })();
     const jumpBodyMat = new T.MeshStandardMaterial({ color: 0x2b2f36, roughness: 0.6, metalness: 0.5 });
     const jumpEdgeMat = new T.MeshStandardMaterial({ color: 0xd9dee5, roughness: 0.3, metalness: 0.9 });
-    const jumpSignMat = (() => {
-      const c = makeCanvas(256, 128), g = c.getContext('2d');
-      g.fillStyle = 'rgba(20,20,20,0.92)'; rr(g, 4, 4, 248, 120, 22); g.fill(); g.strokeStyle = '#f5c518'; g.lineWidth = 8; g.stroke();
-      g.fillStyle = '#f5c518'; g.font = '900 italic 58px "Segoe UI", system-ui, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('JUMP', 104, 66);
-      g.beginPath(); g.moveTo(196, 92); g.lineTo(196, 58); g.lineTo(180, 58); g.lineTo(210, 26); g.lineTo(240, 58); g.lineTo(224, 58); g.lineTo(224, 92); g.closePath(); g.fill();
-      return new T.SpriteMaterial({ map: canvasTex(c), transparent: true, depthWrite: false, fog: false });
-    })();
     // speed bump: rounded strip across the lane
     const bumpGeo = (() => { const g = new T.CylinderGeometry(0.34, 0.34, 2.5, 18, 1, false, 0, Math.PI); g.rotateZ(Math.PI / 2); g.rotateX(-Math.PI / 2); g.scale(1, 0.55, 1); return g; })();
     const tyre = (x, y, z) => { const g = new T.TorusGeometry(0.3, 0.14, 8, 14); g.rotateX(Math.PI / 2); return part(g, '#15171a', x, y, z); };
@@ -2449,8 +2435,7 @@
         const sideShape = new T.Shape([[0, 0], [L, 0], [L, H]].map(([a, b2]) => new T.Vector2(a, b2)));
         const body = new T.ExtrudeGeometry(sideShape, { depth: W, bevelEnabled: false }); body.rotateY(Math.PI / 2); body.translate(-W / 2, 0, L / 2);
         const lip = new T.Mesh(new T.BoxGeometry(W + 0.12, 0.09, 0.14), jumpEdgeMat); lip.position.set(0, H + 0.02, -L / 2);
-        const sign = new T.Sprite(jumpSignMat); sign.scale.set(1.5, 0.75, 1); sign.position.set(0, H + 1.5, -L / 2);
-        const g = new T.Group(); g.add(new T.Mesh(body, jumpBodyMat), deck, lip, sign);
+        const g = new T.Group(); g.add(new T.Mesh(body, jumpBodyMat), deck, lip);
         return g;
       },
       bump: () => { const g = new T.Group(), m = new T.Mesh(bumpGeo, bumpMat); g.add(m); return g; },
@@ -2933,12 +2918,14 @@
         // landing: the body comes down on a damper (no snap to the ground), then the suspension dips and settles
         rig.hopSm = hopRaw >= (rig.hopSm || 0) ? hopRaw : rig.hopSm + (hopRaw - rig.hopSm) * Math.min(1, dt * 13);
         if (rig.hopSm < 0.004) rig.hopSm = 0;
-        const hop = rig.hopSm, inAir = car.jumpTimer > 0;
+        const hpP = car.hopT > 0 && car.hopDur > 0 ? 1 - car.hopT / car.hopDur : 1; // v17 boost-pad hop (cosmetic, sim sets hopT/hopDur)
+        const hp = car.hopT > 0 && car.hopDur > 0 ? Math.sin(Math.PI * hpP) * 0.3 : 0;
+        const hop = rig.hopSm + hp, inAir = car.jumpTimer > 0;
         if (rig.wasAir && !inAir) rig.suspV = -1.5;
         rig.wasAir = inAir;
         rig.suspV = (rig.suspV || 0) + (-150 * (rig.suspY || 0) - 13 * (rig.suspV || 0)) * Math.min(dt, 0.033);
         rig.suspY = Math.max(-0.14, Math.min(0.08, (rig.suspY || 0) + rig.suspV * Math.min(dt, 0.033)));
-        const pitchWant = inAir ? (air - 0.5) * 0.24 : (hop > 0.02 && !rampT ? 0.05 : -rampT * 0.2);
+        const pitchWant = inAir ? (air - 0.5) * 0.24 : (hop > 0.02 && !rampT ? 0.05 : -rampT * 0.2) - (hp > 0 && hpP < 0.5 ? 0.07 * Math.sin(Math.PI * hpP * 2) : 0);
         rig.pitchSm = (rig.pitchSm || 0) + (pitchWant - (rig.pitchSm || 0)) * Math.min(1, dt * 7);
         rig.group.position.set(x + (car.scrapeDir || 0) * scrape * 0.12, hop, z);
         rig.tilt.rotation.x = rig.pitchSm - rig.suspY * 0.35;
@@ -3001,16 +2988,14 @@
 
       // track objects
       const used = {};
-      let nitroN = 0;
       for (const obj of trackObjects) {
         const dzTrack = obj.z - player.z;
-        if (dzTrack < -40 || dzTrack > 600) continue;
+        if (dzTrack < -40 || dzTrack > 2400) continue;
         const n = used[obj.type] = (used[obj.type] || 0) + 1;
         const m = acquire(obj.type, n - 1);
         m.visible = true;
         if (obj.type === 'boost') {
           m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
-          if (nitroN < NITRO_N && hash(obj.z * 0.0371 + 0.5) < 0.5) { const st = nitroStrips[nitroN++]; st.visible = true; st.position.set(obj.x * R3D_XS, 0.02, -obj.z * R3D_ZS + PAD_L / 2 + NITRO_L / 2); } // about half of the pads get a lead-in strip
         } else if (obj.type === 'jump' || obj.type === 'oil' || obj.type === 'bump') {
           m.position.set(obj.x * R3D_XS, 0, -obj.z * R3D_ZS);
         } else {
@@ -3032,8 +3017,6 @@
         const t = (m.userData.t += dt); m.visible = t < 0.8;
         if (m.visible) { const k = t < 0.09 ? t / 0.09 : Math.max(0, 1 - (t - 0.09) / 0.71); m.rotation.y = m.userData.side > 0 ? Math.PI : 0; m.scale.set(0.15 + 0.95 * k * (2 - k), 1, 1); }
       }
-      for (let i = nitroN; i < NITRO_N; i++) nitroStrips[i].visible = false;
-      nitroMat.opacity = 0.62 + Math.sin(tSec * 7) * 0.3; nitroTex.offset.y = -(tSec * 1.4) % 1;
       chevTex.offset.y = -(tSec * 1.6) % 1;
       padGlowMat.opacity = 0.7 + Math.sin(tSec * 5) * 0.18;
 
@@ -3085,7 +3068,7 @@
       if (warm) {
         if (!RT.tunnel) buildTunnel({ z0: 600, z1: 830 }, RT.map); // a stand-in, only so the tunnel shaders get built now
         cityGroup.visible = bridgeGroup.visible = tunnelGroup.visible = true; cityGroup.position.z += 6000; bridgeGroup.position.z += 6000; tunnelGroup.position.z += 6000;
-        for (const m of cityMeshes) m.count = 1; nitroStrips[0].visible = true; nitroStrips[0].position.z += 6000;
+        for (const m of cityMeshes) m.count = 1;
       }
       if (composer) { if (composerW !== viewW || composerH !== viewH || composerPR !== pixelCap) { composerW = viewW; composerH = viewH; composerPR = pixelCap; composer.setSize(viewW, viewH); } composer.render(dt); }
       else renderer.render(scene, camera);
