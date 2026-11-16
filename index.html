@@ -4519,28 +4519,28 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #leaderboardBtn { color: #ffc83d; } #modeSelectHudBtn { color: #5fb4ff; } #raceInfoBtn { color: #7fb2ff; } #howToPlayBtn { color: #8ec5ff; } .speed-pill { color: #22e07a; }
 .hud-pill .hud-pill-label { color: #fff; }
 /* right chip stack */
-.right-hud-stack { top: 36px; right: 6px; gap: 8px; align-items: stretch; width: 108px; zoom: 1 !important; opacity: 1 !important; }
+.right-hud-stack { top: 36px; right: 6px; gap: 8px; align-items: stretch; width: 96px; zoom: 1 !important; opacity: 1 !important; }
 .right-hud-stack .icon-toggle-btn { zoom: 1 !important; }
 .right-hud-stack .mini-utility-row { justify-content: flex-end; }
 #weatherCycleBtn, #weatherChip { --acc: #ffc83d; }
 #mapChip { --acc: #22e07a; } #timerChip { --acc: #2f7bff; } #cameraToggleBtn { --acc: #5fe3ff; }
 .right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip {
-  width: 108px; height: 30px; box-sizing: border-box; border-radius: 11px; padding: 0 7px; position: relative; font-size: 9.5px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
+  width: 96px; height: 27px; box-sizing: border-box; border-radius: 10px; padding: 0 6px; position: relative; font-size: 8.6px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
   border: 1px solid color-mix(in srgb, var(--acc) 65%, transparent); background: linear-gradient(180deg, rgba(16,28,54,.92), rgba(7,13,28,.94)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 28%, transparent), inset 0 1px 0 rgba(255,255,255,.08); }
 .right-hud-stack #weatherChip { padding: 0; display: block; border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
-.right-hud-stack #weatherChip > #weatherCycleBtn { width: 100%; padding: 0 26px 0 7px; justify-content: flex-start; }
+.right-hud-stack #weatherChip > #weatherCycleBtn { width: 100%; padding: 0 23px 0 6px; justify-content: flex-start; }
 .right-hud-stack .hud-chip { padding: 0; }
 .right-hud-stack .hud-chip .chip-main { padding: 0 2px 0 7px; height: 100%; }
 .right-hud-stack .icon-toggle-btn::before { content: ''; position: absolute; left: 0; right: 0; top: -5px; bottom: -5px; }
 .right-hud-stack .hud-chip::before { pointer-events: none; }
 .right-hud-stack .hud-chip .chip-main::before { content: ''; position: absolute; left: 0; right: 30px; top: -5px; bottom: -5px; }
-.right-hud-stack .icon-toggle-btn .ic, .right-hud-stack .hud-chip .ic { width: 15px; height: 15px; color: var(--acc); }
+.right-hud-stack .icon-toggle-btn .ic, .right-hud-stack .hud-chip .ic { width: 13px; height: 13px; color: var(--acc); }
 .right-hud-stack #weatherBtnText, .right-hud-stack #cameraBtnText, .right-hud-stack .chip-main > span { gap: 5px; }
 .right-hud-stack #cameraToggleBtn { justify-content: flex-start; }
-.hud-chip .chip-q, .right-hud-stack .chip-q { width: 18px; height: 18px; margin: 0 5px 0 2px; font-size: 10.5px; font-weight: 900; color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); background: color-mix(in srgb, var(--acc) 14%, transparent); }
+.hud-chip .chip-q, .right-hud-stack .chip-q { width: 16px; height: 16px; margin: 0 4px 0 2px; font-size: 9.5px; font-weight: 900; color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); background: color-mix(in srgb, var(--acc) 14%, transparent); }
 .hud-chip .chip-q::after { inset: -11px; }
-.right-hud-stack #weatherChip > .chip-q { position: absolute; right: 6px; top: 6px; margin: 0; z-index: 2; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
+.right-hud-stack #weatherChip > .chip-q { position: absolute; right: 5px; top: 5.5px; margin: 0; z-index: 2; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
 .right-hud-stack #weatherChip > .chip-q::after { content: ''; position: absolute; inset: -11px; }
 .right-hud-stack #weatherChip > .chip-q:active, .hud-chip .chip-q:active { transform: scale(.88); }
 /* locked while racing: dimmed, same shape */
@@ -4563,12 +4563,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #v17ChatBtn.cd .v17c-ring { opacity: 1; }
 #v17ChatBtn.cd .v17c-ring circle { animation: v17cRing 3s linear forwards; }
 @keyframes v17cRing { from { stroke-dashoffset: 125.7; } to { stroke-dashoffset: 0; } }
-#v17ChatTray { pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: min(340px, calc(100vw - 20px)); opacity: 0; transform: translateY(8px); transition: opacity .18s, transform .18s; visibility: hidden; }
+#v17ChatTray { pointer-events: none; display: flex; flex-direction: column; gap: 6px; align-items: stretch; width: 150px; max-width: 45vw; opacity: 0; transform: scale(.85); transform-origin: 100% 100%; transition: opacity .18s, transform .18s; visibility: hidden; }
 #v17ChatTray.open { opacity: 1; transform: none; visibility: visible; }
 #v17ChatTray.open .v17c-chip { pointer-events: auto; }
-.v17c-chip { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 10px 4px 9px; border-radius: 16px; cursor: pointer; text-align: left; font: 800 12px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef4ff; background: linear-gradient(180deg, rgba(20,34,62,.96), rgba(8,14,28,.97)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 8px rgba(0,0,0,.5); -webkit-tap-highlight-color: transparent; }
+.v17c-chip { position: relative; display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px; border-radius: 10px; cursor: pointer; text-align: left; font: 800 10.5px/1 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef4ff; white-space: nowrap; background: linear-gradient(180deg, rgba(20,34,62,.92), rgba(8,14,28,.92)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 6px rgba(0,0,0,.45); -webkit-tap-highlight-color: transparent; }
+.v17c-chip::before { content: ''; position: absolute; left: -4px; right: -4px; top: -4px; bottom: -4px; }
+.v17c-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .v17c-chip:active { transform: scale(.97); }
-.v17c-chip .ic { width: 17px; height: 17px; }
+.v17c-chip .ic { width: 14px; height: 14px; }
+@media (min-width: 400px) { #v17ChatTray { width: 164px; } }
 @media (prefers-reduced-motion: reduce) { #v17ChatTray, #v17ChatBtn { transition: none; } }
 </style>
 <style id="v17Polish">
@@ -8895,12 +8898,14 @@ window.dispatchEvent(new Event('tr-three'));
     drawRoundedRect(ctx, cardX, mapTop - 24, cardW, mapH + 46, 11, true);
 
     const path = (typeof trackPath === 'function') ? trackPath() : { pts: [[0, 0], [0, FINISH_LINE_Z * 0.29]], step: FINISH_LINE_Z, minX: 0, maxX: 0, len: FINISH_LINE_Z * 0.29 };
-    const pts = path.pts, sy = mapH / path.len, innerW = cardW * 0.62;
+    const pts = path.pts, innerW = cardW * 0.62;
+    if (path.minY === undefined) { let lo = 0, hi = 0; for (const q of pts) { if (q[1] < lo) lo = q[1]; if (q[1] > hi) hi = q[1]; } path.minY = lo; path.maxY = hi; } // a route that doubles back must still fit the card
+    const sy = mapH / Math.max(1, path.maxY - path.minY);
     const sx = Math.min(innerW / Math.max(1, path.maxX - path.minX), sy * 3.2);
     const cx = cardX + cardW / 2, midX = (path.minX + path.maxX) / 2;
     const at = (z) => {
       const f = Math.max(0, Math.min(pts.length - 1.001, z / path.step)), i = Math.floor(f), t = f - i, a = pts[i], b = pts[i + 1];
-      return [cx + (a[0] + (b[0] - a[0]) * t - midX) * sx, mapBot - (a[1] + (b[1] - a[1]) * t) * sy];
+      return [cx + (a[0] + (b[0] - a[0]) * t - midX) * sx, mapBot - (a[1] + (b[1] - a[1]) * t - path.minY) * sy];
     };
     const trace = (z0, z1) => {
       ctx.beginPath();
@@ -9066,7 +9071,7 @@ window.dispatchEvent(new Event('tr-three'));
       R.city = { z0: 250, z1: Math.max(900, endZ - 150) };
     } else if (mapK === 'mountain') {
       R.events = []; R.style = 'twisty';
-      sweepsAndS(260 + rnd2() * 120, endZ - 260, { sweep: 0.5, lenW: [340, 340], ampW: [0.0021, 0.0012], lenS: [520, 320], ampS: [0.0019, 0.0012], waves: [1, 1.5, 2], gap: [10, 90] });
+      sweepsAndS(260 + rnd2() * 120, endZ - 260, { sweep: 0.5, lenW: [380, 340], ampW: [0.0015, 0.0008], lenS: [560, 320], ampS: [0.0014, 0.0008], waves: [1, 1.5], gap: [40, 140] });
       R.hills = { a1: 0.00032 + rnd2() * 0.00014, f1: 200 + rnd2() * 120, p1: rnd2() * 6.283, a2: 0.00014 + rnd2() * 0.00012, f2: 90 + rnd2() * 60, p2: rnd2() * 6.283 };
     } else if (mapK === 'lake') {
       R.events = []; R.style = 'gentle'; R.hills = null;
