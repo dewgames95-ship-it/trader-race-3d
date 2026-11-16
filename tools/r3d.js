@@ -1697,6 +1697,7 @@
         }
         for (let s = 2.8; s < MOD - 1; s += 2.8) { const top = arch(s / MOD) - 0.2; box(ax - 0.05, ax + 0.05, -0.02, top, s - 0.05, s + 0.05, '#e4e1dc'); }
         box(sg * 6 - 0.65, sg * 6 + 0.65, -9.8, -2.4, MOD / 2 - 0.65, MOD / 2 + 0.65, '#a7adb5');
+        parts.push(part(new T.CylinderGeometry(1.9, 2.2, 0.08, 16), '#eef7f8', sg * 6, LAKE_WY + 0.03, -MOD / 2)); // foam ring around the pier
       }
       box(-7.4, 7.4, -2.4, -1.2, MOD / 2 - 0.9, MOD / 2 + 0.9, '#9ea4ac');
       const m = new T.InstancedMesh(merge(parts), lakeDeckMat, LAKE_NMOD); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m;
@@ -1704,6 +1705,32 @@
     // water: one big plane that follows the camera (the grass has a hole over the water stretch), ripples scroll slowly
     const lakeTex = rippleTex.clone(); lakeTex.needsUpdate = true;
     const lakeWaterMat = new T.MeshStandardMaterial({ color: 0x1f78a0, map: lakeTex, roughness: 0.12, metalness: 0.3, envMapIntensity: 1.4 });
+    // v17: wave-normal shading (sun glints through the scene's sun/moon light), sky tint at grazing angles, darker deep water with distance
+    const lakeU = { t: { value: 0 }, sky: { value: new T.Color(0xcfe9fb) } };
+    lakeWaterMat.onBeforeCompile = (sh) => {
+      sh.uniforms.uT = lakeU.t; sh.uniforms.uSky = lakeU.sky;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        uniform float uT; uniform vec3 uSky; varying vec3 vWP;
+        vec2 lkGrad(vec2 p, float t) {
+          vec2 g = vec2(0.0);
+          g += vec2(0.80, 0.60) * cos(dot(p, vec2(0.80, 0.60)) * 0.55 + t * 1.30) * 0.30;
+          g += vec2(-0.55, 0.83) * cos(dot(p, vec2(-0.55, 0.83)) * 1.10 + t * 1.90) * 0.17;
+          g += vec2(0.95, -0.30) * cos(dot(p, vec2(0.95, -0.30)) * 2.30 + t * 2.60) * 0.09;
+          g += vec2(-0.30, -0.95) * cos(dot(p, vec2(-0.30, -0.95)) * 4.70 + t * 3.40) * 0.045;
+          return g;
+        }`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        { float dd = length(vViewPosition); float fade = 1.0 - smoothstep(180.0, 700.0, dd) * 0.75;
+          vec2 g = lkGrad(vWP.xz, uT) * fade;
+          vec3 nw = normalize(vec3(-g.x, 1.0, -g.y));
+          normal = normalize(mix(normal, normalize((viewMatrix * vec4(nw, 0.0)).xyz), 0.9)); }`)
+        .replace('#include <fog_fragment>', `{ float dd = length(vViewPosition); vec3 vd = normalize(vViewPosition);
+          float fr = pow(1.0 - clamp(dot(normal, vd), 0.0, 1.0), 3.0);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * vec3(0.55, 0.72, 0.85), smoothstep(90.0, 650.0, dd) * 0.55);
+          gl_FragColor.rgb += uSky * fr * 0.38; }
+        #include <fog_fragment>`);
+    };
     const lakeWater = (() => {
       const g = new T.PlaneGeometry(2600, 2600, 2, Math.round(2600 / 6)); g.rotateX(-Math.PI / 2);
       const pos = g.attributes.position, uv = g.attributes.uv;
@@ -1721,7 +1748,7 @@
         for (const t of TT) {
           const y = t <= 0 ? -0.1 : -0.1 + (LAKE_WY - 0.4 + 0.1) * smooth01(0, 16, t);
           P.push(x, y, -(off + t));
-          if (t <= 0) tc.copy(cg); else if (t < 5) tc.copy(cg).lerp(cs, t / 5); else if (t < 11) tc.copy(cs).lerp(cw, (t - 5) / 6); else tc.copy(cw);
+          if (t === 3) tc.set('#eef6f4'); else if (t <= 0) tc.copy(cg); else if (t < 5) tc.copy(cg).lerp(cs, t / 5); else if (t < 11) tc.copy(cs).lerp(cw, (t - 5) / 6); else tc.copy(cw);
           const jit = 0.94 + hash(x * 0.37 + t) * 0.12; C.push(tc.r * jit, tc.g * jit, tc.b * jit);
         }
       }
@@ -1750,19 +1777,29 @@
         trees.push(part(new T.CylinderGeometry(0.25, 0.35, 1.6 * s, 6), '#6b4a2a', Math.cos(ang) * rad, y + 0.8 * s, Math.sin(ang) * rad));
         trees.push(part(new T.ConeGeometry(1.9 * s, 6.2 * s, 7), i % 3 ? '#2f6f3c' : '#3a8444', Math.cos(ang) * rad, y + 4.4 * s, Math.sin(ang) * rad));
       }
-      return merge([body, ...trees]);
+      const rocks = [];
+      for (let i = 0; i < 6; i++) { const ang = hash(v * 9.1 + i * 3.7) * 6.283, rad = R * (0.85 + hash(i * 2.9 + v) * 0.3), sz = 0.8 + hash(i * 4.4 + v) * 1.3; rocks.push(part(new T.DodecahedronGeometry(sz, 0).scale(1.2, 0.8, 1), i % 2 ? '#8d9199' : '#a2a69f', Math.cos(ang) * rad, -0.2 + sz * 0.3, Math.sin(ang) * rad)); }
+      return merge([body, ...trees, ...rocks]);
     };
-    const islandMeshes = [0, 1].map((v) => { const m = new T.InstancedMesh(buildIsland(v), islandMat, 8); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m; });
+    const islandMeshes = [0, 1].map((v) => { const m = new T.InstancedMesh(buildIsland(v), islandMat, 14); m.frustumCulled = false; m.count = 0; lakeGroup.add(m); return m; });
     // far shore: a low hazy bank riding with the camera in front of the skyline, so the city stands on land across the water
     const shoreFarMat = basicVC({ fog: false });
     const shoreFar = (() => {
-      const P = [], C = [], I = [], top = col('#5f8f62').lerp(col('#c3d6e4'), 0.25), low = col('#cbbf8c').lerp(col('#c3d6e4'), 0.22), deep = col('#7fa6ad');
-      for (let i = 0; i <= 130; i++) {
-        const x = -900 + i * 14, h = 2.6 + 7 * Math.pow(Math.abs(Math.sin(x * 0.011 + 1)), 1.3) + 4 * Math.pow(Math.sin(x * 0.027 + 0.3), 2) + hash(i * 1.7) * 1.2, base = P.length / 3;
-        P.push(x, h, -380, x, 0.4, -380, x, -8, -380); C.push(top.r, top.g, top.b, low.r, low.g, low.b, deep.r, deep.g, deep.b);
-        if (i > 0) { const a = base - 3; I.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
-      }
-      const m = new T.Mesh(indexed(P, C, I, false), shoreFarMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(shoreFarMat); return m;
+      // three layers across the water: a dark tree line, low hills, and hazy mountains behind them
+      const grp = new T.Group(); const hz = col('#c3d6e4');
+      const layer = (zc, hBase, hAmp, step, hazeK, cTop, cLow, trees, seed) => {
+        const P = [], C = [], I = [], top = col(cTop).lerp(hz, hazeK), low = col(cLow).lerp(hz, hazeK * 0.9), deep = col('#7fa6ad').lerp(hz, hazeK * 0.5);
+        for (let i = 0; i <= Math.round(1800 / step); i++) {
+          const x = -900 + i * step, h = hBase + hAmp * Math.pow(Math.abs(Math.sin(x * 0.0071 + seed)), 1.2) + hAmp * 0.55 * Math.pow(Math.sin(x * 0.019 + seed * 2.3), 2) + hash(i * 1.7 + seed) * (trees ? 3.2 : 1.0), base = P.length / 3;
+          P.push(x, h, zc, x, 0.4, zc, x, -8, zc); C.push(top.r, top.g, top.b, low.r, low.g, low.b, deep.r, deep.g, deep.b);
+          if (i > 0) { const q = base - 3; I.push(q, q + 3, q + 1, q + 1, q + 3, q + 4, q + 1, q + 4, q + 2, q + 2, q + 4, q + 5); }
+        }
+        const m = new T.Mesh(indexed(P, C, I, false), shoreFarMat); m.frustumCulled = false; grp.add(m);
+      };
+      layer(-760, 26, 42, 24, 0.62, '#6d8aa0', '#9fb4c2', false, 2.1);   // hazy mountains
+      layer(-560, 9, 20, 16, 0.4, '#5f8a66', '#cbbf8c', false, 0.7);     // low hills
+      layer(-380, 2.6, 9, 6, 0.18, '#3f7a4c', '#cbbf8c', true, 0.3);     // shore + tree line
+      grp.visible = false; backdrop.add(grp); noBend(shoreFarMat); return grp;
     })();
     let lakeM0 = Infinity, lakeM1 = -Infinity, lakeNMod = 0, lakeBase = null, islBase = null;
     const placeLake = (lake) => {
@@ -1782,13 +1819,13 @@
     const layoutIslands = (camM) => {
       const s0 = Math.floor((camM - 120) / ISL_SEG), s1 = Math.floor((camM + 680) / ISL_SEG), n = [0, 0];
       for (let s = s0; s <= s1; s++) for (const side of [-1, 1]) {
-        if (hash(s * 3.1 + side * 7.7) > 0.58) continue;
+        if (hash(s * 3.1 + side * 7.7) > 0.7) continue;
         const zc = s * ISL_SEG + hash(s * 9.7 + side * 2.1) * 150;
         if (zc < lakeM0 + 40 || zc > lakeM1 - 40) continue;
-        const v = hash(s * 1.9 + side) < 0.5 ? 0 : 1, sc = 0.7 + hash(s * 5.3 + side) * 0.8;
-        if (n[v] >= 8) continue;
+        const v = hash(s * 1.9 + side) < 0.5 ? 0 : 1, sc = 0.4 + hash(s * 5.3 + side) * 1.0;
+        if (n[v] >= 14) continue;
         qy.setFromAxisAngle(upY, hash(s * 2.3 + side * 5) * 6.28);
-        islandMeshes[v].setMatrixAt(n[v]++, m4.compose(v3a.set(side * (100 + hash(s * 5.3 + side * 3) * 320), LAKE_WY, -zc), qy, v3b.set(sc, sc * (0.8 + hash(s * 6.1) * 0.5), sc)));
+        islandMeshes[v].setMatrixAt(n[v]++, m4.compose(v3a.set(side * Math.max(30 + sc * 46, 50 + hash(s * 5.3 + side * 3) * 420), LAKE_WY, -zc), qy, v3b.set(sc, sc * (0.8 + hash(s * 6.1) * 0.5), sc)));
       }
       islandMeshes.forEach((m, v) => { m.count = n[v]; m.instanceMatrix.needsUpdate = true; });
     };
@@ -2844,6 +2881,7 @@
           const lb = Math.floor((camM - LAKE_BEHIND - lakeM0) / LAKE_MOD); if (lb !== lakeBase) { lakeBase = lb; layoutLake(camM); }
           const ib = Math.floor(camM / 60); if (ib !== islBase) { islBase = ib; layoutIslands(camM); }
           lakeWater.position.z = grass.position.z;
+          lakeU.t.value = tSec; lakeU.sky.value.copy(scene.fog.color);
           lakeTex.offset.set((tSec * 0.011) % 1, (lakeWater.position.z / 9 + tSec * 0.017) % 1);
         }
       }
