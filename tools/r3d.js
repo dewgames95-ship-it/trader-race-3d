@@ -417,7 +417,7 @@
       sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#55a636', grass2: '#43902c', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
       rain:   { stops: [[0, '#0b1220'], [0.2, '#18212f'], [0.36, '#3e4a5c'], [1, '#3e4a5c']], fog: '#4a5666', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#a9b8cf', '#33403f', 0.88], sun: ['#c9d6ea', 0.5], cloud: '#6f7a8c', city: '#6f7d94', road: '#858e9d', leaf: '#a2b0aa', glow: 0 },
       snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#587f5a', grass2: '#4d7152', hemi: ['#f2f6ff', '#aebbd0', 1.15], sun: ['#eef3ff', 1.1], cloud: '#ffffff', city: '#dbe7f5', road: '#aab2be', leaf: '#cfe2d6', glow: 0.25 },
-      night:  { stops: [[0, '#02040c'], [0.2, '#050b1e'], [0.36, '#101d40'], [1, '#101d40']], fog: '#0b1430', grass: '#2d5a3a', grass2: '#264c33', hemi: ['#8196d8', '#232b48', 1.0], sun: ['#9db4ff', 0.7], cloud: '#1c2748', city: '#4a5a8c', road: '#8a94aa', leaf: '#6e88b8', glow: 0 },
+      night:  { stops: [[0, '#02040c'], [0.2, '#050b1e'], [0.36, '#101d40'], [1, '#101d40']], fog: '#14214a', grass: '#2d5a3a', grass2: '#264c33', hemi: ['#9db2f0', '#34426e', 1.9], sun: ['#a9c0ff', 1.5], cloud: '#1c2748', city: '#4a5a8c', road: '#8a94aa', leaf: '#6e88b8', glow: 0 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
     };
     const skyTexCache = {};
@@ -1537,8 +1537,8 @@
     // one 40 m wall module: a faceted face with strata bands, a ledge on top and a back that drops to the ground; both ends are 13 m
     // high with a plain profile, so any two modules (also mirrored) meet without a seam
     const buildCliff = (v) => {
-      const NZ = 10, NY = 6, NR = NY + 4, DZ = CLIFF_MOD / NZ, X0 = RAIL_X + 2.6, P = [], C = [], I = [], hh = [];
-      for (let i = 0; i <= NZ; i++) hh.push(i === 0 || i === NZ ? 13 : 8 + Math.pow(hash(v * 17.3 + i * 3.71), 1.2) * 17);
+      const NZ = 12, NY = 8, NR = NY + 4, DZ = CLIFF_MOD / NZ, X0 = RAIL_X + 2.6, P = [], C = [], I = [], hh = [];
+      for (let i = 0; i <= NZ; i++) hh.push(i === 0 || i === NZ ? 13 : 8 + Math.pow(hash(v * 17.3 + i * 3.71), 1.1) * 22);
       for (let i = 1; i < NZ; i++) hh[i] = hh[i] * 0.75 + (hh[i - 1] + hh[i + 1]) * 0.125;
       const cc = new T.Color(), moss = col('#657f48');
       for (let r = 0; r < NR; r++) for (let i = 0; i <= NZ; i++) {
@@ -1554,7 +1554,8 @@
           else { x = xf + 16; y = -0.5; }
         }
         P.push(X0 + x, y, -i * DZ);
-        cc.copy(ROCK_TONES[(r + Math.floor(hash(v * 7.1 + i * 0.5) * 3)) % 6]).multiplyScalar((r === 0 ? 0.55 : 0.82) + hv(6.7) * 0.4);
+        const ck = end ? 0 : v * 7.1 + i * 0.5; // the two end columns look the same on every module: no colour seams
+        cc.copy(ROCK_TONES[(Math.floor(r / 2) + Math.floor(hash(ck) * 3)) % 6]).multiplyScalar((r === 0 ? 0.45 : (r === 1 ? 0.65 : 0.82)) + (end ? 0.2 : hv(6.7) * 0.4) + (r % 2 ? -0.07 : 0.05) + (!end && (i + r) % 3 === 0 ? -0.1 : 0)); // strata bands, dark cracks, dark foot
         if (r >= NY + 1) cc.lerp(moss, r === NY + 1 ? 0.5 : 0.3);
         C.push(cc.r, cc.g, cc.b);
       }
@@ -1621,19 +1622,35 @@
     // layered ridges (with snow caps) on the horizon: ride with the camera like the skyline, hazed by their own vertex colours
     const ridgeMat = basicVC({ fog: false });
     const ridgeMesh = (() => {
-      const P = [], C = [], I = [], fogc = col('#c3d0e2'), snow = col('#f5f8fc');
-      [{ z: -560, base: 55, amp: 80, sn: 9999, c: '#4f6f69', haze: 0.2 }, { z: -700, base: 95, amp: 120, sn: 165, c: '#6a8aa2', haze: 0.42 }, { z: -850, base: 140, amp: 160, sn: 205, c: '#8fadc6', haze: 0.62 }].forEach((L, li) => {
-        const N = 150, rock = col(L.c).lerp(fogc, L.haze), deep = col(L.c).lerp(fogc, Math.min(1, L.haze + 0.3));
-        for (let i = 0; i <= N; i++) {
-          const x = -900 + i * 12, ph = li * 1.7;
-          const r1 = 1 - Math.abs(Math.sin(x * 0.0061 + ph)), r2 = 1 - Math.abs(Math.sin(x * 0.0143 + ph * 2.3)), r3 = 1 - Math.abs(Math.sin(x * 0.0331 + ph * 0.7));
-          const h = L.base * 0.35 + L.amp * (0.55 * Math.pow(r1, 1.4) + 0.3 * Math.pow(r2, 1.6) + 0.15 * r3) + hash(i * 1.9 + li) * 7, capped = h > L.sn;
-          const base = P.length / 3;
-          P.push(x, h, L.z, x, capped ? L.sn - 5 : h - 14, L.z, x, -95, L.z);
-          const tc = capped ? snow : rock;
-          C.push(tc.r, tc.g, tc.b, rock.r, rock.g, rock.b, deep.r, deep.g, deep.b);
-          if (i > 0) { const a = base - 3; I.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
+      // 4 procedural height-field layers (fractal + ridged noise): sun-shaded rock strata, forest on the gentle low slopes, snow above an irregular line, haze growing with distance
+      const P = [], C = [], I = [], fogc = col('#c3d0e2'), snow = col('#f6f9fd'), forest = col('#3d5a38'), forest2 = col('#56703f'), cc = new T.Color(), rk = new T.Color();
+      const sm = (t) => t * t * (3 - 2 * t), clamp01 = (t) => Math.max(0, Math.min(1, t));
+      const vn = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = sm(x - ix), fy = sm(y - iy), h = (a, b) => hash(a * 12.9 + b * 78.2 + 5.1); return (h(ix, iy) * (1 - fx) + h(ix + 1, iy) * fx) * (1 - fy) + (h(ix, iy + 1) * (1 - fx) + h(ix + 1, iy + 1) * fx) * fy; };
+      const fbm = (x, y, o) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * vn(x * f + k * 17, y * f + k * 31); a *= 0.5; f *= 2.05; } return t / 0.9375; };
+      const rid = (x, y, o) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * (1 - Math.abs(vn(x * f + k * 7, y * f + k * 13) * 2 - 1)); a *= 0.5; f *= 2.1; } return t / 0.9375; };
+      const LAY = [{ z: -520, base: 40, amp: 95, sn: 0.86, c: '#5e5850', haze: 0.12, fs: 0.0100 }, { z: -680, base: 70, amp: 150, sn: 0.8, c: '#5f5d5a', haze: 0.3, fs: 0.0075 }, { z: -860, base: 110, amp: 210, sn: 0.74, c: '#66656a', haze: 0.48, fs: 0.0058 }, { z: -1060, base: 150, amp: 270, sn: 0.7, c: '#777a84', haze: 0.66, fs: 0.0046 }];
+      const NX = 170, NR = 6, DX = 12, DD = 22, SY = -95;
+      LAY.forEach((L, li) => {
+        const Hf = (x, d) => { const u = x * L.fs + li * 11.3, v = d * 0.012 + li * 5.7; return L.base * 0.3 + L.amp * (0.42 * fbm(u * 1.3, v, 5) + 0.58 * Math.pow(rid(u, v, 4), 1.35)) + 6 * fbm(x * 0.05, d * 0.05, 2); };
+        const start = P.length / 3, haze = L.haze;
+        for (let r = 0; r < NR; r++) for (let i = 0; i <= NX; i++) {
+          const x = -1000 + i * DX, d = r * DD, h = Hf(x, d);
+          const hx = (Hf(x + 6, d) - Hf(x - 6, d)) / 12, hd = (Hf(x, d + 6) - Hf(x, d - 6)) / 12, sl = Math.sqrt(hx * hx + hd * hd);
+          const nl = 1 / Math.sqrt(hx * hx + 1 + hd * hd), lit = Math.max(0, (-hx * SUN_DIR.x + SUN_DIR.y + hd * SUN_DIR.z) * nl);
+          const hn = h / (L.base * 0.3 + L.amp), strata = 0.86 + 0.22 * Math.sin(h * 0.45 + vn(x * 0.03, d * 0.03) * 6);
+          rk.set(L.c).multiplyScalar(strata * (0.95 + 0.2 * vn(x * 0.09, h * 0.1)));
+          const tree = (1 - sm(clamp01((hn - 0.3) / 0.22))) * (1 - sm(clamp01((sl - 0.35) / 0.5)));
+          cc.copy(rk).lerp(vn(x * 0.07, d * 0.07 + h * 0.05) > 0.5 ? forest : forest2, tree * 0.9);
+          const sline = L.sn + (vn(x * 0.02 + 3, d * 0.02) - 0.5) * 0.3 + (hn > 0.5 ? 0 : 0), sn = sm(clamp01((hn - sline) / 0.12)) * (1 - sm(clamp01((sl - 0.8) / 0.7)) * 0.7);
+          cc.lerp(snow, sn);
+          cc.multiplyScalar(0.5 + 0.7 * lit).lerp(fogc, haze + (1 - haze) * 0.1 * (r / NR));
+          P.push(x, h, L.z - d); C.push(cc.r, cc.g, cc.b);
         }
+        for (let r = 0; r < NR - 1; r++) for (let i = 0; i < NX; i++) { const a = start + r * (NX + 1) + i, b = a + 1, c = a + NX + 1, e = c + 1; I.push(a, b, c, b, e, c); }
+        // skirt: the front row drops to the ground, hazed like the layer
+        const sk = P.length / 3; cc.copy(col(L.c)).lerp(fogc, Math.min(1, haze + 0.25));
+        for (let i = 0; i <= NX; i++) { P.push(-1000 + i * DX, SY, L.z); C.push(cc.r, cc.g, cc.b); }
+        for (let i = 0; i < NX; i++) { const a = start + i, b = a + 1, c = sk + i, e = c + 1; I.push(a, c, b, b, c, e); }
       });
       const m = new T.Mesh(indexed(P, C, I, false), ridgeMat); m.frustumCulled = false; m.visible = false; backdrop.add(m); noBend(ridgeMat); return m;
     })();
@@ -2535,22 +2552,37 @@
     const lampGlow = (() => {
       const pos = new Float32Array(LAMP_ROWS * 2 * 3), g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
       const p = new T.Points(g, new T.PointsMaterial({ color: 0xffc680, size: 2.8, map: glowTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false }));
-      p.frustumCulled = false; nightRoad.add(p); return { pos, g };
+      p.frustumCulled = false; nightRoad.add(p); return { pos, g, p };
     })();
     const poolGeo = flatOnRoad(1, 1, 1);
     const lampPoolTex = (() => { const c = makeCanvas(128, 128), g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return canvasTex(c); })();
     const lampPools = new T.InstancedMesh(poolGeo, new T.MeshBasicMaterial({ map: lampPoolTex, color: 0xffcf98, transparent: true, opacity: 0.3, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), LAMP_ROWS * 2);
     lampPools.frustumCulled = false; lampPools.renderOrder = 2; nightRoad.add(lampPools);
     const nQ = new T.Quaternion(), nS = new T.Vector3(), nP = new T.Vector3(), nM = new T.Matrix4();
+    // warm lamp light on cars / rails / road: two pooled point lights (no shadows), one per lamp side, each hopping to the nearest lamp of its parity
+    const lampLt = [0, 1].map(() => { const l = new T.PointLight(0xffb468, 0, 15, 2); l.castShadow = false; scene.add(l); return l; });
+    const lampLtOn = () => lampLt.some((l) => l.intensity > 0);
     let nightBase = null;
+    const lampLightFrame = (pz) => {
+      for (let p = 0; p < 2; p++) {
+        const l = lampLt[p];
+        if (!nightRoad.visible || !lamps.visible) { l.intensity = 0; continue; }
+        const m = 2 * Math.round(((-pz - 9) / 17 - p) / 2) + p, z = -9 - 17 * m; // lamp index m: even = right side, odd = left
+        const hide = -z > tnM0 - 2 && -z < tnM1 + 2;
+        l.position.set((m % 2 === 0 ? 1 : -1) * LAMP_HEAD_X, 6.6, z);
+        l.intensity = hide ? 0 : 150;
+      }
+    };
     const climateFrame = (cz) => {
+      lampPools.visible = lampGlow.p.visible = lamps.visible;
       if (!nightRoad.visible) return;
-      const lb = Math.floor(-cz / LAMP_GAP); if (lb === nightBase) return; nightBase = lb;
+      const lbk = Math.floor(-cz / LAMP_GAP), lb = lbk + (tnM0 === Infinity ? 0.5 : tnM0 * 1e-4 % 0.4); if (lb === nightBase) return; nightBase = lb;
       for (let r = 0; r < LAMP_ROWS; r++) {
-        const zr = -(lb + r - 1) * LAMP_GAP - 9, zl = zr + LAMP_GAP / 2;
+        const zr = -(lbk + r - 1) * LAMP_GAP - 9, zl = zr + LAMP_GAP / 2;
         lampGlow.pos.set([LAMP_HEAD_X, 7.2, zr, -LAMP_HEAD_X, 7.2, zl], r * 6);
-        lampPools.setMatrixAt(r * 2, nM.compose(nP.set(LAMP_HEAD_X * 0.8, 0.045, zr), nQ, nS.set(12, 1, 16)));
-        lampPools.setMatrixAt(r * 2 + 1, nM.compose(nP.set(-LAMP_HEAD_X * 0.8, 0.045, zl), nQ, nS.set(12, 1, 16)));
+        const hr = -zr > tnM0 - 2 && -zr < tnM1 + 2, hl = -zl > tnM0 - 2 && -zl < tnM1 + 2; // no pools where the lamp is hidden (tunnel)
+        lampPools.setMatrixAt(r * 2, nM.compose(nP.set(LAMP_HEAD_X * 0.8, 0.045, zr), nQ, hr ? nS.set(0, 0, 0) : nS.set(12, 1, 16)));
+        lampPools.setMatrixAt(r * 2 + 1, nM.compose(nP.set(-LAMP_HEAD_X * 0.8, 0.045, zl), nQ, hl ? nS.set(0, 0, 0) : nS.set(12, 1, 16)));
       }
       lampGlow.g.attributes.position.needsUpdate = true; lampPools.instanceMatrix.needsUpdate = true;
     };
@@ -2628,9 +2660,9 @@
       if (mp.haze) scene.fog.color.lerp(tmpColor.set(mp.haze), mp.hazeK * (key === 'night' ? 0.08 : (key === 'rain' ? 0.5 : 1)));
       scene.fog.near = mp.fog[0]; scene.fog.far = mp.fog[1];
       hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); baseHemi = w.hemi[2];
-      sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.7 : (key === 'night' ? 0.2 : (key === 'sunset' ? 0.8 : 1));
+      sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.7 : (key === 'night' ? 0.4 : (key === 'sunset' ? 0.8 : 1));
       applyLightK();
-      tmpColor.set(w.city); for (const m of tintMats) { m.color.copy(tmpColor); if (key === 'night' && m.isMeshBasicMaterial) m.color.multiplyScalar(0.22); } // unlit backdrop pieces go dark at night
+      tmpColor.set(w.city); for (const m of tintMats) { m.color.copy(tmpColor); if (key === 'night' && m.isMeshBasicMaterial) m.color.multiplyScalar(0.4); } // unlit backdrop pieces go dark at night
       lakeWaterMat.color.set(0x1f78a0).multiply(tmpColor);
       cityMat.color.set(w.city); bldMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
       tmpColor.set(w.city); for (const c of cityMats) c.m.color.copy(c.base).multiply(tmpColor);
@@ -2813,6 +2845,7 @@
         railLightPos[o + 3] = RAIL_X - 0.1; railLightPos[o + 4] = 0.5; railLightPos[o + 5] = z;
       }
       railLightGeo.attributes.position.needsUpdate = true;
+      lampLightFrame(-player.z * R3D_ZS);
       climateFrame(cz); // night: lamp glows + light pools follow the lamps
       const lBaseL = Math.floor(-cz / LAMP_GAP);
       if (lBaseL !== lampBase) {
