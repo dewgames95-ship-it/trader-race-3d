@@ -7091,8 +7091,8 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     if (skip) return;
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
     const map = pick(MAP_KEYS);
-    let wx = pick(WEATHER_THEMES); if (map === 'desert' && wx === 'snow') wx = pick(['sunny', 'rain', 'night']);
-    const cars3 = Math.random() < 0.5 ? 2 : 3;
+    const wx = 'sunny';   // owner's choice: every fresh open starts Sunny in 3-car mode; only the map is random
+    const cars3 = 3;
     localMapChoice = map; currentMap = map; currentWeather = wx;
     try { selectRaceMode(cars3); } catch (e) {}
     try { updateWeatherButtonLabel(); updateMapTimerChips(); } catch (e) {}
