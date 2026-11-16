@@ -4563,12 +4563,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #v17ChatBtn.cd .v17c-ring { opacity: 1; }
 #v17ChatBtn.cd .v17c-ring circle { animation: v17cRing 3s linear forwards; }
 @keyframes v17cRing { from { stroke-dashoffset: 125.7; } to { stroke-dashoffset: 0; } }
-#v17ChatTray { pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: min(340px, calc(100vw - 20px)); opacity: 0; transform: translateY(8px); transition: opacity .18s, transform .18s; visibility: hidden; }
+#v17ChatTray { pointer-events: none; display: flex; flex-direction: column; gap: 6px; align-items: stretch; width: 150px; max-width: 45vw; opacity: 0; transform: scale(.85); transform-origin: 100% 100%; transition: opacity .18s, transform .18s; visibility: hidden; }
 #v17ChatTray.open { opacity: 1; transform: none; visibility: visible; }
 #v17ChatTray.open .v17c-chip { pointer-events: auto; }
-.v17c-chip { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 10px 4px 9px; border-radius: 16px; cursor: pointer; text-align: left; font: 800 12px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef4ff; background: linear-gradient(180deg, rgba(20,34,62,.96), rgba(8,14,28,.97)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 8px rgba(0,0,0,.5); -webkit-tap-highlight-color: transparent; }
+.v17c-chip { position: relative; display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px; border-radius: 10px; cursor: pointer; text-align: left; font: 800 10.5px/1 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef4ff; white-space: nowrap; background: linear-gradient(180deg, rgba(20,34,62,.92), rgba(8,14,28,.92)); border: 1px solid rgba(140,170,215,.4); box-shadow: 0 2px 6px rgba(0,0,0,.45); -webkit-tap-highlight-color: transparent; }
+.v17c-chip::before { content: ''; position: absolute; left: -4px; right: -4px; top: -4px; bottom: -4px; }
+.v17c-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .v17c-chip:active { transform: scale(.97); }
-.v17c-chip .ic { width: 17px; height: 17px; }
+.v17c-chip .ic { width: 14px; height: 14px; }
+@media (min-width: 400px) { #v17ChatTray { width: 164px; } }
 @media (prefers-reduced-motion: reduce) { #v17ChatTray, #v17ChatBtn { transition: none; } }
 </style>
 <style id="v17Polish">
