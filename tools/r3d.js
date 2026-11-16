@@ -415,8 +415,9 @@
     // ---------- sky ----------
     const SKY = {
       sunny:  { stops: [[0, '#0a5fd0'], [0.17, '#2f92ff'], [0.31, '#8fd0ff'], [0.37, '#d9f1ff'], [1, '#d9f1ff']], fog: '#cfe8f8', grass: '#55a636', grass2: '#43902c', hemi: ['#fff8ec', '#6b8f5a', 1.35], sun: ['#ffe7c2', 2.5], cloud: '#ffffff', city: '#ffffff', road: '#ffffff', leaf: '#ffffff', glow: 0.5 },
-      rain:   { stops: [[0, '#0f172a'], [0.2, '#1e293b'], [0.36, '#56657a'], [1, '#56657a']], fog: '#57667a', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#b8c7dc', '#3b4a45', 0.95], sun: ['#c9d6ea', 0.75], cloud: '#8693a8', city: '#7f8ea6', road: '#9aa3b2', leaf: '#b9c6c0', glow: 0 },
-      snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#e6edf5', grass2: '#d8e1ec', hemi: ['#ffffff', '#c3cfdf', 1.2], sun: ['#ffffff', 1.5], cloud: '#ffffff', city: '#dbe7f5', road: '#e2e8f0', leaf: '#dfeee6', glow: 0.25 },
+      rain:   { stops: [[0, '#0b1220'], [0.2, '#18212f'], [0.36, '#3e4a5c'], [1, '#3e4a5c']], fog: '#4a5666', grass: '#1c6b3a', grass2: '#18603a', hemi: ['#a9b8cf', '#33403f', 0.88], sun: ['#c9d6ea', 0.5], cloud: '#6f7a8c', city: '#6f7d94', road: '#858e9d', leaf: '#a2b0aa', glow: 0 },
+      snow:   { stops: [[0, '#1e3a8a'], [0.19, '#60a5fa'], [0.35, '#e2e8f0'], [1, '#e2e8f0']], fog: '#e3eaf3', grass: '#587f5a', grass2: '#4d7152', hemi: ['#f2f6ff', '#aebbd0', 1.15], sun: ['#eef3ff', 1.1], cloud: '#ffffff', city: '#dbe7f5', road: '#aab2be', leaf: '#cfe2d6', glow: 0.25 },
+      night:  { stops: [[0, '#02040c'], [0.2, '#050b1e'], [0.36, '#101d40'], [1, '#101d40']], fog: '#0b1430', grass: '#2d5a3a', grass2: '#264c33', hemi: ['#8196d8', '#232b48', 1.0], sun: ['#9db4ff', 0.7], cloud: '#1c2748', city: '#4a5a8c', road: '#8a94aa', leaf: '#6e88b8', glow: 0 },
       sunset: { stops: [[0, '#311042'], [0.15, '#b91c1c'], [0.28, '#f97316'], [0.37, '#fde047'], [1, '#fde047']], fog: '#f2a35c', grass: '#557f17', grass2: '#4b7214', hemi: ['#ffd1a6', '#4c4a2a', 1.0], sun: ['#ffae66', 1.7], cloud: '#ffd3a8', city: '#e2703a', road: '#f0c7a8', leaf: '#e9c98a', glow: 0.9 }
     };
     const skyTexCache = {};
@@ -443,7 +444,7 @@
       const geo = new T.SphereGeometry(900, 40, 20, (90 - 75) * d2r, 150 * d2r, (90 - 66) * d2r, 70 * d2r);
       // vertex tint over the photo clouds: each climate gets its own horizon -> zenith gradient (linear RGB)
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
-      const SKY_TINT = { sunny: [[1.04, 1.04, 1.06], [0.125, 0.345, 0.93]], rain: [[0.5, 0.54, 0.6], [0.2, 0.23, 0.3]], snow: [[1.1, 1.12, 1.15], [0.62, 0.78, 1.0]], sunset: [[2.5, 1.05, 0.38], [0.62, 0.3, 0.72]] };
+      const SKY_TINT = { sunny: [[1.04, 1.04, 1.06], [0.125, 0.345, 0.93]], rain: [[0.44, 0.47, 0.52], [0.25, 0.27, 0.31]], night: [[0.05, 0.075, 0.17], [0.006, 0.012, 0.045]], snow: [[1.1, 1.12, 1.15], [0.62, 0.78, 1.0]], sunset: [[2.5, 1.05, 0.38], [0.62, 0.3, 0.72]] };
       tintSky = (key) => {
         const [lo, hi] = SKY_TINT[key] || SKY_TINT.sunny, pos = geo.attributes.position, a = geo.attributes.color;
         for (let i = 0; i < pos.count; i++) { const e = Math.pow(Math.max(0, Math.min(1, pos.getY(i) / 900 / 0.75)), 0.8); a.setXYZ(i, lo[0] + (hi[0] - lo[0]) * e, lo[1] + (hi[1] - lo[1]) * e, lo[2] + (hi[2] - lo[2]) * e); }
@@ -657,7 +658,7 @@
     const GRASS_LEN = 2600, GRASS_PERIOD = 46;
     grassTex.repeat.set(GRASS_LEN / GRASS_PERIOD, GRASS_LEN / GRASS_PERIOD);
     let curMap = 'highway', cliffSide = 1, groundKind = 'grass'; // the map being drawn (see applyMap)
-    const paintGrass = (a, b) => {
+    const paintGrass = (a, b, snowy) => {
       const g = grassC.getContext('2d'), ca = col(a), cb = col(b);
       const S = 1024, hx = (c, k) => '#' + c.clone().multiplyScalar(k).getHexString(), wrap = [-S, 0, S];
       const dry = '#' + ca.clone().lerp(col('#c2b25a'), 0.4).getHexString(), deep = hx(cb, 0.62);
@@ -690,6 +691,23 @@
           g.fillStyle = rock ? 'rgba(122,122,116,0.95)' : 'rgba(44,120,40,0.85)'; g.beginPath(); g.ellipse(X, Y, r, r * 0.72, 0, 0, 6.283); g.fill();
           g.fillStyle = rock ? 'rgba(200,200,192,0.9)' : 'rgba(120,190,70,0.7)'; g.beginPath(); g.ellipse(X - r * 0.2, Y - r * 0.25, r * 0.6, r * 0.4, 0, 0, 6.283); g.fill();
         });
+      }
+      if (snowy) {                                                             // irregular light snow patches (~40%), soft edges
+        for (let i = 0; i < 34; i++) {
+          const x = hash(i * 1.91 + 11) * S, y = hash(i * 2.37 + 4) * S, r = 34 + hash(i * 3.13) * 90, sq = 0.4 + hash(i * 4.1) * 0.45, rot = hash(i * 5.3) * 3.1;
+          each(x, y, r * 1.3, (X, Y) => {
+            g.save(); g.translate(X, Y); g.rotate(rot); g.scale(1, sq);
+            const gr = g.createRadialGradient(0, 0, r * 0.15, 0, 0, r);
+            gr.addColorStop(0, 'rgba(240,246,252,0.96)'); gr.addColorStop(0.6, 'rgba(236,243,250,0.9)'); gr.addColorStop(1, 'rgba(232,240,248,0)');
+            g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, 6.283); g.fill(); g.restore();
+          });
+        }
+        for (let i = 0; i < 700; i++) {                                        // wind-blown specks and the odd bare tuft inside a patch
+          const x = hash(i * 1.17 + 3) * S, y = hash(i * 2.9 + 8) * S, r = 3 + hash(i * 3.7) * 9;
+          g.fillStyle = hash(i * 4.4) < 0.7 ? 'rgba(244,248,253,0.55)' : 'rgba(80,110,80,0.35)';
+          each(x, y, r, (X, Y) => { g.beginPath(); g.ellipse(X, Y, r, r * 0.55, 0, 0, 6.283); g.fill(); });
+        }
+        g.globalAlpha = 1;
       }
       grassTex.needsUpdate = true;
     };
@@ -736,7 +754,7 @@
       }
       grassTex.needsUpdate = true;
     };
-    const paintGround = (a, b) => { if (groundKind === 'sand') paintSand(a, b); else paintGrass(a, b); };
+    const paintGround = (a, b, snowy) => { if (groundKind === 'sand') paintSand(a, b); else paintGrass(a, b, snowy); };
     // Holes in the ground: the gorge / lake under a bridge (fragments whose world z lies inside uTrGap.xy are discarded;
     // with uTrWob the lake shore wobbles in x), and the valley side of the mountain road (everything beyond uTrCut.y on side uTrCut.x).
     const trGap = { value: new T.Vector2(1, 0) }; // (zMin, zMax); the default is an empty range
@@ -1835,7 +1853,7 @@
       lake:     { ground: null, fog: [100, 1300], haze: '#bfe0ee', hazeK: 0.3 },
       desert:   { ground: ['#dcb77c', '#c69a5e'], sand: true, fog: [110, 1500], haze: '#efca94', hazeK: 0.5 }
     };
-    const GTINT = { rain: { m: [0.62, 0.68, 0.74] }, snow: { mix: '#eef3f8', k: 0.72 }, sunset: { m: [1.1, 0.8, 0.6] } };
+    const GTINT = { rain: { m: [0.62, 0.68, 0.74] }, snow: { mix: '#dfe8ee', k: 0.2 }, night: { m: [0.26, 0.31, 0.44] }, sunset: { m: [1.1, 0.8, 0.6] } };
     let mapApplied = '', cityBase = null;
     const applyMap = (key) => {
       mapApplied = key; curMap = key; groundKind = MAPS[key].sand ? 'sand' : 'grass';
@@ -2429,7 +2447,7 @@
     const streaks = Array.from({ length: 6 }, () => { const m = new T.Mesh(flatOnRoad(0.07, 12), streakMat); m.position.y = 0.03; m.visible = false; scene.add(m); return m; });
 
     // rain / snow live in a box that travels with the camera
-    const PRECIP_N = 260;
+    const PRECIP_N = 420;
     const rainPos = new Float32Array(PRECIP_N * 6), snowPos = new Float32Array(PRECIP_N * 3);
     const seed = Array.from({ length: PRECIP_N }, (_, i) => ({ x: (hash(i) - 0.5) * 44, y: hash(i + 0.37) * 22, z: -hash(i + 0.71) * 70 + 6, v: 0.7 + hash(i + 0.13) * 0.6 }));
     const rainGeo = new T.BufferGeometry(); rainGeo.setAttribute('position', new T.BufferAttribute(rainPos, 3));
@@ -2439,6 +2457,151 @@
     rain.frustumCulled = snow.frustumCulled = false; rain.visible = snow.visible = false;
     scene.add(rain, snow);
 
+    // ---------- climate: night lights, wet road, snow caps ----------
+    // The page's current climate (the test switch window._trRouteForce.weather overrides it).
+    const wxNow = () => (window._trRouteForce && window._trRouteForce.weather) || currentWeather;
+    const trFx = { snow: { value: 0 }, night: { value: 0 } }; // 0..1, driven by climateApply
+    const GLSL_NOISE = 'float trH(vec2 p){ return fract(sin(dot(mod(p, 61.0), vec2(127.1, 311.7))) * 43758.5453); }\n'
+      + 'float trNoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(trH(i), trH(i + vec2(1.0, 0.0)), f.x), mix(trH(i + vec2(0.0, 1.0)), trH(i + vec2(1.0, 1.0)), f.x), f.y); }\n';
+    // One shared shader patch (chained after whatever onBeforeCompile the material already has, e.g. noBend / the gorge hole):
+    //   o.snow: 'up' = snow caps on upward-facing surfaces (+ irregular edge), 'road' = dusting on the shoulders only, 'grass' = extra dusting near the road
+    //   o.lit: night self-light (share of the albedo added as emission, keeps hazard stripes readable)   o.win: night lit windows by world-scale cell
+    const trPatch = (mat, o) => {
+      if (!mat || mat.userData.trClimate || !(mat.isMeshLambertMaterial || mat.isMeshStandardMaterial || mat.isMeshPhongMaterial)) return;
+      mat.userData.trClimate = true;
+      const prev = mat.onBeforeCompile, prevKey = Object.prototype.hasOwnProperty.call(mat, 'customProgramCacheKey') ? mat.customProgramCacheKey.bind(mat) : null;
+      const tag = 'trClim' + (o.snow || '-') + (o.lit || 0) + (o.win ? 'w' : '');
+      let frag = '';
+      if (o.snow === 'up') frag += 'float trN = trNoise(vTrW.xz * 0.9 + vTrW.y * 0.7) - 0.5; float trS = smoothstep(0.42 + trN * 0.3, 0.7 + trN * 0.3, vTrWN.y) * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), trS);\n';
+      if (o.snow === 'road') frag += 'float trN = trNoise(vTrW.xz * vec2(0.5, 0.35)); float trS = clamp(smoothstep(' + (R3D_XS * 0.91).toFixed(2) + ', ' + (R3D_XS * 1.0).toFixed(2) + ', abs(vTrW.x)) * (0.4 + 0.6 * trN) + 0.05 * trN, 0.0, 1.0) * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.94, 1.0), trS);\n';
+      if (o.snow === 'grass') frag += 'float trN = trNoise(vTrW.xz * 0.11) + 0.5 * trNoise(vTrW.xz * 0.37); float trS = smoothstep(0.85, 1.05, trN + (1.0 - smoothstep(4.0, 18.0, abs(vTrW.x))) * 0.22) * 0.6 * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.94, 0.98), trS);\n';
+      let emi = '';
+      if (o.lit) emi += 'totalEmissiveRadiance += diffuseColor.rgb * uTrNight * ' + o.lit.toFixed(2) + ';\n';
+      if (o.win) emi += 'vec3 trn = normalize(vTrON + vec3(0.0001)); float trWall = 1.0 - smoothstep(0.25, 0.5, abs(trn.y)); vec2 trT = normalize(vec2(-trn.z, trn.x) + vec2(0.0001)); vec2 trUV = vec2(dot(vTrO.xz, trT) / 3.4, vTrO.y / 3.6); vec2 trC = floor(trUV), trF = fract(trUV);'
+        + ' float trWin = step(0.58, trH(trC + vec2(7.0, 3.0))) * step(0.2, trF.x) * step(trF.x, 0.8) * step(0.25, trF.y) * step(trF.y, 0.8) * trWall; vec3 trWc = mix(vec3(1.0, 0.78, 0.4), vec3(0.72, 0.86, 1.0), step(0.82, trH(trC * 1.7 + 2.0)));'
+        + ' totalEmissiveRadiance += trWc * trWin * uTrNight * 1.7;\n';
+      mat.onBeforeCompile = (sh, r) => {
+        if (prev) prev.call(mat, sh, r);
+        sh.uniforms.uTrSnow = trFx.snow; sh.uniforms.uTrNight = trFx.night;
+        sh.vertexShader = sh.vertexShader
+          .replace('#include <common>', '#include <common>\nvarying vec3 vTrW; varying vec3 vTrWN; varying vec3 vTrO; varying vec3 vTrON;')
+          .replace('#include <begin_vertex>', '#include <begin_vertex>\nvec3 trOn = objectNormal; vec3 trPo = transformed;\n#ifdef USE_INSTANCING\ntrOn = mat3(instanceMatrix) * trOn; trPo = (instanceMatrix * vec4(trPo, 1.0)).xyz;\n#endif\n'
+            + 'vTrWN = normalize(mat3(modelMatrix) * trOn); vTrW = (modelMatrix * vec4(trPo, 1.0)).xyz; vTrO = trPo * length(modelMatrix[0].xyz); vTrON = trOn;');
+        sh.fragmentShader = sh.fragmentShader
+          .replace('#include <common>', '#include <common>\nvarying vec3 vTrW; varying vec3 vTrWN; varying vec3 vTrO; varying vec3 vTrON; uniform float uTrSnow; uniform float uTrNight;\n' + GLSL_NOISE)
+          .replace('#include <color_fragment>', '#include <color_fragment>\n' + frag)
+          .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' + emi);
+      };
+      mat.customProgramCacheKey = () => (prevKey ? prevKey() : '') + '|' + tag;
+    };
+    {
+      const done = new Set(), each = (m, o) => { if (m && !done.has(m)) { done.add(m); trPatch(m, o); } };
+      const eachMat = (root, o) => root.traverse((x) => { if (x.isMesh) [].concat(x.material).forEach((m) => each(m, o)); });
+      for (const kit of treeKits) for (const im of kit.parts) each(im.material, { snow: 'up' });
+      for (const kit of grassKits) each(kit.im.material, { snow: 'up' });
+      each(leafMat, { snow: 'up' });
+      each(grassMat, { snow: 'grass' }); each(roadMat, { snow: 'road' });
+      eachMat(rails, { snow: 'up', lit: 0.12 }); each(railMat, { snow: 'up', lit: 0.12 });
+      each(lamps.material, { snow: 'up', lit: 0.35 }); each(matVC, { snow: 'up', lit: 0.35 });
+      for (const m of [roadblockMat, barrierMat, jumpBodyMat, bumpMat, ...wreckMats.slice(0, 3)]) each(m, { snow: 'up', lit: 0.4 });
+      each(bldMat, { snow: 'up' }); each(payMat, { snow: 'up' });
+      for (const c of cityMats) each(c.m, { snow: 'up', win: true });
+    }
+
+    // night: stars + moon on the sky, lamp glows + light pools on the road, headlights / tail lights on the cars
+    const skyNight = new T.Group(); skyNight.visible = false; backdrop.add(skyNight);
+    {
+      const N = 170, P = new Float32Array(N * 3), C = new Float32Array(N * 3), d2r = Math.PI / 180;
+      for (let i = 0; i < N; i++) {
+        const az = (hash(i * 1.7) - 0.5) * 150 * d2r, el = (6 + hash(i * 2.3) * 58) * d2r, k = 0.45 + hash(i * 3.1) * 0.55;
+        P[i * 3] = 1100 * Math.sin(az) * Math.cos(el); P[i * 3 + 1] = 1100 * Math.sin(el); P[i * 3 + 2] = -1100 * Math.cos(az) * Math.cos(el);
+        C[i * 3] = k * 0.9; C[i * 3 + 1] = k * 0.95; C[i * 3 + 2] = k;
+      }
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(P, 3)); g.setAttribute('color', new T.BufferAttribute(C, 3));
+      const sm = new T.PointsMaterial({ size: 2.6, sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, fog: false });
+      noBend(sm);
+      const stars = new T.Points(g, sm); stars.frustumCulled = false; skyNight.add(stars);
+      const mc = makeCanvas(64, 64), mg = mc.getContext('2d');
+      mg.fillStyle = '#eef3ff'; mg.beginPath(); mg.arc(32, 32, 24, 0, 6.283); mg.fill();
+      mg.fillStyle = 'rgba(150,165,205,0.35)'; for (const [x, y, r] of [[24, 26, 6], [38, 36, 5], [30, 42, 3.5], [40, 22, 3]]) { mg.beginPath(); mg.arc(x, y, r, 0, 6.283); mg.fill(); }
+      const moon = new T.Sprite(new T.SpriteMaterial({ map: canvasTex(mc), fog: false, depthWrite: false }));
+      moon.scale.set(46, 46, 1); moon.position.set(-260, 430, -1000);
+      const halo = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: 0x9db4ff, opacity: 0.55, transparent: true, blending: T.AdditiveBlending, fog: false, depthWrite: false }));
+      halo.scale.set(330, 330, 1); halo.position.copy(moon.position);
+      skyNight.add(halo, moon);
+    }
+    const nightRoad = new T.Group(); nightRoad.visible = false; scene.add(nightRoad);
+    const LAMP_HEAD_X = RAIL_X + 1.0 - 2.3;
+    const lampGlow = (() => {
+      const pos = new Float32Array(LAMP_ROWS * 2 * 3), g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
+      const p = new T.Points(g, new T.PointsMaterial({ color: 0xffc680, size: 2.8, map: glowTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false }));
+      p.frustumCulled = false; nightRoad.add(p); return { pos, g };
+    })();
+    const poolGeo = flatOnRoad(1, 1, 1);
+    const lampPoolTex = (() => { const c = makeCanvas(128, 128), g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return canvasTex(c); })();
+    const lampPools = new T.InstancedMesh(poolGeo, new T.MeshBasicMaterial({ map: lampPoolTex, color: 0xffcf98, transparent: true, opacity: 0.3, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), LAMP_ROWS * 2);
+    lampPools.frustumCulled = false; lampPools.renderOrder = 2; nightRoad.add(lampPools);
+    const nQ = new T.Quaternion(), nS = new T.Vector3(), nP = new T.Vector3(), nM = new T.Matrix4();
+    let nightBase = null;
+    const climateFrame = (cz) => {
+      if (!nightRoad.visible) return;
+      const lb = Math.floor(-cz / LAMP_GAP); if (lb === nightBase) return; nightBase = lb;
+      for (let r = 0; r < LAMP_ROWS; r++) {
+        const zr = -(lb + r - 1) * LAMP_GAP - 9, zl = zr + LAMP_GAP / 2;
+        lampGlow.pos.set([LAMP_HEAD_X, 7.2, zr, -LAMP_HEAD_X, 7.2, zl], r * 6);
+        lampPools.setMatrixAt(r * 2, nM.compose(nP.set(LAMP_HEAD_X * 0.8, 0.045, zr), nQ, nS.set(12, 1, 16)));
+        lampPools.setMatrixAt(r * 2 + 1, nM.compose(nP.set(-LAMP_HEAD_X * 0.8, 0.045, zl), nQ, nS.set(12, 1, 16)));
+      }
+      lampGlow.g.attributes.position.needsUpdate = true; lampPools.instanceMatrix.needsUpdate = true;
+    };
+    // roadside reflectors: amber on the left rail, blue on the right (the markers along the rails are hidden by day)
+    {
+      const col3 = new Float32Array(LIGHT_ROWS * 2 * 3);
+      for (let i = 0; i < LIGHT_ROWS * 2; i++) { const left = i % 2 === 0; col3[i * 3] = left ? 1 : 0.31; col3[i * 3 + 1] = left ? 0.69 : 0.71; col3[i * 3 + 2] = left ? 0.25 : 1; }
+      railLightGeo.setAttribute('color', new T.BufferAttribute(col3, 3)); railLights.material.vertexColors = true; railLights.material.color.set(0xffffff); railLights.material.size = 1.2;
+    }
+    // headlight beams on the road + lens glows, and brighter tail lights, per car (the oncoming car too)
+    const beamTex = (() => {
+      const c = makeCanvas(128, 256), g = c.getContext('2d');
+      for (const cx of [34, 94]) {
+        g.save(); g.translate(cx, 236); g.scale(0.5, 3.6);
+        const gr = g.createRadialGradient(0, 0, 2, 0, 0, 52); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 52, 0, 6.283); g.fill(); g.restore();
+      }
+      return canvasTex(c);
+    })();
+    const beamGeo = flatOnRoad(3.8, 26, 1);
+    const beamMat = new T.MeshBasicMaterial({ map: beamTex, color: 0xfff0c8, transparent: true, opacity: 0.5, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+    const lensMat = new T.SpriteMaterial({ map: glowTex, color: 0xfff4d6, transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false });
+    let nightOn = false;
+    for (const rig of [...rigs, oncRig]) {
+      const fz = carKit ? -carKit.rearZ : -CAR_L / 2, lx = carKit ? carKit.lampX : 0.62, ly = carKit ? carKit.lampY * 0.9 : 0.62;
+      const beam = new T.Mesh(beamGeo, beamMat); beam.position.set(0, 0.045, fz - 12); beam.renderOrder = 2; beam.frustumCulled = false; rig.group.add(beam);
+      rig.nightObjs = [beam];
+      for (const sx of [-1, 1]) { const l = new T.Sprite(lensMat); l.scale.set(0.62, 0.5, 1); l.position.set(sx * lx, ly, fz - 0.05); rig.tilt.add(l); rig.nightObjs.push(l); }
+      for (const o of rig.nightObjs) o.visible = false;
+      const sb = rig.setBrake;
+      rig.setBrake = (on) => { // night: tail lights stay lit, brake lights flare
+        sb(on); if (!nightOn) return;
+        if (rig.tailSprites) { rig.tailMat.opacity = on ? 1 : 0.85; const k = (on ? 1.9 : 1.35); for (const t of rig.tailSprites) t.scale.set(0.24 * k, 0.2 * k, 1); } else rig.tailMat.color.set(on ? 0xff5040 : 0xe02020);
+      };
+    }
+    // everything climate-specific is switched here, from the key alone, so cycling back to sunny restores the identical look
+    const FOG_NEAR = { rain: 60, night: 80, snow: 80 }, FOG_FAR = { rain: 1000, night: 1250, snow: 1500 }, SHADOW_K = { rain: 0.45, night: 0.3, snow: 0.7 };
+    const climateApply = (key) => {
+      const night = key === 'night';
+      nightOn = night; nightBase = null;
+      trFx.snow.value = key === 'snow' ? 1 : 0; trFx.night.value = night ? 1 : 0;
+      scene.fog.near = Math.min(scene.fog.near, FOG_NEAR[key] || 120); scene.fog.far = Math.min(scene.fog.far, FOG_FAR[key] || 1900); // the map sets its own range first; the climate can only pull it in
+      sun.shadow.intensity = SHADOW_K[key] || 1;
+      skyNight.visible = night; nightRoad.visible = night; railLights.visible = night;
+      for (const rig of [...rigs, oncRig]) for (const o of rig.nightObjs) o.visible = night;
+      bldMat.emissiveIntensity = night ? 2.4 : 0.5; bldMat.envMapIntensity = night ? 0.25 : 1;
+      cityLights.material.size = night ? 3.6 : 3.4;
+      if (night) { roadMat.envMapIntensity = 0.3; roadMat.roughness = 0.3; }
+      if (key === 'rain') { roadMat.envMapIntensity = 2.6; roadMat.roughness = 0.07; } // wet, mirror-like asphalt
+    };
+
     // ---------- weather ----------
     let weatherApplied = null;
     const applyWeather = (key) => {
@@ -2446,7 +2609,7 @@
       weatherApplied = key;
       const photoSky = !!skyDome; // every climate uses the same photo-cloud dome, recoloured
       tintSky(key);
-      if (photoSky && key !== 'sunny') w.fog = { rain: '#5f6b7c', snow: '#dfe7f1', sunset: '#e9a070' }[key] || w.fog;
+      if (photoSky && key !== 'sunny') w.fog = { rain: '#4a5666', snow: '#dfe7f1', sunset: '#e9a070', night: '#0b1430' }[key] || w.fog;
       scene.background = skyTex(SKY[key] ? key : 'sunny');
       if (skyDome) skyDome.visible = photoSky;
       floraMat.color.set(w.leaf); tuftMat.color.set(w.leaf); for (const m of leafMats) {
@@ -2460,12 +2623,12 @@
       const mp = MAPS[mapApplied] || MAPS.highway;
       if (mp.ground) { // per-map ground palette, tinted by the climate (the climate keeps its own tint on every map)
         const gt = GTINT[key], cols = mp.ground.map((hex) => { const c = col(hex); if (gt) { if (gt.mix) c.lerp(tmpColor.set(gt.mix), gt.k); else c.multiply(tmpColor.setRGB(gt.m[0], gt.m[1], gt.m[2])); } return '#' + c.getHexString(); });
-        paintGround(cols[0], cols[1]);
-      } else paintGround(w.grass, w.grass2);
-      if (mp.haze) scene.fog.color.lerp(tmpColor.set(mp.haze), mp.hazeK * (key === 'rain' ? 0.5 : 1));
+        paintGround(cols[0], cols[1], key === 'snow');
+      } else paintGround(w.grass, w.grass2, key === 'snow');
+      if (mp.haze) scene.fog.color.lerp(tmpColor.set(mp.haze), mp.hazeK * (key === 'night' ? 0.08 : (key === 'rain' ? 0.5 : 1)));
       scene.fog.near = mp.fog[0]; scene.fog.far = mp.fog[1];
       hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); baseHemi = w.hemi[2];
-      sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.55 : (key === 'sunset' ? 0.8 : 1);
+      sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.7 : (key === 'night' ? 0.2 : (key === 'sunset' ? 0.8 : 1));
       applyLightK();
       tmpColor.set(w.city); for (const m of tintMats) m.color.copy(tmpColor);
       lakeWaterMat.color.set(0x1f78a0).multiply(tmpColor);
@@ -2477,6 +2640,7 @@
       sunGlow.position.y = key === 'sunset' ? 60 : 190;
       sunGlow.material.color.set(key === 'sunset' ? '#ffd27a' : '#ffffff');
       rain.visible = key === 'rain'; snow.visible = key === 'snow';
+      climateApply(key); // night lights, wet road, snow caps (see the climate block above)
     };
 
     // ---------- sizing ----------
@@ -2542,7 +2706,7 @@
       const RT = raceRoute(); // the map and the route of this race (re-rolled whenever the map, the obstacle layout or the race length changes)
       if (mapApplied !== RT.map) applyMap(RT.map);
       if (RT !== sceneryFor) { sceneryFor = RT; setRouteScenery(RT); }
-      if (weatherApplied !== currentWeather) applyWeather(currentWeather); // an unknown climate key falls back to the sunny table
+      if (weatherApplied !== wxNow()) applyWeather(wxNow()); // an unknown climate key falls back to the sunny table
 
       // adaptive resolution: step down once if the phone cannot hold the frame rate
       frameCount++;
@@ -2649,6 +2813,7 @@
         railLightPos[o + 3] = RAIL_X - 0.1; railLightPos[o + 4] = 0.5; railLightPos[o + 5] = z;
       }
       railLightGeo.attributes.position.needsUpdate = true;
+      climateFrame(cz); // night: lamp glows + light pools follow the lamps
       const lBaseL = Math.floor(-cz / LAMP_GAP);
       if (lBaseL !== lampBase) {
         lampBase = lBaseL; let nl = 0;
@@ -2850,7 +3015,7 @@
         for (let i = 0; i < PRECIP_N; i++) {
           const s = seed[i]; s.y -= 34 * s.v * dt; if (s.y < 0) s.y += 22;
           const o = i * 6, x = camX + s.x, z = cz + s.z;
-          rainPos[o] = x; rainPos[o + 1] = s.y; rainPos[o + 2] = z; rainPos[o + 3] = x - 0.18; rainPos[o + 4] = s.y + 0.95; rainPos[o + 5] = z;
+          rainPos[o] = x; rainPos[o + 1] = s.y; rainPos[o + 2] = z; rainPos[o + 3] = x - 0.42; rainPos[o + 4] = s.y + 1.15; rainPos[o + 5] = z; // slanted streaks
         }
         rainGeo.attributes.position.needsUpdate = true;
       } else if (snow.visible) {
