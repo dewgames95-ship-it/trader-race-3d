@@ -444,7 +444,7 @@
       const geo = new T.SphereGeometry(900, 40, 20, (90 - 75) * d2r, 150 * d2r, (90 - 66) * d2r, 70 * d2r);
       // vertex tint over the photo clouds: each climate gets its own horizon -> zenith gradient (linear RGB)
       geo.setAttribute('color', new T.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
-      const SKY_TINT = { sunny: [[1.04, 1.04, 1.06], [0.125, 0.345, 0.93]], rain: [[0.44, 0.47, 0.52], [0.25, 0.27, 0.31]], night: [[0.05, 0.075, 0.17], [0.006, 0.012, 0.045]], snow: [[1.1, 1.12, 1.15], [0.62, 0.78, 1.0]], sunset: [[2.5, 1.05, 0.38], [0.62, 0.3, 0.72]] };
+      const SKY_TINT = { sunny: [[1.04, 1.04, 1.06], [0.125, 0.345, 0.93]], rain: [[0.42, 0.43, 0.46], [0.4, 0.35, 0.28]], night: [[0.05, 0.075, 0.17], [0.006, 0.012, 0.045]], snow: [[1.1, 1.12, 1.15], [0.62, 0.78, 1.0]], sunset: [[2.5, 1.05, 0.38], [0.62, 0.3, 0.72]] };
       tintSky = (key) => {
         const [lo, hi] = SKY_TINT[key] || SKY_TINT.sunny, pos = geo.attributes.position, a = geo.attributes.color;
         for (let i = 0; i < pos.count; i++) { const e = Math.pow(Math.max(0, Math.min(1, pos.getY(i) / 900 / 0.75)), 0.8); a.setXYZ(i, lo[0] + (hi[0] - lo[0]) * e, lo[1] + (hi[1] - lo[1]) * e, lo[2] + (hi[2] - lo[2]) * e); }
@@ -693,7 +693,7 @@
         });
       }
       if (snowy) {                                                             // irregular light snow patches (~40%), soft edges
-        for (let i = 0; i < 34; i++) {
+        for (let i = 0; i < 22; i++) {
           const x = hash(i * 1.91 + 11) * S, y = hash(i * 2.37 + 4) * S, r = 34 + hash(i * 3.13) * 90, sq = 0.4 + hash(i * 4.1) * 0.45, rot = hash(i * 5.3) * 3.1;
           each(x, y, r * 1.3, (X, Y) => {
             g.save(); g.translate(X, Y); g.rotate(rot); g.scale(1, sq);
@@ -2474,7 +2474,7 @@
       let frag = '';
       if (o.snow === 'up') frag += 'float trN = trNoise(vTrW.xz * 0.9 + vTrW.y * 0.7) - 0.5; float trS = smoothstep(0.42 + trN * 0.3, 0.7 + trN * 0.3, vTrWN.y) * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), trS);\n';
       if (o.snow === 'road') frag += 'float trN = trNoise(vTrW.xz * vec2(0.5, 0.35)); float trS = clamp(smoothstep(' + (R3D_XS * 0.91).toFixed(2) + ', ' + (R3D_XS * 1.0).toFixed(2) + ', abs(vTrW.x)) * (0.4 + 0.6 * trN) + 0.05 * trN, 0.0, 1.0) * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.94, 1.0), trS);\n';
-      if (o.snow === 'grass') frag += 'float trN = trNoise(vTrW.xz * 0.11) + 0.5 * trNoise(vTrW.xz * 0.37); float trS = smoothstep(0.85, 1.05, trN + (1.0 - smoothstep(4.0, 18.0, abs(vTrW.x))) * 0.22) * 0.6 * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.94, 0.98), trS);\n';
+      if (o.snow === 'grass') frag += 'float trN = trNoise(vTrW.xz * 0.11) + 0.5 * trNoise(vTrW.xz * 0.37); float trS = smoothstep(0.92, 1.12, trN + (1.0 - smoothstep(4.0, 18.0, abs(vTrW.x))) * 0.16) * 0.5 * uTrSnow; diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.94, 0.98), trS);\n';
       let emi = '';
       if (o.lit) emi += 'totalEmissiveRadiance += diffuseColor.rgb * uTrNight * ' + o.lit.toFixed(2) + ';\n';
       if (o.win) emi += 'vec3 trn = normalize(vTrON + vec3(0.0001)); float trWall = 1.0 - smoothstep(0.25, 0.5, abs(trn.y)); vec2 trT = normalize(vec2(-trn.z, trn.x) + vec2(0.0001)); vec2 trUV = vec2(dot(vTrO.xz, trT) / 3.4, vTrO.y / 3.6); vec2 trC = floor(trUV), trF = fract(trUV);'
@@ -2504,7 +2504,7 @@
       eachMat(rails, { snow: 'up', lit: 0.12 }); each(railMat, { snow: 'up', lit: 0.12 });
       each(lamps.material, { snow: 'up', lit: 0.35 }); each(matVC, { snow: 'up', lit: 0.35 });
       for (const m of [roadblockMat, barrierMat, jumpBodyMat, bumpMat, ...wreckMats.slice(0, 3)]) each(m, { snow: 'up', lit: 0.4 });
-      each(bldMat, { snow: 'up' }); each(payMat, { snow: 'up' });
+      each(bldMat, { snow: 'up' }); each(payMat, { snow: 'grass' }); // pavement: patchy dusting, never a white sheet
       for (const c of cityMats) each(c.m, { snow: 'up', win: true });
     }
 
@@ -2591,7 +2591,7 @@
     const climateApply = (key) => {
       const night = key === 'night';
       nightOn = night; nightBase = null;
-      trFx.snow.value = key === 'snow' ? 1 : 0; trFx.night.value = night ? 1 : 0;
+      trFx.snow.value = key === 'snow' ? (curMap === 'desert' ? 0.4 : 1) : 0; // the desert only gets a light dusting trFx.night.value = night ? 1 : 0;
       scene.fog.near = Math.min(scene.fog.near, FOG_NEAR[key] || 120); scene.fog.far = Math.min(scene.fog.far, FOG_FAR[key] || 1900); // the map sets its own range first; the climate can only pull it in
       sun.shadow.intensity = SHADOW_K[key] || 1;
       skyNight.visible = night; nightRoad.visible = night; railLights.visible = night;
@@ -2630,7 +2630,7 @@
       hemi.color.set(w.hemi[0]); hemi.groundColor.set(w.hemi[1]); baseHemi = w.hemi[2];
       sun.color.set(w.sun[0]); baseSun = w.sun[1]; baseEnv = key === 'rain' ? 0.7 : (key === 'night' ? 0.2 : (key === 'sunset' ? 0.8 : 1));
       applyLightK();
-      tmpColor.set(w.city); for (const m of tintMats) m.color.copy(tmpColor);
+      tmpColor.set(w.city); for (const m of tintMats) { m.color.copy(tmpColor); if (key === 'night' && m.isMeshBasicMaterial) m.color.multiplyScalar(0.22); } // unlit backdrop pieces go dark at night
       lakeWaterMat.color.set(0x1f78a0).multiply(tmpColor);
       cityMat.color.set(w.city); bldMat.color.set(w.city); roadMat.color.set(w.road); leafMat.color.set(w.leaf);
       tmpColor.set(w.city); for (const c of cityMats) c.m.color.copy(c.base).multiply(tmpColor);
