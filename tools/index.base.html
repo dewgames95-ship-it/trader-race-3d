@@ -3710,6 +3710,306 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     user-select: text;
   }
 </style>
+<style id="uiPolishB">
+/* uiPolishB: Invest / Invite / Profile screens. Scoped to the three screen ids only. */
+#screenInvest, #screenInvite, #screenProfile {
+  --ub-green: #22E07A; --ub-gold: #FFC83D; --ub-blue: #2F7BFF;
+  --ub-ink: #f1f5fb; --ub-mute: #93a4bd;
+  --ub-line: rgba(130, 168, 220, 0.22);
+  --ub-glass: linear-gradient(150deg, rgba(20, 34, 62, 0.92), rgba(8, 15, 29, 0.96));
+}
+@keyframes ubIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ubPulse { 0% { transform: scale(1); } 40% { transform: scale(1.09); } 100% { transform: scale(1); } }
+#screenInvest.active-screen, #screenInvite.active-screen, #screenProfile.active-screen { animation: ubIn 0.2s ease-out backwards; }
+#investExploreList, #investMyList { animation: ubIn 0.18s ease-out backwards; }
+.ub-pulse { animation: ubPulse 0.45s ease-out; }
+
+/* ---------- shared bits ---------- */
+:is(#screenInvest, #screenInvite, #screenProfile) .ub-i {
+  width: 1em; height: 1em; flex: 0 0 auto; display: inline-block; vertical-align: middle;
+  fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; overflow: visible;
+}
+:is(#screenInvest, #screenInvite, #screenProfile) svg.icon-sm { width: 18px; height: 18px; }
+:is(#screenInvest, #screenInvite, #screenProfile) svg.icon-md { width: 26px; height: 26px; }
+:is(#screenInvest, #screenInvite, #screenProfile) svg.icon-lg { width: 30px; height: 30px; }
+:is(#screenInvest, #screenInvite, #screenProfile) .panel:not(.profile-banner) {
+  background: var(--ub-glass);
+  border: 1px solid var(--ub-line);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 6px 18px rgba(0, 0, 0, 0.38);
+}
+:is(#screenInvest, #screenInvite, #screenProfile) h1,
+:is(#screenInvest, #screenInvite, #screenProfile) h2,
+:is(#screenInvest, #screenInvite, #screenProfile) h3 { text-transform: uppercase; font-style: italic; font-weight: 900; }
+:is(#screenInvest, #screenInvite, #screenProfile) button, :is(#screenInvest, #screenInvite, #screenProfile) .invest-card,
+:is(#screenInvest, #screenInvite, #screenProfile) .commission-tier, :is(#screenInvest, #screenInvite, #screenProfile) .ref-stat,
+:is(#screenInvest, #screenInvite, #screenProfile) .menu-item {
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+:is(#screenInvest, #screenInvite, #screenProfile) button:active:not(:disabled),
+:is(#screenInvest, #screenInvite, #screenProfile) .invest-card:active,
+:is(#screenInvest, #screenInvite, #screenProfile) .commission-tier:active { transform: scale(0.97) !important; }
+:is(#screenInvest, #screenInvite, #screenProfile) .green-btn {
+  background: linear-gradient(180deg, #2eea82 0%, #11a653 100%) !important;
+  border: 1px solid rgba(160, 255, 200, 0.55) !important;
+  box-shadow: 0 4px 0 #0a5a2e, 0 8px 18px rgba(34, 224, 122, 0.25), inset 0 1px 0 rgba(255,255,255,0.35) !important;
+  color: #03230f !important; text-shadow: none; font-style: italic; text-transform: uppercase; letter-spacing: 0.3px;
+  border-radius: 13px !important;
+}
+:is(#screenInvest, #screenInvite, #screenProfile) .green-btn:active { box-shadow: 0 1px 0 #0a5a2e, 0 3px 8px rgba(34,224,122,.2) !important; transform: translateY(3px) scale(0.98) !important; }
+:is(#screenInvest, #screenInvite, #screenProfile) .blue-btn {
+  background: linear-gradient(180deg, #3c8bff 0%, #1459d1 100%) !important; border: 1px solid rgba(150,195,255,.55) !important;
+  box-shadow: 0 3px 0 #0b3585, inset 0 1px 0 rgba(255,255,255,.3) !important; border-radius: 12px !important;
+}
+.ub-copied { color: var(--ub-green) !important; border-color: rgba(34, 224, 122, 0.7) !important; }
+.ub-copied .ub-i { stroke: var(--ub-green); }
+
+/* ---------- INVEST ---------- */
+#screenInvest .investment-head { padding: 14px 14px 10px; background: linear-gradient(180deg, rgba(47,123,255,0.16), transparent); border-bottom: 1px solid var(--ub-line); }
+#screenInvest .investment-head h1 {
+  display: flex !important; align-items: center; justify-content: center; gap: 9px;
+  font-size: 23px !important; letter-spacing: 0.4px; line-height: 1 !important;
+}
+#screenInvest .investment-head h1 .ub-head-ic {
+  width: 32px !important; height: 32px !important; padding: 7px; border-radius: 11px; color: #fff;
+  background: linear-gradient(145deg, #3c8bff, #1245b8); box-shadow: 0 4px 12px rgba(47,123,255,0.45), inset 0 1px 0 rgba(255,255,255,.35);
+}
+#screenInvest .investment-head p { margin: 6px 0 0 !important; font-size: 13px !important; color: var(--ub-mute) !important; }
+#screenInvest .tabs-dark {
+  margin: 12px auto 2px; padding: 3px; gap: 3px; border-radius: 14px; border: 1px solid var(--ub-line); background: rgba(6, 12, 24, 0.85);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); grid-template-columns: 1fr 1fr;
+}
+#screenInvest .tabs-dark button { height: 36px; border-radius: 11px; font-size: 13px; font-weight: 800; text-transform: uppercase; font-style: italic; letter-spacing: 0.2px; color: var(--ub-mute); white-space: nowrap; }
+#screenInvest .tabs-dark button.active { background: linear-gradient(180deg, #3c8bff, #1459d1); color: #fff; box-shadow: 0 3px 10px rgba(47,123,255,.45), inset 0 1px 0 rgba(255,255,255,.3); }
+#screenInvest .invest-list { padding: 8px 12px 16px !important; }
+#screenInvest .invest-card {
+  position: relative; overflow: hidden; margin: 0 0 12px !important; padding: 12px !important; min-height: 0 !important;
+  display: grid !important; grid-template-columns: 1fr 1fr !important; grid-template-areas: "visual stats" "meta meta" "action action"; gap: 10px 12px !important;
+  border: 1px solid color-mix(in srgb, var(--tier), transparent 55%) !important; border-radius: 16px !important;
+  background: linear-gradient(150deg, rgba(20,34,62,0.94), rgba(7,13,26,0.98)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 6px 18px rgba(0,0,0,0.38) !important;
+}
+#screenInvest .invest-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--tier), transparent); opacity: 0.9; }
+#screenInvest .invest-card.featured { box-shadow: inset 0 0 22px color-mix(in srgb, var(--tier), transparent 86%), 0 0 16px color-mix(in srgb, var(--tier), transparent 72%), 0 6px 18px rgba(0,0,0,0.38) !important; }
+#screenInvest .tier-visual { grid-area: visual; min-width: 0; padding: 0 !important; border: 0 !important; display: flex !important; flex-direction: column; justify-content: flex-start !important; gap: 0; }
+#screenInvest .tier-name { display: flex !important; align-items: center; gap: 6px !important; font-size: 21px !important; font-weight: 900 !important; font-style: italic; line-height: 1 !important; color: var(--tier) !important; letter-spacing: 0.3px; }
+#screenInvest .tier-name .ub-i { width: 20px; height: 20px; color: var(--tier); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tier), transparent 50%)); }
+#screenInvest .tier-desc { margin-top: 3px !important; font-size: 11.5px !important; color: var(--ub-mute) !important; font-weight: 700 !important; }
+#screenInvest .tier-visual > img { width: 100% !important; max-width: 150px; height: 56px !important; margin: 6px 0 0 !important; object-fit: contain !important; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.5)); }
+#screenInvest .tier-stats { grid-area: stats; min-width: 0; padding: 0 0 0 12px !important; border-left: 1px solid var(--ub-line) !important; display: flex; flex-direction: column; justify-content: center; }
+#screenInvest .invest-label { font-size: 10px !important; font-weight: 800 !important; letter-spacing: 0.6px !important; color: var(--ub-mute) !important; text-transform: uppercase; }
+#screenInvest .invest-number { font-size: 22px !important; font-weight: 900 !important; color: #fff !important; line-height: 1.1 !important; margin: 1px 0 0 !important; font-variant-numeric: tabular-nums; }
+#screenInvest .profit-number { font-size: 22px !important; font-weight: 900 !important; color: var(--ub-green) !important; line-height: 1.1 !important; font-variant-numeric: tabular-nums; }
+#screenInvest .invest-number small, #screenInvest .profit-number small { font-size: 10.5px !important; font-weight: 700 !important; color: var(--ub-mute) !important; }
+#screenInvest .mini-divider { margin: 7px 0 !important; background: var(--ub-line) !important; }
+#screenInvest .tier-stats .tiny { font-size: 10.5px !important; color: var(--ub-gold) !important; font-weight: 800 !important; }
+#screenInvest .tier-meta {
+  grid-area: meta; padding: 0 !important; border: 0 !important; display: flex !important; gap: 6px !important; flex-direction: row !important; min-width: 0;
+}
+#screenInvest .tier-meta p, #screenInvest .tier-meta p.tiny {
+  flex: 1 1 0; min-width: 0; margin: 0 !important; padding: 7px 8px; border-radius: 11px; background: rgba(6, 12, 24, 0.6); border: 1px solid rgba(130,168,220,0.14);
+  font-size: 9px !important; line-height: 1.2 !important;
+}
+#screenInvest .tier-meta p br { display: none; }
+#screenInvest .tier-meta p .muted { display: flex !important; align-items: center; gap: 4px !important; font-size: 9px !important; font-weight: 800 !important; letter-spacing: 0.4px; color: var(--ub-mute) !important; text-transform: uppercase; white-space: nowrap !important; margin-bottom: 3px; }
+#screenInvest .tier-meta p .muted .ub-i { width: 12px !important; height: 12px !important; margin: 0 !important; }
+#screenInvest .tier-meta p b { display: block !important; font-size: 12.5px !important; font-weight: 800 !important; color: #fff !important; white-space: nowrap !important; }
+#screenInvest .tier-meta p b.blue { color: #38bdf8 !important; }
+#screenInvest .tier-action { grid-area: action; padding: 0 !important; border: 0 !important; display: flex !important; flex-direction: row !important; align-items: stretch; gap: 10px !important; }
+#screenInvest .share-box {
+  flex: 0 0 38%; min-width: 0; margin: 0 !important; padding: 6px 8px !important; display: flex !important; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 12px !important; background: rgba(6, 12, 24, 0.6) !important; border: 1px solid rgba(130,168,220,0.14) !important; box-shadow: none !important; min-height: 46px;
+}
+#screenInvest .share-box .invest-label { font-size: 9px !important; white-space: nowrap; }
+#screenInvest .share-box strong { font-size: 20px !important; font-weight: 900 !important; line-height: 1.05 !important; }
+#screenInvest .invest-now { flex: 1; min-height: 46px !important; width: auto !important; margin: 0 !important; padding: 0 10px !important; font-size: 15px !important; line-height: 1.1 !important; white-space: nowrap; }
+#screenInvest .invest-now br { display: none; }
+#screenInvest .invest-note { margin: 2px 0 8px !important; padding: 12px !important; display: grid !important; grid-template-columns: 44px 1fr 84px !important; gap: 10px !important; align-items: center; overflow: hidden; }
+#screenInvest .invest-note-icon { width: 44px !important; height: 44px !important; display: grid; place-items: center; border-radius: 13px !important; background: linear-gradient(145deg, #3c8bff, #1245b8) !important; box-shadow: 0 4px 12px rgba(47,123,255,.4); }
+#screenInvest .invest-note-icon .ub-i { width: 24px !important; height: 24px !important; color: #fff; }
+#screenInvest .invest-note-copy b { font-size: 15px !important; }
+#screenInvest .invest-note-copy p { font-size: 11px !important; line-height: 1.4 !important; color: var(--ub-mute) !important; margin-top: 4px !important; }
+#screenInvest .invest-note-car { width: 100% !important; height: 48px !important; margin: 0 !important; object-fit: contain; }
+/* my investments */
+#screenInvest #myInvestmentsContainer { display: block; }
+#screenInvest #myInvestmentsContainer > .panel { border-radius: 16px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 18px rgba(0,0,0,.38) !important; }
+#screenInvest #myInvestmentsContainer div[style*="font-size:8"] { font-size: 9.5px !important; letter-spacing: 0.3px; }
+#screenInvest #myInvestmentsContainer .ub-st { width: 12px; height: 12px; margin-right: 2px; vertical-align: -2px; }
+#screenInvest #myInvestmentsContainer .green-btn, #screenInvest #myInvestmentsContainer .blue-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
+#screenInvest .ub-empty { padding: 28px 18px !important; text-align: center; margin-top: 8px; display: flex; flex-direction: column; align-items: center; }
+#screenInvest .ub-empty-ic { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 18px; color: #fff; background: linear-gradient(145deg, #3c8bff, #1245b8); box-shadow: 0 6px 16px rgba(47,123,255,.4), inset 0 1px 0 rgba(255,255,255,.3); font-size: 30px; }
+#screenInvest .ub-empty-t { margin-top: 14px; font-family: "Barlow Condensed", sans-serif; font-size: 22px; font-weight: 900; font-style: italic; color: #fff; letter-spacing: .3px; }
+#screenInvest .ub-empty-p { margin: 6px 0 16px; font-size: 12px; line-height: 1.45; color: var(--ub-mute); max-width: 260px; }
+#screenInvest .ub-empty .green-btn { padding: 0 22px !important; min-height: 44px; font-size: 14px !important; }
+
+/* ---------- shared section headings (invite) ---------- */
+#screenInvite .invite-hero { min-height: 92px !important; padding: 16px 118px 14px 14px !important; border-bottom: 1px solid var(--ub-line); background-size: 112px auto, auto, auto !important; }
+#screenInvite .invite-hero h1 { font-family: "Barlow Condensed", 'Segoe UI', sans-serif !important; font-size: 28px !important; letter-spacing: 0.4px !important; line-height: 1 !important; }
+#screenInvite .invite-hero p { font-size: 12.5px !important; margin-top: 6px !important; color: var(--ub-mute) !important; }
+#screenInvite .content { padding: 12px 12px 22px !important; }
+#screenInvite .section-kicker, #screenProfile .profile-section h2 {
+  margin: 14px 0 9px !important; font-size: 17px !important; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; color: #fff;
+}
+#screenInvite .content > .section-kicker:first-child { margin-top: 2px !important; }
+#screenInvite .section-kicker::before { width: 4px !important; height: 16px !important; border-radius: 3px; background: linear-gradient(180deg, var(--ub-green), #0b8a45) !important; box-shadow: 0 0 8px rgba(34,224,122,.55); }
+#screenInvite .earn-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+#screenInvite .earn-card { padding: 12px !important; }
+#screenInvite .earn-card h3 {
+  display: grid !important; grid-template-columns: 34px 1fr; column-gap: 10px; align-items: center; margin: 0 0 10px !important; font-size: 15px !important; line-height: 1.15 !important; text-transform: uppercase;
+}
+#screenInvite .earn-card h3 .icon-md { grid-row: 1 / 3; width: 34px !important; height: 34px !important; padding: 7px; border-radius: 11px; color: #fff; background: linear-gradient(145deg, #3c8bff, #1245b8); }
+#screenInvite .earn-card h3 b { font-size: 12.5px; font-weight: 800; color: var(--ub-mute); text-transform: none; font-style: normal; }
+#screenInvite .earn-card h3 span { font-size: 15px !important; color: var(--ub-green) !important; }
+#screenInvite .flow { display: flex !important; align-items: stretch; gap: 4px !important; padding: 0 !important; background: none !important; border: 0 !important; }
+#screenInvite .flow > div { flex: 1 1 0; min-width: 0; padding: 9px 3px 8px; text-align: center; font-size: 10px !important; font-weight: 700; color: var(--ub-mute); line-height: 1.25 !important; border-radius: 12px; background: rgba(6,12,24,0.62); border: 1px solid rgba(130,168,220,0.14); }
+#screenInvite .flow > div b { display: block; margin-top: 2px; font-size: 14px; font-weight: 900; color: #fff; }
+#screenInvite .flow > div b.blue { color: #7cc4ff; }
+#screenInvite .flow > div b.green { color: var(--ub-green); }
+#screenInvite .flow > .ub-i { width: 14px !important; height: 14px !important; align-self: center; color: var(--ub-mute); flex: 0 0 auto; }
+#screenInvite .flow .orb { width: 30px !important; height: 30px !important; margin: 0 auto 5px !important; display: grid !important; place-items: center; border-radius: 10px !important; color: #fff; background: linear-gradient(145deg, #3c8bff, #1245b8); }
+#screenInvite .flow .orb .ub-i { width: 16px !important; height: 16px !important; }
+#screenInvite .ref-grid { grid-template-columns: 1fr !important; gap: 8px !important; margin-top: 12px !important; }
+#screenInvite .ref-box { padding: 11px 12px !important; gap: 10px !important; }
+#screenInvite .ref-box .tiny { font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
+#screenInvite .ref-value { font-size: 22px !important; font-weight: 900 !important; color: var(--ub-gold) !important; letter-spacing: 1px; font-family: "Barlow Condensed", sans-serif; line-height: 1.15; }
+#screenInvite .ref-link { max-width: 100% !important; font-size: 12px !important; color: #7cc4ff !important; font-weight: 700; margin-top: 2px; }
+:is(#screenInvite, #screenProfile) .copy-btn {
+  flex: 0 0 auto; width: 40px !important; height: 40px !important; display: grid !important; place-items: center; padding: 0 !important; border-radius: 12px !important; color: #fff;
+  background: linear-gradient(180deg, #3c8bff, #1459d1) !important; border: 1px solid rgba(150,195,255,.5) !important; box-shadow: 0 3px 0 #0b3585 !important;
+}
+:is(#screenInvite, #screenProfile) .copy-btn .ub-i { width: 19px; height: 19px; }
+:is(#screenInvite, #screenProfile) .copy-btn.ub-copied { background: rgba(34,224,122,0.18) !important; box-shadow: 0 3px 0 #0a5a2e !important; }
+#screenInvite .share-label { margin: 16px 0 0 !important; font-size: 13px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ub-mute); }
+#screenInvite .share-row { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 8px !important; margin: 10px 0 14px !important; }
+#screenInvite .social { width: 100% !important; height: 52px !important; padding: 0 !important; display: grid !important; place-items: center; border-radius: 15px !important; background: var(--ub-glass) !important; border: 1px solid var(--ub-line) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.07) !important; }
+#screenInvite .social .ub-i { width: 24px; height: 24px; stroke-width: 1.8; }
+#screenInvite .social[data-share="Telegram"] { color: #3bb4ee; }
+#screenInvite .social[data-share="WhatsApp"] { color: #2fe07a; }
+#screenInvite .social[data-share="Instagram"] { color: #ff6fa8; }
+#screenInvite .social[data-share="X"] { color: #fff; }
+#screenInvite .progress-card { padding: 14px !important; display: grid !important; grid-template-columns: 46px 1fr 40px !important; gap: 12px !important; align-items: center; }
+#screenInvite .big-orb { width: 46px !important; height: 46px !important; display: grid !important; place-items: center; border-radius: 14px !important; color: #fff; background: linear-gradient(145deg, #3c8bff, #1245b8) !important; box-shadow: 0 4px 12px rgba(47,123,255,.4); }
+#screenInvite .big-orb .ub-i { width: 24px !important; height: 24px !important; }
+#screenInvite .medal { color: var(--ub-gold); }
+#screenInvite .medal .ub-i { width: 34px !important; height: 34px !important; stroke-width: 1.6; }
+#screenInvite .progress-card strong { color: var(--ub-green) !important; font-size: 20px !important; }
+#screenInvite .progress-track { height: 8px !important; background: rgba(6,12,24,0.9) !important; border: 1px solid rgba(130,168,220,0.14); margin: 7px 0 6px !important; }
+#screenInvite .progress-track span { background: linear-gradient(90deg, #1fc968, var(--ub-green)) !important; box-shadow: 0 0 10px rgba(34,224,122,.6); transition: width 0.4s ease; }
+#screenInvite .progress-card small { font-size: 11px !important; }
+#screenInvite .tier-row { grid-template-columns: repeat(4, 1fr) !important; gap: 7px !important; }
+#screenInvite .commission-tier { min-height: 96px !important; padding: 10px 2px 9px !important; display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border-radius: 14px !important; color: var(--ub-mute); }
+#screenInvite .commission-tier strong { font-size: 20px !important; font-weight: 900; color: var(--ub-mute) !important; font-family: "Barlow Condensed", sans-serif; }
+#screenInvite .commission-tier .ub-i { width: 22px !important; height: 22px !important; }
+#screenInvite .commission-tier small { font-size: 10.5px !important; line-height: 1.25; text-align: center; font-weight: 700; }
+#screenInvite .commission-tier.active { border-color: rgba(34,224,122,0.8) !important; color: var(--ub-green); background: linear-gradient(150deg, rgba(34,224,122,0.16), rgba(8,15,29,0.96)) !important; box-shadow: 0 0 14px rgba(34,224,122,.25), inset 0 1px 0 rgba(255,255,255,.07) !important; }
+#screenInvite .commission-tier.active strong { color: var(--ub-green) !important; }
+#screenInvite .referral-stats { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+#screenInvite .ref-stat { min-height: 76px !important; padding: 11px 12px !important; display: grid !important; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 2px; align-items: center; justify-items: start; text-align: left; font-size: 11px !important; font-weight: 700; color: var(--ub-mute) !important; cursor: default; }
+#screenInvite .ref-stat .ub-i { grid-row: 1; width: 20px !important; height: 20px !important; color: #7cc4ff; }
+#screenInvite .ref-stat strong { grid-column: 1 / 3; margin: 0 !important; font-size: 22px !important; line-height: 1.1; color: var(--ub-green) !important; font-variant-numeric: tabular-nums; display: inline !important; }
+#screenInvite .ref-stat strong.blue { color: #fff !important; }
+#screenInvite .withdraw-ref { width: 100%; min-height: 50px !important; margin-top: 12px; display: flex !important; align-items: center; justify-content: center; gap: 9px; font-size: 14px !important; white-space: nowrap; padding: 0 10px !important; }
+#screenInvite .withdraw-ref span { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#screenInvite .withdraw-ref .ub-i { width: 20px; height: 20px; }
+#screenInvite .content > aside.panel { margin-top: 10px; text-align: left; padding: 11px 12px !important; display: flex; align-items: center; gap: 8px; font-size: 11.5px !important; line-height: 1.4; color: var(--ub-mute) !important; }
+#screenInvite .content > aside.panel .ub-i { color: var(--ub-green); width: 20px; height: 20px; }
+#screenInvite .content > section.panel:last-child { margin-top: 12px !important; padding: 13px !important; }
+#screenInvite .content > section.panel:last-child > b { font-size: 17px !important; font-style: italic; }
+#screenInvite .why-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-top: 10px !important; }
+#screenInvite .why { padding: 11px 8px !important; font-size: 11px !important; line-height: 1.3; color: var(--ub-mute) !important; border-radius: 13px; background: rgba(6,12,24,0.6); border: 1px solid rgba(130,168,220,0.14); text-align: left !important; display: grid; grid-template-columns: 22px 1fr; column-gap: 8px; align-items: start; }
+#screenInvite .why .ub-i { grid-row: 1 / 3; width: 22px !important; height: 22px !important; }
+#screenInvite .why b { margin: 0 0 1px !important; font-size: 12.5px !important; }
+#screenInvite .why b.blue { color: #7cc4ff; } #screenInvite .why .ub-i:nth-child(1) { color: #7cc4ff; }
+
+/* ---------- PROFILE ---------- */
+#screenProfile .profile-body { padding: 12px 12px 22px !important; }
+#screenProfile .profile-head { padding: 12px !important; grid-template-columns: 54px 1fr auto !important; gap: 12px !important; border-radius: 16px !important; }
+#screenProfile .profile-head .avatar { width: 54px !important; height: 54px !important; border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 0 14px rgba(47,123,255,0.6); }
+#screenProfile .profile-title { font-size: 20px !important; letter-spacing: 0.4px; }
+#screenProfile .profile-name-tag { font-size: 14px !important; color: #7cc4ff; }
+#screenProfile .profile-identity .muted { display: block !important; font-size: 10.5px !important; margin-top: 1px; }
+#screenProfile .vip-pill-lg { margin-top: 5px !important; padding: 3px 9px !important; border-radius: 99px !important; font-size: 11px !important; color: #3a2600; background: linear-gradient(180deg, #ffd86a, #f5a90c) !important; box-shadow: 0 2px 8px rgba(255,200,61,.35); }
+#screenProfile .vip-pill-lg .ub-i { width: 14px !important; height: 14px !important; }
+#screenProfile .refer-box { padding: 7px 8px 7px 10px !important; border-radius: 12px !important; gap: 8px !important; }
+#screenProfile .refer-box .muted { font-size: 9.5px !important; letter-spacing: 0.6px; }
+#screenProfile .refer-box .profile-name-tag { font-size: 13px !important; color: var(--ub-gold); }
+#screenProfile .refer-box .copy-btn { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
+#screenProfile .wallet-card { margin-top: 10px !important; padding: 12px 14px 14px !important; border-radius: 18px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 10px 24px rgba(5,66,178,0.45) !important; }
+#screenProfile .wallet-card > div[style*="font-size:12px"] { font-size: 11px !important; letter-spacing: 0.6px; text-transform: uppercase; font-weight: 800 !important; opacity: 0.85 !important; }
+#screenProfile .balance-big { font-size: 34px !important; line-height: 1.05 !important; font-weight: 900; font-style: italic; font-variant-numeric: tabular-nums; }
+#screenProfile .balance-big#profileProfitBalance { font-size: 26px !important; }
+#screenProfile .balance-big small { font-size: 13px !important; font-style: normal; }
+#screenProfile .wallet-line { width: 100% !important; margin: 8px 0 !important; }
+#screenProfile .wallet-buttons { margin-top: 12px !important; gap: 10px !important; }
+#screenProfile .wallet-buttons button { min-height: 44px !important; border-radius: 13px !important; font-size: 14px !important; font-weight: 900; font-style: italic; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 7px; }
+#screenProfile .wallet-buttons .ub-i { width: 18px; height: 18px; }
+#screenProfile .deposit-wallet { background: linear-gradient(180deg, #2eea82, #11a653) !important; color: #03230f !important; border: 1px solid rgba(160,255,200,.55) !important; box-shadow: 0 4px 0 #0a5a2e, 0 8px 16px rgba(34,224,122,.25) !important; }
+#screenProfile .withdraw-wallet { background: rgba(6,14,30,0.35) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.4) !important; }
+#screenProfile .tr-wallet-mode-bar .ub-i, #screenProfile .tr-wrefill-btn .ub-i { width: 11px; height: 11px; margin-right: 3px; }
+#screenProfile .tr-wrefill-btn { display: inline-flex; align-items: center; }
+#screenProfile .tr-settings { margin: 10px 0 0 !important; padding: 12px 14px !important; border-radius: 16px !important; background: var(--ub-glass) !important; border: 1px solid var(--ub-line) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 18px rgba(0,0,0,.38); }
+#screenProfile .tr-settings h4 { display: flex; align-items: center; gap: 7px; margin: 0 0 4px !important; font-size: 13px !important; letter-spacing: 0.6px !important; color: var(--ub-mute) !important; font-family: "Barlow Condensed", sans-serif; font-style: italic; font-weight: 900; }
+#screenProfile .tr-settings h4 .ub-i { width: 16px; height: 16px; color: #7cc4ff; }
+#screenProfile .tr-set-row { padding: 9px 0 !important; font-size: 13px !important; font-weight: 700; min-height: 46px; }
+#screenProfile .tr-set-row > span:first-child { display: flex; align-items: center; gap: 9px; }
+#screenProfile .tr-set-row > span:first-child .ub-i { width: 18px; height: 18px; color: #7cc4ff; }
+#screenProfile .tr-set-row .tr-btn.green { color: #03230f !important; opacity: 1 !important; }
+#screenProfile .tr-set-row .tr-btn { min-height: 32px; display: inline-flex; align-items: center; gap: 5px; }
+#screenProfile .tr-set-row .tr-btn .ub-i { width: 13px; height: 13px; }
+#screenProfile .tr-switch { width: 44px !important; height: 25px !important; }
+#screenProfile .tr-switch::after { width: 19px !important; height: 19px !important; top: 2px !important; left: 2px !important; }
+#screenProfile .tr-switch.on::after { left: 21px !important; }
+#screenProfile .bonus { margin-top: 10px !important; padding: 12px 14px !important; border-radius: 16px !important; border-color: rgba(255,200,61,0.35) !important; }
+#screenProfile .bonus-icon { width: 44px !important; height: 44px !important; display: grid !important; place-items: center; border-radius: 13px !important; color: #3a2600; background: linear-gradient(145deg, #ffd86a, #f5a90c) !important; box-shadow: 0 4px 12px rgba(255,200,61,.3); }
+#screenProfile .bonus-icon .ub-i { width: 24px !important; height: 24px !important; }
+#screenProfile .bonus b { font-size: 13px !important; }
+#screenProfile .bonus b .ub-i { width: 15px !important; height: 15px !important; color: var(--ub-mute); vertical-align: -2px; }
+#screenProfile #bonusLockedVal { font-size: 26px !important; color: var(--ub-gold) !important; font-family: "Barlow Condensed", sans-serif; font-style: italic; display: inline-block; }
+#screenProfile #unlockBonusBtn { min-height: 38px !important; padding: 0 16px !important; font-size: 12.5px !important; border-radius: 11px !important; }
+#screenProfile .profile-section { margin-top: 10px !important; padding: 12px !important; }
+#screenProfile .profile-section h2 { margin: 0 0 10px !important; }
+#screenProfile .profile-stats { grid-template-columns: repeat(3, 1fr); gap: 8px !important; }
+#screenProfile .profile-stat { min-height: 96px !important; padding: 10px 4px !important; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 14px !important; }
+#screenProfile .profile-stat-label { display: flex !important; flex-direction: column; align-items: center; gap: 5px !important; font-size: 10px !important; line-height: 1.15; font-weight: 800; color: var(--ub-mute); text-transform: uppercase; letter-spacing: 0.3px; }
+#screenProfile .profile-stat-label .ub-i { width: 24px !important; height: 24px !important; color: #7cc4ff; }
+#screenProfile .profile-stat:nth-child(2) .ub-i { color: var(--ub-green); } #screenProfile .profile-stat:nth-child(3) .ub-i { color: var(--ub-gold); }
+#screenProfile .profile-stat strong { margin: 7px 0 0 !important; font-size: 17px !important; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+#screenProfile .profile-stat small { font-size: 10px !important; font-weight: 700; color: var(--ub-mute); }
+#screenProfile .menu-list { margin-top: 10px !important; padding: 4px 0; overflow: hidden; }
+#screenProfile .menu-item { width: 100%; min-height: 58px !important; padding: 8px 12px !important; display: grid !important; grid-template-columns: 40px 1fr 20px !important; gap: 12px !important; align-items: center; text-align: left; background: transparent !important; border: 0 !important; border-bottom: 1px solid rgba(130,168,220,0.12) !important; color: #fff; cursor: pointer; font-family: inherit; }
+#screenProfile .menu-item:last-child { border-bottom: 0 !important; }
+#screenProfile .menu-item:active { background: rgba(47,123,255,0.14) !important; transform: scale(0.985) !important; }
+#screenProfile .menu-icon { width: 40px !important; height: 40px !important; display: grid !important; place-items: center; border-radius: 12px !important; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 3px 8px rgba(0,0,0,.35); }
+#screenProfile .menu-icon .ub-i { width: 21px !important; height: 21px !important; }
+#screenProfile .menu-item b { font-size: 14px !important; font-weight: 800 !important; }
+#screenProfile .menu-item small { font-size: 11px !important; color: var(--ub-mute) !important; margin-top: 1px; display: block; }
+#screenProfile .menu-item .chev { color: var(--ub-mute); display: grid; place-items: center; }
+#screenProfile .menu-item .chev .ub-i { width: 18px; height: 18px; }
+#screenProfile .profile-banner { border: 1px solid var(--ub-line); margin-top: 10px !important; padding: 14px 44% 14px 14px !important; min-height: 84px !important; border-radius: 16px !important; }
+#screenProfile .profile-banner strong { font-size: 16px !important; display: flex; align-items: center; gap: 7px; }
+#screenProfile .profile-banner strong .ub-i { color: var(--ub-gold); }
+#screenProfile .profile-banner p { font-size: 11.5px !important; color: var(--ub-mute) !important; }
+
+@media (max-width: 380px) {
+  #screenInvest .invest-card { padding: 10px !important; gap: 9px 10px !important; }
+  #screenInvest .tier-name { font-size: 19px !important; }
+  #screenInvest .invest-number, #screenInvest .profit-number { font-size: 20px !important; }
+  #screenInvest .tabs-dark button { font-size: 12px; }
+  #screenInvite .invite-hero { padding-right: 100px !important; }
+  #screenInvite .flow > div b { font-size: 13px; }
+  #screenInvite .withdraw-ref { font-size: 12.5px !important; gap: 7px; }
+  #screenInvite .commission-tier strong { font-size: 18px !important; }
+  #screenProfile .profile-head { grid-template-columns: 48px 1fr auto !important; gap: 9px !important; }
+  #screenProfile .profile-head .avatar { width: 48px !important; height: 48px !important; }
+  #screenProfile .profile-stat strong { font-size: 15px !important; }
+  #screenProfile .balance-big { font-size: 30px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #screenInvest.active-screen, #screenInvite.active-screen, #screenProfile.active-screen, #investExploreList, #investMyList, .ub-pulse { animation: none !important; }
+  :is(#screenInvest, #screenInvite, #screenProfile) * { transition: none !important; }
+}
+</style>
 </head>
 <body>
 
@@ -4145,8 +4445,53 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
        SCREEN B: INVEST TAB (invest.php - VIP Investment Plans)
        ===================================================================== -->
   <div class="cr-screen" id="screenInvest">
+    <svg class="ub-sprite" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+      <defs>
+        <symbol id="ub-rocket" viewBox="0 0 24 24"><path d="M14 4.500c3-1.300 6-1.500 6-1.500s-.2 3-1.500 6L13 14.500l-3.500-3.500z"/><circle cx="14.700" cy="9.300" r="1.400"/><path d="M9.500 11L6 10.500 3.500 13l3.500.8M13 14.500l.5 3.500L11 20.500l-.8-3.500M7.500 16.500c-1.800.3-3 1.700-3 3.500 1.800 0 3.200-1.200 3.500-3"/></symbol>
+        <symbol id="ub-chart" viewBox="0 0 24 24"><path d="M3.500 17l5.500-6 4 4 7-8"/><path d="M15 7h5v5"/></symbol>
+        <symbol id="ub-trend" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 15l3.500-4 3 2.500L19 8"/></symbol>
+        <symbol id="ub-calendar" viewBox="0 0 24 24"><rect x="3.500" y="5" width="17" height="15" rx="3.500"/><path d="M3.500 10h17M8 3v4M16 3v4"/></symbol>
+        <symbol id="ub-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 7v5l3.500 2"/></symbol>
+        <symbol id="ub-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.600"/><path d="M4.500 20c.8-4 4-5.500 7.500-5.500s6.700 1.500 7.500 5.500"/></symbol>
+        <symbol id="ub-users" viewBox="0 0 24 24"><circle cx="9" cy="8.500" r="3.200"/><path d="M2.800 19.500c.7-3.600 3.300-5 6.200-5s5.500 1.400 6.200 5"/><path d="M15.500 5.700a3.200 3.200 0 0 1 0 5.600M18 14.800c1.800.6 2.800 2 3.200 4.200"/></symbol>
+        <symbol id="ub-layers" viewBox="0 0 24 24"><path d="M12 4l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/></symbol>
+        <symbol id="ub-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.500"/><circle cx="9" cy="9" r="1.100" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.100" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.100" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.100" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.100" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="ub-diamond" viewBox="0 0 24 24"><path d="M6.500 4h11L22 9.500 12 20.500 2 9.500z"/><path d="M2 9.500h20M9.500 4L8 9.500l4 11 4-11L14.500 4"/></symbol>
+        <symbol id="ub-shield" viewBox="0 0 24 24"><path d="M12 3l7.500 3v5.500c0 4.500-3.200 8-7.500 9.500-4.300-1.500-7.500-5-7.500-9.500V6z" fill="currentColor" fill-opacity=".18"/></symbol>
+        <symbol id="ub-shield-check" viewBox="0 0 24 24"><path d="M12 3l7.500 3v5.500c0 4.500-3.200 8-7.500 9.500-4.300-1.500-7.500-5-7.500-9.500V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></symbol>
+        <symbol id="ub-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+        <symbol id="ub-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+        <symbol id="ub-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.500c0 3 1.500 4.500 3.600 5M16 6h3.500c0 3-1.500 4.500-3.600 5M12 13v4M8.500 20h7M10 17h4"/></symbol>
+        <symbol id="ub-flag" viewBox="0 0 24 24"><path d="M5.500 21V4"/><path d="M5.500 5h12.500l-2.500 4 2.500 4H5.500"/></symbol>
+        <symbol id="ub-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 6.500v11M14.700 9.300c-.6-.8-1.600-1.300-2.700-1.300-1.600 0-2.700.9-2.700 2.100 0 3 5.500 1.600 5.500 4.300 0 1.300-1.200 2.100-2.800 2.100-1.200 0-2.300-.5-2.900-1.400"/></symbol>
+        <symbol id="ub-percent" viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="7.500" cy="7.500" r="2.300"/><circle cx="16.500" cy="16.500" r="2.300"/></symbol>
+        <symbol id="ub-wallet" viewBox="0 0 24 24"><path d="M5.500 7.500L16 4.500a1.500 1.500 0 0 1 2 1.400V8"/><rect x="3.500" y="7.500" width="17" height="12" rx="3.500"/><path d="M16 13.500h2.500"/></symbol>
+        <symbol id="ub-receipt" viewBox="0 0 24 24"><path d="M6 3.500h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.500h6M9 12h6"/></symbol>
+        <symbol id="ub-copy" viewBox="0 0 24 24"><rect x="8.500" y="8.500" width="11" height="11" rx="3"/><path d="M15.500 8.500V7A2.500 2.500 0 0 0 13 4.500H7A2.500 2.500 0 0 0 4.500 7v6A2.500 2.500 0 0 0 7 15.500h1.500"/></symbol>
+        <symbol id="ub-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500"/></symbol>
+        <symbol id="ub-telegram" viewBox="0 0 24 24"><path d="M20.800 3.500L3.200 10.800l5.600 2.100 2.200 6.400 3.200-3.800 4.500 3.300z"/><path d="M8.800 12.900l8.200-6"/></symbol>
+        <symbol id="ub-whatsapp" viewBox="0 0 24 24"><path d="M3.500 20.500l1.200-4.200A8.500 8.500 0 1 1 8 19.400z"/><path d="M9 8.500c0 4 2.500 6.500 6.500 6.500l1-1.800-2-1-1 .8c-1-.4-1.800-1.200-2.200-2.200l.8-1-1-2z"/></symbol>
+        <symbol id="ub-instagram" viewBox="0 0 24 24"><rect x="3.500" y="3.500" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r=".9" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="ub-x" viewBox="0 0 24 24"><path d="M4.500 4.500l15 15M19.500 4.500l-15 15"/></symbol>
+        <symbol id="ub-bolt" viewBox="0 0 24 24"><path d="M13 3L5.500 13.500H11L10 21l8-10.500h-5.500z"/></symbol>
+        <symbol id="ub-infinity" viewBox="0 0 24 24"><path d="M12 12c-1.500-2.200-3-3.500-4.800-3.500a3.500 3.500 0 0 0 0 7c1.800 0 3.300-1.300 4.800-3.500zm0 0c1.500 2.200 3 3.500 4.800 3.500a3.500 3.500 0 0 0 0-7C15 8.500 13.500 9.800 12 12z"/></symbol>
+        <symbol id="ub-lock" viewBox="0 0 24 24"><rect x="5" y="10.500" width="14" height="10" rx="3"/><path d="M8 10.500V8a4 4 0 0 1 8 0v2.500"/></symbol>
+        <symbol id="ub-gift" viewBox="0 0 24 24"><rect x="3.500" y="9" width="17" height="4" rx="1.500"/><path d="M5 13v7h14v-7M12 9v11M12 9S10.500 4 8 4.500 7.500 9 12 9zm0 0s1.500-5 4-4.500S16.500 9 12 9z"/></symbol>
+        <symbol id="ub-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M9.800 9.500a2.300 2.300 0 0 1 4.400.8c0 1.600-2.200 1.800-2.200 3.200M12 16.800v.1"/></symbol>
+        <symbol id="ub-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M3.500 12h17M12 3.500c2.500 2.500 3.500 5.300 3.500 8.500s-1 6-3.500 8.500c-2.500-2.500-3.500-5.300-3.500-8.500s1-6 3.500-8.500z"/></symbol>
+        <symbol id="ub-chat" viewBox="0 0 24 24"><path d="M4 6.500A2.500 2.500 0 0 1 6.500 4h11A2.500 2.500 0 0 1 20 6.500v7a2.500 2.500 0 0 1-2.500 2.500H11l-4.500 4V16A2.500 2.500 0 0 1 4 13.500z"/></symbol>
+        <symbol id="ub-login" viewBox="0 0 24 24"><path d="M14 4h3.500A2.500 2.500 0 0 1 20 6.500v11a2.500 2.500 0 0 1-2.500 2.500H14M4 12h10M10 8l4 4-4 4"/></symbol>
+        <symbol id="ub-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.300 5.700M20 4v5h-5"/></symbol>
+        <symbol id="ub-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.200"/><circle cx="8" cy="17" r="2.200"/></symbol>
+        <symbol id="ub-gamepad" viewBox="0 0 24 24"><rect x="3" y="7.500" width="18" height="10" rx="5"/><path d="M8 10.500v4M6 12.500h4M15.500 11.800h.01M17.800 13.800h.01"/></symbol>
+        <symbol id="ub-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/></symbol>
+        <symbol id="ub-sound" viewBox="0 0 24 24"><path d="M4 10v4h3.500l5 4V6l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/></symbol>
+        <symbol id="ub-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.500 2h-15zM10 21h4"/></symbol>
+        <symbol id="ub-flagfin" viewBox="0 0 24 24"><path d="M5.500 21V4M5.500 5h12.500l-2.500 4 2.500 4H5.500"/></symbol>
+      </defs>
+    </svg>
     <header class="investment-head">
-      <h1><img class="icon-md" src="assets/ui/ed1ee7bac0.webp" alt=""> VIP INVESTMENT PLANS</h1>
+      <h1><svg class="ub-i icon-md ub-head-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-rocket"/></svg> VIP INVESTMENT PLANS</h1>
       <p>Fund Professional Racers • Earn Daily Passive Income</p>
       <div class="tabs-dark" role="tablist">
         <button class="active" id="tabExplorePlansBtn" type="button">EXPLORE INVESTMENT PLANS</button>
@@ -4157,7 +4502,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     <section class="invest-list" id="investExploreList" aria-label="Investment plans">
       <article class="invest-card" style="--tier:#e3813a">
         <div class="tier-visual">
-          <div class="tier-name"><img class="badge-bronze" src="assets/ui/1468b5257d.webp" alt="">BRONZE</div>
+          <div class="tier-name"><svg class="ub-i badge-bronze" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield"/></svg>BRONZE</div>
           <div class="tier-desc">Beginner Racer</div>
           <img src="assets/ui/202f202686.webp" alt="Bronze plan car">
         </div>
@@ -4167,18 +4512,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div class="invest-label">DAILY PROFIT</div><div class="profit-number">0.50 <small>USDT</small></div><div class="tiny">(5%)</div>
         </div>
         <div class="tier-meta">
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/42999fec37.webp" alt=""> DURATION</span><br><b>Flexible</b></p>
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""> MAX BUY</span><br><b>2 Times</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-clock"/></svg> DURATION</span><br><b>Flexible</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-layers"/></svg> MAX BUY</span><br><b>2 Times</b></p>
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Bronze" data-cost="10" data-daily="0.50" data-duration="Flexible">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Bronze" data-cost="10" data-daily="0.50" data-duration="Flexible">INVEST NOW</button>
         </div>
       </article>
 
       <article class="invest-card" style="--tier:#bfc9d5">
         <div class="tier-visual">
-          <div class="tier-name"><img class="badge-silver" src="assets/ui/1468b5257d.webp" alt="">SILVER</div>
+          <div class="tier-name"><svg class="ub-i badge-silver" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield"/></svg>SILVER</div>
           <div class="tier-desc">VIP 1 – Starter</div>
           <img src="assets/ui/8180a93c78.webp" alt="Silver plan car">
         </div>
@@ -4188,19 +4533,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div class="invest-label">DAILY PROFIT</div><div class="profit-number">1.20 <small>USDT</small></div><div class="tiny">(~4%)</div>
         </div>
         <div class="tier-meta">
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/42999fec37.webp" alt=""> DURATION</span><br><b>120 Days</b></p>
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""> MAX BUY</span><br><b>2 Times</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-clock"/></svg> DURATION</span><br><b>120 Days</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-layers"/></svg> MAX BUY</span><br><b>2 Times</b></p>
           <p class="tiny"><span class="muted">TOTAL RETURN</span><br><b>144 USDT</b></p>
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Silver" data-cost="30" data-daily="1.20" data-duration="120 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Silver" data-cost="30" data-daily="1.20" data-duration="120 Days">INVEST NOW</button>
         </div>
       </article>
 
       <article class="invest-card" style="--tier:#ffc52d">
         <div class="tier-visual">
-          <div class="tier-name"><img class="badge-gold" src="assets/ui/1468b5257d.webp" alt="">GOLD</div>
+          <div class="tier-name"><svg class="ub-i badge-gold" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield"/></svg>GOLD</div>
           <div class="tier-desc">VIP 2 – Grow Steady</div>
           <img src="assets/ui/60d28e609d.webp" alt="Gold plan car">
         </div>
@@ -4210,19 +4555,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div class="invest-label">DAILY PROFIT</div><div class="profit-number">7.50 <small>USDT</small></div><div class="tiny">(~5%)</div>
         </div>
         <div class="tier-meta">
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/42999fec37.webp" alt=""> DURATION</span><br><b>120 Days</b></p>
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""> MAX BUY</span><br><b>2 Times</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-clock"/></svg> DURATION</span><br><b>120 Days</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-layers"/></svg> MAX BUY</span><br><b>2 Times</b></p>
           <p class="tiny"><span class="muted">TOTAL RETURN</span><br><b>900 USDT</b></p>
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong>30%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Gold" data-cost="150" data-daily="7.50" data-duration="120 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Gold" data-cost="150" data-daily="7.50" data-duration="120 Days">INVEST NOW</button>
         </div>
       </article>
 
       <article class="invest-card featured" style="--tier:#1fbaff">
         <div class="tier-visual">
-          <div class="tier-name"><img class="badge-diamond" src="assets/ui/0c10878fa5.webp" alt="">DIAMOND</div>
+          <div class="tier-name"><svg class="ub-i badge-diamond" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg>DIAMOND</div>
           <div class="tier-desc">VIP 3 – High Return</div>
           <img src="assets/ui/1f748c930d.webp" alt="Diamond plan car">
         </div>
@@ -4232,19 +4577,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div class="invest-label">DAILY PROFIT</div><div class="profit-number">39.00 <small>USDT</small></div><div class="tiny">(6.5%)</div>
         </div>
         <div class="tier-meta">
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/42999fec37.webp" alt=""> DURATION</span><br><b class="blue">90 Days</b></p>
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""> MAX BUY</span><br><b>3 Times</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-clock"/></svg> DURATION</span><br><b class="blue">90 Days</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-layers"/></svg> MAX BUY</span><br><b>3 Times</b></p>
           <p class="tiny"><span class="muted">TOTAL RETURN</span><br><b>3,510 USDT</b></p>
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong class="blue">20%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="Diamond" data-cost="600" data-daily="39.00" data-duration="90 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="Diamond" data-cost="600" data-daily="39.00" data-duration="90 Days">INVEST NOW</button>
         </div>
       </article>
 
       <article class="invest-card featured" style="--tier:#a83dff">
         <div class="tier-visual">
-          <div class="tier-name"><img class="badge-vip" src="assets/ui/0c10878fa5.webp" alt="">VIP 4</div>
+          <div class="tier-name"><svg class="ub-i badge-vip" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg>VIP 4</div>
           <div class="tier-desc">Ultimate Racer</div>
           <img src="assets/ui/029a0a32de.webp" alt="VIP 4 plan car">
         </div>
@@ -4254,18 +4599,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div class="invest-label">DAILY PROFIT</div><div class="profit-number">270.00 <small>USDT</small></div><div class="tiny">(9%)</div>
         </div>
         <div class="tier-meta">
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/42999fec37.webp" alt=""> DURATION</span><br><b class="blue">90 Days</b></p>
-          <p><span class="muted"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""> MAX BUY</span><br><b>3 Times</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-clock"/></svg> DURATION</span><br><b class="blue">90 Days</b></p>
+          <p><span class="muted"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-layers"/></svg> MAX BUY</span><br><b>3 Times</b></p>
           <p class="tiny"><span class="muted">TOTAL RETURN</span><br><b>24,300 USDT</b></p>
         </div>
         <div class="tier-action">
           <div class="share-box"><span class="invest-label">RIDER SHARE</span><strong style="color:#b14aff">10%</strong></div>
-          <button class="green-btn invest-now" type="button" data-plan="VIP 4" data-cost="3000" data-daily="270.00" data-duration="90 Days">INVEST<br>NOW</button>
+          <button class="green-btn invest-now" type="button" data-plan="VIP 4" data-cost="3000" data-daily="270.00" data-duration="90 Days">INVEST NOW</button>
         </div>
       </article>
 
       <aside class="panel invest-note">
-        <div class="invest-note-icon"><img src="assets/ui/021910fcbe.webp" alt=""></div>
+        <div class="invest-note-icon"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg></div>
         <div class="invest-note-copy">
           <b class="condensed">HOW INVESTMENT WORKS</b>
           <p>Your investment funds are assigned to racers who compete throughout the day. Daily profits are credited automatically.</p>
@@ -4292,19 +4637,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <h2 class="section-kicker">How You Earn</h2>
       <section class="earn-grid">
         <article class="panel earn-card">
-          <h3><img class="icon-md" src="assets/ui/83e812fc69.webp" alt=""> &nbsp; Betting Rewards<br><b>Earn <span>10%</span> Commission</b></h3>
+          <h3><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-dice"/></svg> Betting Rewards<br><b>Earn <span>10%</span> Commission</b></h3>
           <div class="flow">
-            <div><span class="orb"><img class="icon-sm" src="assets/ui/17ec2e4ce6.webp" alt=""></span>Friend Bets<br><b class="blue">$10</b></div><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="">
-            <div><span class="orb"><img class="icon-sm" src="assets/ui/c5480b3926.webp" alt=""></span>Friend Wins<br><b class="blue">$30</b></div><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="">
-            <div><span class="orb" style="background:#165a24"><img class="icon-sm" src="assets/ui/59e8c15662.webp" alt=""></span>Platform Fee<br><b class="blue">$6</b></div><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="">
-            <div><span class="orb" style="background:#126d20"><img class="icon-sm" src="assets/ui/8b7869c18b.webp" alt=""></span>You Earn<br><b class="blue">$0.60</b></div>
+            <div><span class="orb"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-user"/></svg></span>Friend Bets<br><b class="blue">$10</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
+            <div><span class="orb"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-trophy"/></svg></span>Friend Wins<br><b class="blue">$30</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
+            <div><span class="orb" style="background:#165a24"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg></span>Platform Fee<br><b class="blue">$6</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
+            <div><span class="orb" style="background:#126d20"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg></span>You Earn<br><b class="blue">$0.60</b></div>
           </div>
         </article>
         <article class="panel earn-card">
-          <h3><img class="icon-md" src="assets/ui/0c10878fa5.webp" alt=""> &nbsp; VIP Purchase Rewards<br><b>Earn <span>5%</span> Commission</b></h3>
+          <h3><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg> VIP Purchase Rewards<br><b>Earn <span>5%</span> Commission</b></h3>
           <div class="flow">
-            <div><span class="orb" style="background:#7430c6"><img class="icon-sm" src="assets/ui/0c10878fa5.webp" alt=""></span>Friend buys<br><b>VIP 3</b></div><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="">
-            <div><span class="orb" style="background:#157b23"><img class="icon-sm" src="assets/ui/59e8c15662.webp" alt=""></span>You receive<br><b class="green">30 USDT</b></div>
+            <div><span class="orb" style="background:#7430c6"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg></span>Friend buys<br><b>VIP 3</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
+            <div><span class="orb" style="background:#157b23"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg></span>You receive<br><b class="green">30 USDT</b></div>
           </div>
         </article>
       </section>
@@ -4312,63 +4657,63 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <section class="ref-grid">
         <div class="panel ref-box">
           <div><div class="muted tiny">Referral Code</div><div class="ref-value">83774</div></div>
-          <button class="copy-btn" type="button" data-copy="83774" aria-label="Copy referral code"><img class="icon-sm" src="assets/ui/1402d7cbf9.webp" alt=""></button>
+          <button class="copy-btn" type="button" data-copy="83774" aria-label="Copy referral code"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
         </div>
         <div class="panel ref-box">
           <div style="min-width:0"><div class="muted tiny">Referral Link</div><div class="ref-link">https://t.me/CryptoRacerBot?start=582</div></div>
-          <button class="copy-btn" type="button" data-copy="https://t.me/CryptoRacerBot?start=582" aria-label="Copy referral link"><img class="icon-sm" src="assets/ui/1402d7cbf9.webp" alt=""></button>
+          <button class="copy-btn" type="button" data-copy="https://t.me/CryptoRacerBot?start=582" aria-label="Copy referral link"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
         </div>
       </section>
 
       <div class="share-label"><span>Share Your Link</span></div>
       <div class="share-row" aria-label="Share your link">
-        <button class="social" type="button" data-share="Telegram" aria-label="Telegram"><img src="assets/ui/45b8ba83e5.webp" alt=""></button>
-        <button class="social" type="button" data-share="WhatsApp" aria-label="WhatsApp"><img src="assets/ui/95fc12c022.webp" alt=""></button>
-        <button class="social" type="button" data-share="Instagram" aria-label="Instagram"><img src="assets/ui/201f09fdc8.webp" alt=""></button>
-        <button class="social" type="button" data-share="X" aria-label="X"><img src="assets/ui/f1cfe4c3bb.webp" alt=""></button>
+        <button class="social" type="button" data-share="Telegram" aria-label="Telegram"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-telegram"/></svg></button>
+        <button class="social" type="button" data-share="WhatsApp" aria-label="WhatsApp"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-whatsapp"/></svg></button>
+        <button class="social" type="button" data-share="Instagram" aria-label="Instagram"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-instagram"/></svg></button>
+        <button class="social" type="button" data-share="X" aria-label="X"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-x"/></svg></button>
       </div>
 
       <section class="panel progress-card">
-        <div class="big-orb"><img class="icon-lg" src="assets/ui/021910fcbe.webp" alt=""></div>
+        <div class="big-orb"><svg class="ub-i icon-lg" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg></div>
         <div><span class="muted tiny">Your Progress</span><br><strong id="refProgressCount">3 / 5</strong> Valid Referrals
           <div class="progress-track"><span id="refProgressBar" style="width:60%"></span></div>
           <small class="muted tiny" id="refProgressSub">2 more referrals to unlock 20% commission tier</small>
         </div>
-        <div class="medal"><img class="icon-lg" src="assets/ui/1468b5257d.webp" alt=""></div>
+        <div class="medal"><svg class="ub-i icon-lg" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg></div>
       </section>
 
       <h2 class="section-kicker" style="margin-top:12px">Commission Tiers</h2>
       <section class="tier-row">
-        <div class="panel commission-tier active" data-tier-pct="10%"><strong>10%</strong><img class="icon-md" src="assets/ui/021910fcbe.webp" alt=""><small>0 - 4<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="20%"><strong>20%</strong><img class="icon-md" src="assets/ui/021910fcbe.webp" alt=""><small>5 - 9<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="30%"><strong>30%</strong><img class="icon-md" src="assets/ui/021910fcbe.webp" alt=""><small>10 - 19<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="40%"><strong>40%</strong><img class="icon-md" src="assets/ui/021910fcbe.webp" alt=""><small>20+<br>Users</small></div>
+        <div class="panel commission-tier active" data-tier-pct="10%"><strong>10%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>0 - 4<br>Users</small></div>
+        <div class="panel commission-tier" data-tier-pct="20%"><strong>20%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>5 - 9<br>Users</small></div>
+        <div class="panel commission-tier" data-tier-pct="30%"><strong>30%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>10 - 19<br>Users</small></div>
+        <div class="panel commission-tier" data-tier-pct="40%"><strong>40%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>20+<br>Users</small></div>
       </section>
 
       <h2 class="section-kicker" style="margin-top:12px">Your Referral Stats</h2>
       <section class="referral-stats">
-        <div class="panel ref-stat"><img class="icon-sm" src="assets/ui/021910fcbe.webp" alt=""> Total Referrals<strong class="blue" id="statTotalRefs">3</strong></div>
-        <div class="panel ref-stat"><img class="icon-sm" src="assets/ui/1468b5257d.webp" alt=""> Active Users<strong id="statActiveRefs">3</strong></div>
-        <div class="panel ref-stat"><img class="icon-sm" src="assets/ui/59e8c15662.webp" alt=""> Lifetime Commission<strong class="blue" id="statLifetimeComm">125.50</strong>USDT</div>
-        <div class="panel ref-stat"><img class="icon-sm" src="assets/ui/04fc4d4535.webp" alt=""> Available Commission<strong class="blue" id="statAvailComm">32.50</strong>USDT</div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg> Total Referrals<strong class="blue" id="statTotalRefs">3</strong></div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg> Active Users<strong id="statActiveRefs">3</strong></div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg> Lifetime Commission<strong class="blue" id="statLifetimeComm">125.50</strong>USDT</div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg> Available Commission<strong class="blue" id="statAvailComm">32.50</strong>USDT</div>
       </section>
 
       <button class="green-btn withdraw-ref" id="withdrawRefBtn" type="button">
-        <img class="icon-sm" src="assets/ui/04fc4d4535.webp" alt="">
+        <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg>
         <span>Withdraw Referral Commission</span>
-        <img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="">
+        <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
       </button>
       <aside class="panel" style="padding:10px 12px;font-size:11px;color:#cbd5e1;">
-        <img class="icon-sm" src="assets/ui/1468b5257d.webp" alt=""> &nbsp; Referral commissions are directly withdrawable. No fee. Withdraw directly anytime.
+        <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg> Referral commissions are directly withdrawable. No fee. Withdraw directly anytime.
       </aside>
 
       <section class="panel" style="margin-top:10px;padding:10px">
         <b class="condensed" style="font-size:15px;">WHY INVITE YOUR FRIENDS?</b>
         <div class="why-grid">
-          <div class="why"><img class="icon-sm" src="assets/ui/07e67dedae.webp" alt=""><b class="blue">Lifetime Earning</b>Earn forever from friends’ play</div>
-          <div class="why"><img class="icon-sm" src="assets/ui/f7833f3c41.webp" alt=""><b class="green">Instant Payout</b>Added instantly</div>
-          <div class="why"><img class="icon-sm" src="assets/ui/6ba2c7863f.webp" alt=""><b style="color:#a34cff">No Limits</b>Unlimited referrals</div>
-          <div class="why"><img class="icon-sm" src="assets/ui/1468b5257d.webp" alt=""><b class="yellow">Secure</b>Real-time tracking</div>
+          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chart"/></svg><b class="blue">Lifetime Earning</b>Earn forever from friends’ play</div>
+          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-bolt"/></svg><b class="green">Instant Payout</b>Added instantly</div>
+          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-infinity"/></svg><b style="color:#a34cff">No Limits</b>Unlimited referrals</div>
+          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg><b class="yellow">Secure</b>Real-time tracking</div>
         </div>
       </section>
     </div>
@@ -4385,11 +4730,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <h1 class="profile-title" id="profileTitleText">TRADER</h1>
           <div class="profile-name-tag" id="profileUsernameText">TRADER582</div>
           <div class="muted">User ID: 83748488</div>
-          <span class="vip-pill-lg"><img class="icon-sm" src="assets/ui/0c10878fa5.webp" alt=""> VIP 3</span>
+          <span class="vip-pill-lg"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg> VIP 3</span>
         </div>
         <div class="panel refer-box">
           <div><div class="muted condensed" style="font-size:10px;">REFER CODE</div><div class="profile-name-tag" style="font-size:15px;">TRADER582</div></div>
-          <button class="copy-btn" type="button" data-copy="TRADER582" aria-label="Copy refer code"><img class="icon-sm" src="assets/ui/1402d7cbf9.webp" alt=""></button>
+          <button class="copy-btn" type="button" data-copy="TRADER582" aria-label="Copy refer code"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
         </div>
       </header>
 
@@ -4400,16 +4745,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div style="font-size:12px;font-weight:700;opacity:0.9;">Profit Balance</div>
         <div class="balance-big" id="profileProfitBalance" style="font-size:32px">32.50 <small>USDT</small></div>
         <div class="wallet-buttons">
-          <button class="deposit-wallet" id="profileDepositBtn" type="button"><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="" style="transform:rotate(90deg)"> Deposit</button>
-          <button class="withdraw-wallet" id="profileWithdrawBtn" type="button"><img class="icon-sm" src="assets/ui/e45c045ab0.webp" alt="" style="transform:rotate(-90deg)"> Withdraw</button>
+          <button class="deposit-wallet" id="profileDepositBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(90deg)"><use href="#ub-arrow"/></svg> Deposit</button>
+          <button class="withdraw-wallet" id="profileWithdrawBtn" type="button"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(-90deg)"><use href="#ub-arrow"/></svg> Withdraw</button>
         </div>
       </section>
 
       <section class="panel bonus" id="profileBonusCard">
         <div class="bonus-left">
-          <div class="bonus-icon"><img class="icon-md" src="assets/ui/137b217c2f.webp" alt=""></div>
+          <div class="bonus-icon"><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-gift"/></svg></div>
           <div>
-            <b style="font-size:13px;">Bonus Locked &nbsp;<img class="icon-sm" src="assets/ui/b766d23a33.webp" alt="" style="width:15px;height:15px;"></b><br>
+            <b style="font-size:13px;">Bonus Locked <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="width:15px;height:15px;"><use href="#ub-help"/></svg></b><br>
             <span class="blue" style="font-size:24px;font-weight:900" id="bonusLockedVal">10.00</span> <small style="font-weight:700;color:#cbd5e1;">USDT</small>
           </div>
         </div>
@@ -4420,15 +4765,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <h2>YOUR STATISTICS</h2>
         <div class="profile-stats">
           <div class="panel profile-stat">
-            <div class="profile-stat-label"><img class="icon-md" src="assets/ui/07e67dedae.webp" alt=""><span>Total<br>Investment</span></div>
+            <div class="profile-stat-label"><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chart"/></svg><span>Total<br>Investment</span></div>
             <strong id="statTotalInvest">520.00</strong><small>USDT</small>
           </div>
           <div class="panel profile-stat">
-            <div class="profile-stat-label"><img class="icon-md" src="assets/ui/6ba2c7863f.webp" alt=""><span>Total Profit<br>Received</span></div>
+            <div class="profile-stat-label"><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-trend"/></svg><span>Total Profit<br>Received</span></div>
             <strong id="statTotalProfit">125.30</strong><small>USDT</small>
           </div>
           <div class="panel profile-stat">
-            <div class="profile-stat-label"><img class="icon-md" src="assets/ui/42999fec37.webp" alt=""><span>Daily<br>Profits</span></div>
+            <div class="profile-stat-label"><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-calendar"/></svg><span>Daily<br>Profits</span></div>
             <strong id="statDailyProfit">39.00</strong><small>USDT</small>
           </div>
         </div>
@@ -4436,49 +4781,49 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
       <section class="panel menu-list">
         <button class="menu-item" type="button" id="menuBetHistoryBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#a53cff,#482467)"><img src="assets/ui/83e812fc69.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#a53cff,#482467)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-dice"/></svg></span>
           <span><b>Bet History</b><small>View your betting history</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuRaceHistoryBtn">
-          <span class="menu-icon"><img src="assets/ui/c5480b3926.webp" alt=""></span>
+          <span class="menu-icon"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-flag"/></svg></span>
           <span><b>Race History</b><small>View your 3D race history</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuTxHistoryBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#f6a812,#6c4210)"><img src="assets/ui/04fc4d4535.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#f6a812,#6c4210)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-receipt"/></svg></span>
           <span><b>Transaction History</b><small>Deposits, withdrawals &amp; orders</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuReferEarnBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#29e94d,#184e27)"><img src="assets/ui/021910fcbe.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#29e94d,#184e27)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg></span>
           <span><b>Refer &amp; Earn</b><small>Invite friends &amp; earn commission</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuLanguageBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#ba4dec,#372158)"><img src="assets/ui/9a4e5f57b8.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#ba4dec,#372158)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-globe"/></svg></span>
           <span><b>Language</b><small id="currentLangLabel">English</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuSecurityBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#32ef44,#174727)"><img src="assets/ui/1468b5257d.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#32ef44,#174727)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg></span>
           <span><b>Security</b><small>Account &amp; security settings</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuSupportBtn">
-          <span class="menu-icon"><img src="assets/ui/45b8ba83e5.webp" alt=""></span>
+          <span class="menu-icon"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chat"/></svg></span>
           <span><b>Support Chat</b><small>Chat with us on Telegram 24/7</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
         <button class="menu-item" type="button" id="menuAuthScreenBtn">
-          <span class="menu-icon" style="background:linear-gradient(145deg,#0ea5e9,#0369a1)"><img src="assets/ui/17ec2e4ce6.webp" alt=""></span>
+          <span class="menu-icon" style="background:linear-gradient(145deg,#0ea5e9,#0369a1)"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-login"/></svg></span>
           <span><b>Login / Sign Up Screen</b><small>Switch account or view Auth portal</small></span>
-          <span class="chev"><img src="assets/ui/e45c045ab0.webp" alt=""></span>
+          <span class="chev"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chev"/></svg></span>
         </button>
       </section>
 
       <aside class="panel profile-banner">
-        <strong><img class="icon-md" src="assets/ui/2ed7f9896a.webp" alt=""> &nbsp; Play. Win. Invest. Earn.</strong>
+        <strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-trophy"/></svg> Play. Win. Invest. Earn.</strong>
         <p>Race, invest, win rewards and grow your USDT portfolio.</p>
       </aside>
     </div>
@@ -4886,6 +5231,40 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (t.id === 'headerNotifBtn') { const nb = document.getElementById('notifModalBackdrop'); if (nb) nb.classList.add('open'); }
     if (t.id === 'closeNotifModalBtn' || t.id === 'notifModalBackdrop' && e.target === t) t.closest('#notifModalBackdrop').classList.remove('open');
   }, true);
+
+  // --- uiPolishB: tab screens (Invest / Invite / Profile): inline icons, tap feedback, copy + stat feedback ---
+  const UBI = (n, c) => `<svg class="ub-i ${c || ''}" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-${n}"/></svg>`;
+  window.__ubI = UBI;
+  ['screenInvest', 'screenInvite', 'screenProfile'].forEach((sid) => {
+    const box = document.getElementById(sid);
+    if (!box) return;
+    // one delegated listener per screen: same tap sound + haptic as the HUD controls
+    box.addEventListener('click', (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('button, .invest-card, .commission-tier, .ref-stat, .profile-stat, .menu-item, .panel.bonus, [data-copy], [data-share]') : null;
+      if (!t || !box.contains(t) || t.disabled) return;
+      _lastHapticMs = 0; triggerHaptic(40);
+      try { playTone(880, 1180, 0.04, 'sine', 0.07); } catch (err) {}
+      const cp = t.closest('[data-copy]');
+      if (cp) {
+        cp.classList.add('ub-copied');
+        clearTimeout(cp._ubT); cp._ubT = setTimeout(() => cp.classList.remove('ub-copied'), 1400);
+      }
+    }, true);
+    // brief pulse whenever a stat / balance number changes
+    if (window.MutationObserver) {
+      const mo = new MutationObserver((list) => {
+        list.forEach((m) => {
+          const el = m.target && (m.target.nodeType === 3 ? m.target.parentElement : m.target);
+          if (!el || !el.closest) return;
+          const n = el.closest('[id^="stat"], [id^="profile"][id$="Balance"], #bonusLockedVal, #refProgressCount, #myInvestCount');
+          if (!n || n.classList.contains('ub-pulse')) return;
+          n.classList.add('ub-pulse');
+          setTimeout(() => n.classList.remove('ub-pulse'), 450);
+        });
+      });
+      mo.observe(box, { childList: true, characterData: true, subtree: true });
+    }
+  });
   function triggerHaptic(pattern) {
     if (window._trFastForwarding || !hapticEnabled) return;
     const now = performance.now();
@@ -5985,10 +6364,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     if (!container) return;
     if (!activeInvestments.length) {
       container.innerHTML = `
-        <div class="panel" style="padding:20px 14px;text-align:center;margin-top:8px;">
-          <div style="font-size:15px;font-weight:900;font-style:italic;">NO ACTIVE INVESTMENTS</div>
-          <p style="font-size:11px;color:#94a3b8;margin:5px 0 12px;">Fund a VIP Pro Racer Plan to earn automatic daily USDT profits.</p>
-          <button class="green-btn" type="button" id="emptyExplorePlansBtn" style="padding:8px 16px;font-size:12px;">EXPLORE VIP PLANS</button>
+        <div class="panel ub-empty">
+          <span class="ub-empty-ic">${UBI('rocket')}</span>
+          <div class="ub-empty-t">NO ACTIVE INVESTMENTS</div>
+          <p class="ub-empty-p">Fund a VIP Pro Racer Plan to earn automatic daily USDT profits.</p>
+          <button class="green-btn" type="button" id="emptyExplorePlansBtn">EXPLORE VIP PLANS</button>
         </div>
       `;
       document.getElementById('emptyExplorePlansBtn')?.addEventListener('click', () => tabExplorePlansBtn.click());
@@ -6020,8 +6400,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         const roiPct = ((inv.daily / inv.cost) * 100).toFixed(1);
         const statusColor = inv.claimedToday ? '#94a3b8' : (inv.taskCompleted ? '#28e066' : '#ffc412');
         const statusLabel = inv.claimedToday
-          ? '✓ PROFIT CLAIMED FOR CYCLE'
-          : (inv.taskCompleted ? '🔔 CYCLE TASK COMPLETE • READY TO CLAIM!' : '🏎️ PRO RACER ON TRACK (TASK RUNNING)');
+          ? UBI('check', 'ub-st') + ' PROFIT CLAIMED FOR CYCLE'
+          : (inv.taskCompleted ? UBI('bell', 'ub-st') + ' TASK COMPLETE • READY TO CLAIM' : UBI('clock', 'ub-st') + ' PRO RACER ON TRACK');
 
         return `
         <div class="panel" style="padding:10px 11px;margin:8px 0;border:1.5px solid ${inv.taskCompleted && !inv.claimedToday ? '#28e066' : 'rgba(56,189,248,0.45)'};display:flex;flex-direction:column;gap:8px;">
@@ -6083,11 +6463,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <div style="display:flex;gap:6px;">
             ${!inv.taskCompleted && !inv.claimedToday ? `
               <button type="button" class="blue-btn fast-finish-task-btn" data-id="${inv.id}" style="flex:1;min-height:34px;font-size:10.5px;font-style:italic;">
-                ⚡ COMPLETE TASK NOW (DEMO)
+                ${UBI('bolt', 'ub-st')} COMPLETE TASK NOW (DEMO)
               </button>
             ` : ''}
             <button class="green-btn claim-daily-btn" data-id="${inv.id}" type="button" style="flex:1.3;min-height:34px;font-size:11.5px;font-style:italic;${(!inv.taskCompleted || inv.claimedToday) ? 'opacity:0.55;' : ''}">
-              ${inv.claimedToday ? '✓ PROFIT CLAIMED TODAY' : (inv.taskCompleted ? '💰 CLAIM +' + inv.daily.toFixed(2) + ' USDT PROFIT' : '⏳ WAITING FOR TASK TIMER...')}
+              ${inv.claimedToday ? UBI('check', 'ub-st') + ' PROFIT CLAIMED TODAY' : (inv.taskCompleted ? UBI('coin', 'ub-st') + ' CLAIM +' + inv.daily.toFixed(2) + ' USDT' : UBI('clock', 'ub-st') + ' WAITING FOR TIMER...')}
             </button>
           </div>
         </div>
@@ -9144,6 +9524,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   function injectSettings() {
     const body = $('.profile-body') || $('#screenProfile');
     if (!body || $('#trSettings')) return;
+    const UBI = window.__ubI || (() => '');
 
     // Also inject compact Live/Demo + Refill bar into Profile .wallet-card top-right
     const wallet = body.querySelector('.wallet-card');
@@ -9156,7 +9537,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <button type="button" class="tr-wmode-btn" data-wm="demo">DEMO</button>
           <button type="button" class="tr-wmode-btn" data-wm="live">LIVE</button>
         </div>
-        <button type="button" class="tr-wrefill-btn" id="trWalletRefillBtn" title="Refill Demo $1000">↻ $1000</button>
+        <button type="button" class="tr-wrefill-btn" id="trWalletRefillBtn" title="Refill Demo $1000">${UBI('refresh')} $1000</button>
       `;
       wallet.prepend(wBar);
       wBar.querySelectorAll('[data-wm]').forEach(btn => {
@@ -9173,17 +9554,17 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     const card = document.createElement('section');
     card.id = 'trSettings'; card.className = 'tr-settings';
     card.innerHTML = `
-      <h4>⚙️ SETTINGS &amp; AUDIO</h4>
-      <div class="tr-set-row"><span>🎮 Play Mode</span>
+      <h4>${UBI('sliders')} SETTINGS &amp; AUDIO</h4>
+      <div class="tr-set-row"><span>${UBI('gamepad')} Play Mode</span>
         <span class="tr-set-pills">
           <button type="button" class="tr-btn ghost" id="trModeDemo">DEMO</button>
           <button type="button" class="tr-btn" id="trModeLive">LIVE</button>
         </span></div>
-      <div class="tr-set-row"><span>🎵 Background Music</span><button type="button" class="tr-switch" id="trMusicSw" aria-label="Toggle music"></button></div>
-      <div class="tr-set-row"><span>🔊 Sound Effects</span><button type="button" class="tr-switch" id="trSfxSw" aria-label="Toggle SFX"></button></div>
-      <div class="tr-set-row" id="trRefillRow"><span>💰 Demo Balance</span>
-        <button type="button" class="tr-btn green" id="trRefillBtn">♻️ Refill $1000</button></div>
-      <div class="tr-set-row"><span>🌐 Language</span><span style="color:#94a3b8;font-size:11.5px;font-weight:700;">English</span></div>`;
+      <div class="tr-set-row"><span>${UBI('music')} Background Music</span><button type="button" class="tr-switch" id="trMusicSw" aria-label="Toggle music"></button></div>
+      <div class="tr-set-row"><span>${UBI('sound')} Sound Effects</span><button type="button" class="tr-switch" id="trSfxSw" aria-label="Toggle SFX"></button></div>
+      <div class="tr-set-row" id="trRefillRow"><span>${UBI('coin')} Demo Balance</span>
+        <button type="button" class="tr-btn green" id="trRefillBtn">${UBI('refresh')} Refill $1000</button></div>
+      <div class="tr-set-row"><span>${UBI('globe')} Language</span><span style="color:#94a3b8;font-size:11.5px;font-weight:700;">English</span></div>`;
     if (wallet) wallet.after(card); else body.prepend(card);
 
     $('#trModeDemo').onclick = () => setMode('demo');
