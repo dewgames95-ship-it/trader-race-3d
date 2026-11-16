@@ -113,7 +113,7 @@
       R.city = { z0: 250, z1: Math.max(900, endZ - 150) };
     } else if (mapK === 'mountain') {
       R.events = []; R.style = 'twisty';
-      sweepsAndS(260 + rnd2() * 120, endZ - 260, { sweep: 0.5, lenW: [340, 340], ampW: [0.0021, 0.0012], lenS: [520, 320], ampS: [0.0019, 0.0012], waves: [1, 1.5, 2], gap: [10, 90] });
+      sweepsAndS(260 + rnd2() * 120, endZ - 260, { sweep: 0.5, lenW: [380, 340], ampW: [0.0015, 0.0008], lenS: [560, 320], ampS: [0.0014, 0.0008], waves: [1, 1.5], gap: [40, 140] });
       R.hills = { a1: 0.00032 + rnd2() * 0.00014, f1: 200 + rnd2() * 120, p1: rnd2() * 6.283, a2: 0.00014 + rnd2() * 0.00012, f2: 90 + rnd2() * 60, p2: rnd2() * 6.283 };
     } else if (mapK === 'lake') {
       R.events = []; R.style = 'gentle'; R.hills = null;
