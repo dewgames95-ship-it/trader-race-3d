@@ -4396,6 +4396,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #modeModalBackdrop .mode-example b { color: #28e066; } #modeModalBackdrop .hard .mode-example b { color: #fbbf24; }
 #modeModalBackdrop .mode-play-btn { min-height: 44px; font-size: 11px; white-space: nowrap; }
 </style>
+<style id="v17Money">
+  .bottom-console .bet-top-row { gap: 3px; }
+  .bottom-console .tr-max-btn {
+    flex: 0 0 auto; position: relative; height: 22px; min-width: 26px; padding: 0 4px; margin-left: -1px;
+    border-radius: 6px; border: 1px solid #FFC83D; background: rgba(255, 200, 61, 0.08); color: #FFC83D;
+    font-family: inherit; font-weight: 900; font-size: 9px; line-height: 1; letter-spacing: 0.3px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; transition: transform 150ms ease, background 150ms ease;
+  }
+  .bottom-console .bet-top-row .bet-amount-display { white-space: nowrap; font-size: clamp(13px, 4.1vw, 17px) !important; padding-left: 3px !important; padding-right: 3px !important; }
+  .bottom-console .tr-max-btn::after { content: ""; position: absolute; inset: -11px -4px; }
+  .bottom-console .tr-max-btn:active { transform: scale(0.94); background: rgba(255, 200, 61, 0.22); }
+</style>
 </head>
 <body>
 
@@ -4637,6 +4649,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             <span class="bet-amount-display" id="betAmountText">1 USDT</span>
           </div>
           <button class="step-btn" id="betPlusBtn">+</button>
+          <button class="tr-max-btn" id="betMaxBtn" type="button" aria-label="Set maximum bet">MAX</button>
         </div>
         <div class="preset-row">
           <button class="preset-pill" data-bet="0.1">0.1</button>
@@ -4658,7 +4671,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
             <path d="M3 8.5v3l9 4 9-4v-3l-9 4z" fill="#17a849"/>
             <ellipse cx="12" cy="8.5" rx="2.6" ry="1.3" fill="#d9fbe5"/>
           </svg>
-          <span class="payout-amount" id="payoutText">2.4 USDT</span>
+          <span class="payout-amount" id="payoutText">2.5 USDT</span>
         </div>
         <span class="winner-sub">WINNER TAKES ALL!</span>
       </div>
@@ -4679,7 +4692,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
         <img class="console-car-Img" src="assets/ui/car_f8_red.webp" alt="Red Ferrari">
         <div class="console-car-pick-btn">BET RED FERRARI ✓</div>
@@ -4689,7 +4702,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
         <img class="console-car-Img" src="assets/ui/car_f8_blue.webp" alt="Blue Ferrari">
         <div class="console-car-pick-btn">BET BLUE FERRARI</div>
@@ -4699,7 +4712,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div class="console-car-top">
           <svg class="cc-badge" viewBox="0 0 20 24" fill="none"><path d="M1.500 3.800h17v10.700c0 4-3.300 6.700-8.500 8.500-5.200-1.800-8.500-4.500-8.500-8.500z" fill="#ffd21f" stroke="#0b1220" stroke-width="1"/><path d="M1.500 1h5.670v2.800H1.500z" fill="#1fae4b"/><path d="M7.170 1h5.660v2.800H7.170z" fill="#ffffff"/><path d="M12.830 1h5.670v2.800h-5.670z" fill="#e02828"/><path d="M11.600 6.200c.9.200 1.700.800 2 1.700l1.300.900-.500.900-1.400-.300c-.300.700-.300 1.300.100 2 .800 1.200.900 2.600.300 3.800l1 1.900-.800 1.300-.700-.300.300-.900-1.300-1.300-.900 1 .500 2.300h-1.300l-.600-2.700c-.900-.600-1.500-1.400-1.800-2.400l-1.500 1.300.400 1.500-.900.300-.900-2 2.200-2.700c.100-1.300.800-2.400 1.900-3.100l-1.900-.600-1.200.700-.500-.700 1.700-1.400 2.600.300c.800-.900 2-1.400 3.200-1.300z" fill="#0b1220"/></svg>
           <span class="console-car-name"><b class="cc-tag">FERRARI</b></span>
-          <span class="console-car-odds" data-odds-lbl>2.4x</span>
+          <span class="console-car-odds" data-odds-lbl>2.5x</span>
         </div>
         <img class="console-car-Img" src="assets/ui/car_f8_yellow.webp" alt="Gold Ferrari">
         <div class="console-car-pick-btn">BET GOLD FERRARI</div>
@@ -5944,6 +5957,11 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let currentBet = 1.0;
   let raceIdCounter = 589;
   let raceModeCars = 3;
+  // v17 money: single source of truth for the total-return multiplier (bet x odds, stake included)
+  const RACE_ODDS = { 2: 1.9, 3: 2.5 };
+  function raceOdds() { return RACE_ODDS[raceModeCars] || RACE_ODDS[3]; }
+  const creditedRaces = new Set(); // race keys whose win was already credited (idempotent auto-claim)
+  let currentRaceCreditKey = null;
   // Default car bet selection: 'red' (Red Ferrari), 'blue' (Blue Ferrari), 'yellow' (Gold Ferrari)
   let selectedPlayerTheme = 'red';
   // True = Auto-Run Car Bet Mode (All cars driven by AI, controls replaced by Car Bet selector)
@@ -6037,9 +6055,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const outcomeSchedule2Car = ['bot1', 'player', 'bot1', 'player', 'bot1', 'bot1', 'player', 'bot1', 'player', 'bot1'];
 
   let winHistory = [
-    { raceId: 586, winner: 'RED FERRARI', car: 'RED FERRARI', mode: '3 CAR', prize: '2.40 USDT', time: '51.42s', gap: '+0.68s' },
-    { raceId: 587, winner: 'YOU (BLUE FERRARI)', car: 'BLUE FERRARI', mode: '3 CAR', prize: '2.40 USDT', time: '50.84s', gap: '-0.91s' },
-    { raceId: 588, winner: 'GOLD FERRARI', car: 'GOLD FERRARI', mode: '3 CAR', prize: '2.40 USDT', time: '51.16s', gap: '+0.54s' }
+    { raceId: 586, winner: 'RED FERRARI', car: 'RED FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '51.42s', gap: '+0.68s' },
+    { raceId: 587, winner: 'YOU (BLUE FERRARI)', car: 'BLUE FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '50.84s', gap: '-0.91s' },
+    { raceId: 588, winner: 'GOLD FERRARI', car: 'GOLD FERRARI', mode: '3 CAR', prize: '2.50 USDT', time: '51.16s', gap: '+0.54s' }
   ];
 
   // Equalized physics constants — ZERO unnatural bot speed cheats!
@@ -6547,7 +6565,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   }
 
-  function getMultiplier() { return raceModeCars === 2 ? 1.8 : 2.4; }
+  function getMultiplier() { return raceOdds(); }
 
   function updateUIValues() {
     balanceText.textContent = balanceUsdt.toFixed(2);
@@ -6852,7 +6870,18 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
   }
   document.getElementById('closeModalBtn').addEventListener('click', closeResultModal);
-  modalActionBtn.addEventListener('click', closeResultModal);
+  // v17 money: winnings are already credited when the result is known; CLAIM only confirms and closes
+  let claimClosing = false;
+  modalActionBtn.addEventListener('click', () => {
+    if (resultModalBackdrop.dataset.view === 'win') {
+      if (claimClosing) return;
+      claimClosing = true;
+      modalActionBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M5 12.500l4.500 4.500L19 7.500" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Claimed';
+      setTimeout(() => { claimClosing = false; if (resultModalBackdrop.classList.contains('open')) closeResultModal(); }, 450);
+      return;
+    }
+    closeResultModal();
+  });
 
   const TROPHY_SVG = UI_IC.trophy;
   const LOSS_SVG = UI_IC.sad;
@@ -6890,15 +6919,15 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   ];
 
   let carBetHistory = [
-    { id: 586, car: 'RED FERRARI', bet: '2.00 USDT', odds: '2.4x', outcome: 'LOST (-2.00 USDT • +0.68s gap)', win: false },
-    { id: 587, car: 'BLUE FERRARI', bet: '1.00 USDT', odds: '2.4x', outcome: 'WON (+2.40 USDT • 1st Place)', win: true },
-    { id: 588, car: 'GOLD FERRARI', bet: '5.00 USDT', odds: '2.4x', outcome: 'WON (+12.00 USDT • 1st Place)', win: true }
+    { id: 586, car: 'RED FERRARI', bet: '2.00 USDT', odds: '2.5x', outcome: 'LOST (-2.00 USDT • +0.68s gap)', win: false },
+    { id: 587, car: 'BLUE FERRARI', bet: '1.00 USDT', odds: '2.5x', outcome: 'WON (+2.50 USDT • 1st Place)', win: true },
+    { id: 588, car: 'GOLD FERRARI', bet: '5.00 USDT', odds: '2.5x', outcome: 'WON (+12.50 USDT • 1st Place)', win: true }
   ];
 
   let walletTransactions = [
     { id: 'TX-9041', type: 'Deposit (USDT BEP20)', amount: '+100.00 USDT', status: 'Completed', positive: true },
     { id: 'TX-9042', type: 'VIP 3 Daily Profit', amount: '+39.00 USDT', status: 'Credited', positive: true },
-    { id: 'TX-9043', type: 'Race #587 Win Prize', amount: '+2.40 USDT', status: 'Completed', positive: true }
+    { id: 'TX-9043', type: 'Race #587 Win Prize', amount: '+2.50 USDT', status: 'Completed', positive: true }
   ];
 
   function showCrToast(msg) {
@@ -7701,8 +7730,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <div class="ui-tiles">
         <div class="ui-tile" style="--c:#ffffff"><span class="ui-ic" style="color:#7fb2ff">${UI_IC.gauge}</span><span class="ui-row-lbl">Top speed</span><span class="ui-row-val">258 KM/H</span><span class="ui-row-sub">Equal spec</span></div>
         <div class="ui-tile" style="--c:#38bdf8"><span class="ui-ic" style="color:#38bdf8">${UI_IC.bolt}</span><span class="ui-row-lbl">Blue booster surge</span><span class="ui-row-val">312 KM/H</span><span class="ui-row-sub">Turbo pump</span></div>
-        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2 car mode payout</span><span class="ui-row-val">1.8x</span><span class="ui-row-sub">80% profit</span></div>
-        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3 car mode payout</span><span class="ui-row-val">2.4x</span><span class="ui-row-sub">140% profit</span></div>
+        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2 car mode payout</span><span class="ui-row-val">1.9x</span><span class="ui-row-sub">90% profit</span></div>
+        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3 car mode payout</span><span class="ui-row-val">2.5x</span><span class="ui-row-sub">150% profit</span></div>
       </div>
     `;
     modalActionBtn.textContent = 'CLOSE';
@@ -7782,8 +7811,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <div class="s">Finish time ${winnerTimeNum.toFixed(2)}s</div></div></div>`;
 
     if (playerWon) {
-      balanceUsdt = +(balanceUsdt + payout).toFixed(2);
-      totalProfitReceivedUsdt = +(totalProfitReceivedUsdt + netProfit).toFixed(2);
+      const _ck = currentRaceCreditKey || ('race-' + raceIdCounter);
+      if (!creditedRaces.has(_ck)) {
+        creditedRaces.add(_ck);
+        balanceUsdt = +(balanceUsdt + payout).toFixed(2);
+        totalProfitReceivedUsdt = +(totalProfitReceivedUsdt + netProfit).toFixed(2);
+      }
       sfxWin();
       modalSvgHolder.innerHTML = TROPHY_SVG;
       modalTitle.textContent = 'YOU WON!';
@@ -8736,7 +8769,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   let demoBal = 1000;
   try { demoBal = parseFloat(localStorage.getItem('tr_demo_bal') || '1000') || 1000; } catch (e) {}
   let state = null, online = false, busy = false;
-  let minBet = 0.1, maxBet = 100, mult2 = 1.8, mult3 = 2.4;
+  let minBet = 0.1, maxBet = 100;
   let pendingBet = null; // {bet_id, winner, payout, amount}
 
   function saveDemo() { try { localStorage.setItem('tr_demo_bal', String(demoBal)); } catch (e) {} }
@@ -9270,7 +9303,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       if (j && j.deposit_address) cacheDepositAddress(j.deposit_address);
       const s = j.settings || {};
       minBet = +s.min_bet || 0.1; maxBet = +s.max_bet || 100;
-      mult2 = +s.mult_2 || 1.8; mult3 = +s.mult_3 || 2.4;
+      window._trServerOdds = { 2: +s.mult_2 || null, 3: +s.mult_3 || null }; // informational only: labels/demo use RACE_ODDS
       applyBalanceUI();
       syncInvestFromState();
       syncCarsAndLabelsWithRoom();
@@ -9297,7 +9330,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   const _gm = getMultiplier;
   getMultiplier = function () {
-    try { return raceModeCars === 2 ? mult2 : mult3; } catch (e) { return _gm ? _gm() : 2.4; }
+    return raceOdds();
   };
 
   // ---- Bet flow: supports 10s shared multiplayer rooms in BOTH Live and Demo modes ----
@@ -9426,6 +9459,16 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   const _showResult = showRaceResultModal;
   showRaceResultModal = async function (rank, sorted) {
     stopRoomPolling();
+    // test-only: _trForceWin = true (win) or 'lose' (loss), honoured ONLY for a demo/offline bet (never live)
+    if (window._trForceWin && pendingBet && pendingBet.demo) {
+      const me = sorted.find(c => c.isPlayer);
+      if (me) sorted = window._trForceWin === 'lose' ? sorted.filter(c => c !== me).concat([me]) : [me].concat(sorted.filter(c => c !== me));
+    }
+    // v17 money: one idempotent credit per race (key = bet id, else race counter)
+    const _raceKey = (pendingBet && pendingBet.bet_id) ? String(pendingBet.bet_id) : ('race-' + raceIdCounter);
+    const _alreadyCredited = creditedRaces.has(_raceKey);
+    creditedRaces.add(_raceKey);
+    currentRaceCreditKey = _raceKey;
     // Honest result: `sorted` is the order the cars really crossed the line. A winner that was pre-assigned
     // by a bet or room reply never reorders it, and the demo payout is worked out from this order.
     rank = sorted.findIndex(c => c.isPlayer) + 1;
@@ -9435,13 +9478,13 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       if (pendingBet.demo) {
         clearPendingDemoBet();
         const stake = +pendingBet.amount || +currentBet || 0;
-        pendingBet.payout = rank === 1 ? +fmt(stake * (raceModeCars === 2 ? mult2 : mult3)) : 0;
-        if (pendingBet.payout > 0) {
+        pendingBet.payout = rank === 1 ? +fmt(stake * raceOdds()) : 0;
+        if (pendingBet.payout > 0 && !_alreadyCredited) {
           demoBal = +fmt(demoBal + pendingBet.payout);
           saveDemo();
           applyBalanceUI();
         }
-      } else if (!pendingBet.demo && pendingBet.bet_id) {
+      } else if (!pendingBet.demo && pendingBet.bet_id && !_alreadyCredited) {
         try { const j = await api('/api/race/result', { bet_id: pendingBet.bet_id }); state = j; applyBalanceUI(); } catch (e) {}
       }
     }
@@ -9774,7 +9817,8 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
   function openLiveWithdraw() {
     stopDepPoll();
-    const avail = playMode === 'live' ? (state ? +state.balance : 0) : demoBal;
+    const avail = (state && isFinite(+state.balance)) ? Math.max(0, +state.balance) : 0; // always the LIVE balance, never demoBal
+    if (playMode === 'demo' && !state && API && !window._trWdTried) { window._trWdTried = true; refresh(true).then(() => { if (state && resultModalBackdrop.classList.contains('open') && modalTitle.textContent.indexOf('WITHDRAW') === 0) openLiveWithdraw(); }); }
     const minW = (state && state.settings && +state.settings.min_withdraw) || 0.5;
     const maxW = (state && state.settings && +state.settings.max_withdraw) || 0;
     const maxLabel = maxW > 0 ? `${maxW} USDT` : 'No Limit';
@@ -10072,6 +10116,14 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
     }
     return Math.min(maxBet, next);
   }
+
+  // v17 money: MAX chip = min(max bet, balance) rounded down to 2 decimals, never below the minimum
+  const betMaxBtn = document.getElementById('betMaxBtn');
+  if (betMaxBtn) betMaxBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const cap = Math.min(maxBet, Math.floor((+balanceUsdt + 1e-9) * 100) / 100);
+    setBet(Math.max(minBet, +cap.toFixed(2)));
+  });
 
   function calcNextBetMinus(cur) {
     let next;
