@@ -4408,6 +4408,102 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   .bottom-console .tr-max-btn::after { content: ""; position: absolute; inset: -11px -4px; }
   .bottom-console .tr-max-btn:active { transform: scale(0.94); background: rgba(255, 200, 61, 0.22); }
 </style>
+<style id="v17Tabs">
+/* v17Tabs: Invest / Invite / Profile type scale reduced ~15-20% to match Bet(Play); new Invite referral layout; Race Info scroll. */
+/* ---------- INVEST ---------- */
+#screenInvest .investment-head { padding: 12px 14px 10px; }
+#screenInvest .investment-head h1 { font-size: 19px !important; gap: 8px; }
+#screenInvest .investment-head h1 .ub-head-ic { width: 28px !important; height: 28px !important; padding: 6px; }
+#screenInvest .investment-head p { font-size: 11px !important; margin-top: 5px !important; }
+#screenInvest .tabs-dark button { font-size: 11px; height: 38px; }
+#screenInvest .tier-name { font-size: 17.5px !important; }
+#screenInvest .tier-desc { font-size: 10px !important; }
+#screenInvest .invest-label { font-size: 9px !important; }
+#screenInvest .invest-number, #screenInvest .profit-number { font-size: 18px !important; }
+#screenInvest .invest-number small, #screenInvest .profit-number small { font-size: 9px !important; }
+#screenInvest .tier-stats .tiny { font-size: 9px !important; }
+#screenInvest .tier-meta p .muted { font-size: 8.5px !important; }
+#screenInvest .tier-meta p b { font-size: 10.5px !important; }
+#screenInvest .share-box .invest-label { font-size: 8.5px !important; }
+#screenInvest .share-box strong { font-size: 17px !important; }
+#screenInvest .invest-now { font-size: 13px !important; min-height: 44px !important; }
+#screenInvest .invest-note-copy b { font-size: 13px !important; }
+#screenInvest .invest-note-copy p { font-size: 10px !important; }
+#screenInvest .ub-empty-t { font-size: 18px; }
+#screenInvest .ub-empty-p { font-size: 11px; }
+#screenInvest .ub-empty .green-btn { font-size: 13px !important; }
+/* ---------- INVITE ---------- */
+#screenInvite .invite-hero h1 { font-size: 23px !important; }
+#screenInvite .invite-hero p { font-size: 11px !important; }
+#screenInvite .section-kicker { font-size: 14px !important; margin: 12px 0 8px !important; }
+#screenInvite .ref-value { font-size: 18px !important; }
+#screenInvite .ref-link { font-size: 11px !important; }
+#screenInvite .ref-box .tiny { font-size: 9.5px; }
+#screenInvite .share-label { font-size: 11px; }
+#screenInvite .ref-stat { min-height: 68px !important; font-size: 10px !important; }
+#screenInvite .ref-stat strong { font-size: 18px !important; }
+#screenInvite .withdraw-ref { font-size: 12.5px !important; min-height: 46px !important; }
+#screenInvite .inv-rule { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; padding: 14px !important; margin: 12px 0 8px; text-align: left; }
+#screenInvite .inv-rule-ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; color: #03230f; background: linear-gradient(145deg, #2eea82, #11a653); }
+#screenInvite .inv-rule b { display: block; font-size: 13.5px; line-height: 1.25; font-weight: 800; color: #fff; }
+#screenInvite .inv-rule p { margin: 3px 0 0; font-size: 11px; line-height: 1.35; color: var(--ub-mute); font-weight: 700; }
+#screenInvite .inv-rule p.inv-rule-up { color: var(--ub-gold); font-weight: 800; }
+#screenInvite .inv-example { padding: 12px 14px !important; margin: 0 0 12px; text-align: left; }
+#screenInvite .inv-ex-k { display: block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ub-mute); margin-bottom: 6px; }
+#screenInvite .inv-ex-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; font-weight: 700; color: #dbe6f7; }
+#screenInvite .inv-ex-row b { color: #fff; font-weight: 900; }
+#screenInvite .inv-ex-row b.green { color: var(--ub-green); }
+#screenInvite .inv-ex-row .ub-i { color: var(--ub-mute); }
+#screenInvite .inv-example p { margin: 6px 0 0; font-size: 10.5px; color: var(--ub-mute); font-weight: 700; }
+#screenInvite .inv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#screenInvite .inv-stats .ref-stat { grid-template-rows: auto auto auto !important; align-content: start; row-gap: 4px; padding-top: 12px !important; }
+#screenInvite .inv-stats .ref-stat strong { grid-column: 1 / 3; display: block !important; }
+#screenInvite .inv-stats .ref-stat strong.blue { color: var(--ub-green) !important; }
+#screenInvite .inv-stats .ref-stat em { grid-column: 1 / 3; font-style: normal; font-size: 9px; font-weight: 700; color: var(--ub-mute); margin-top: -4px; }
+#screenInvite .inv-progress { display: block !important; margin-top: 8px; padding: 12px 14px !important; text-align: left; }
+#screenInvite .inv-prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+#screenInvite .inv-progress strong { font-size: 15px !important; }
+#screenInvite .inv-progress .progress-track { margin: 8px 0 6px; height: 8px; }
+#screenInvite .inv-progress small { font-size: 10.5px !important; }
+/* ---------- PROFILE ---------- */
+#screenProfile .profile-title { font-size: 16.5px !important; }
+#screenProfile .profile-name-tag { font-size: 12px !important; }
+#screenProfile .profile-identity .muted { font-size: 9px !important; }
+#screenProfile .vip-pill-lg { font-size: 10px !important; }
+#screenProfile .refer-box .muted { font-size: 8.5px !important; }
+#screenProfile .refer-box .profile-name-tag { font-size: 11px !important; }
+#screenProfile .wallet-card > div[style*="font-size:12px"] { font-size: 10px !important; }
+#screenProfile .balance-big { font-size: 28px !important; }
+#screenProfile .balance-big#profileProfitBalance { font-size: 22px !important; }
+#screenProfile .balance-big small { font-size: 11px !important; }
+#screenProfile .wallet-buttons button { font-size: 12.5px !important; }
+#screenProfile .tr-settings h4 { font-size: 11px !important; }
+#screenProfile .tr-set-row { font-size: 11px !important; min-height: 44px; }
+#screenProfile .bonus b { font-size: 11px !important; }
+#screenProfile #bonusLockedVal { font-size: 21px !important; }
+#screenProfile #unlockBonusBtn { font-size: 11px !important; min-height: 44px !important; }
+#screenProfile .profile-section h2 { font-size: 14px; }
+#screenProfile .profile-stat-label { font-size: 9px !important; }
+#screenProfile .profile-stat strong { font-size: 14px !important; }
+#screenProfile .profile-stat small { font-size: 9px !important; }
+#screenProfile .menu-item b { font-size: 12px !important; }
+#screenProfile .menu-item small { font-size: 9.5px !important; }
+#screenProfile .profile-banner strong { font-size: 13.5px !important; }
+#screenProfile .profile-banner p { font-size: 10px !important; }
+@media (max-width: 380px) {
+  #screenInvest .tier-name { font-size: 16px !important; }
+  #screenInvest .invest-number, #screenInvest .profit-number { font-size: 17px !important; }
+  #screenInvest .tabs-dark button { font-size: 10.5px; }
+  #screenInvite .withdraw-ref { font-size: 12px !important; }
+  #screenProfile .profile-stat strong { font-size: 13px !important; }
+  #screenProfile .balance-big { font-size: 26px !important; }
+}
+/* ---------- Race Info popup: header + close stay put, body scrolls ---------- */
+#resultModalBackdrop[data-ri] .result-modal { max-height: 80vh; display: flex; flex-direction: column; }
+#resultModalBackdrop[data-ri] #modalBodyContent { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto; margin: 0 -4px; padding: 0 4px; }
+#resultModalBackdrop[data-ri] .modal-close { position: absolute; }
+#resultModalBackdrop[data-ri] .ri-list .ui-step p + p { margin-top: 5px; }
+</style>
 </head>
 <body>
 
@@ -5038,28 +5134,22 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
   <div class="cr-screen" id="screenInvite">
     <header class="invite-hero">
       <h1>Invite &amp; Earn</h1>
-      <p>Earn lifetime rewards by inviting your friends!</p>
+      <p>Earn from every bet your friends place.</p>
     </header>
 
     <div class="content">
-      <h2 class="section-kicker">How You Earn</h2>
-      <section class="earn-grid">
-        <article class="panel earn-card">
-          <h3><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-dice"/></svg> Betting Rewards<br><b>Earn <span>10%</span> Commission</b></h3>
-          <div class="flow">
-            <div><span class="orb"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-user"/></svg></span>Friend Bets<br><b class="blue">$10</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
-            <div><span class="orb"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-trophy"/></svg></span>Friend Wins<br><b class="blue">$30</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
-            <div><span class="orb" style="background:#165a24"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg></span>Platform Fee<br><b class="blue">$6</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
-            <div><span class="orb" style="background:#126d20"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg></span>You Earn<br><b class="blue">$0.60</b></div>
-          </div>
-        </article>
-        <article class="panel earn-card">
-          <h3><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg> VIP Purchase Rewards<br><b>Earn <span>5%</span> Commission</b></h3>
-          <div class="flow">
-            <div><span class="orb" style="background:#7430c6"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-diamond"/></svg></span>Friend buys<br><b>VIP 3</b></div><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
-            <div><span class="orb" style="background:#157b23"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg></span>You receive<br><b class="green">30 USDT</b></div>
-          </div>
-        </article>
+      <section class="panel inv-rule">
+        <div class="inv-rule-ic"><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-percent"/></svg></div>
+        <div>
+          <b>You earn 1% of your referrals' total bet volume.</b>
+          <p>Lifetime. Win or loss.</p>
+          <p class="inv-rule-up">More than 10 referrals = 2%.</p>
+        </div>
+      </section>
+      <section class="panel inv-example">
+        <span class="inv-ex-k">Example</span>
+        <div class="inv-ex-row"><span>1 referral bets <b>$100</b> total</span><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg><span>you get <b class="green">$1</b></span></div>
+        <p>Fully withdrawable. No fee, no conditions.</p>
       </section>
 
       <section class="ref-grid">
@@ -5081,49 +5171,25 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <button class="social" type="button" data-share="X" aria-label="X"><svg class="ub-i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-x"/></svg></button>
       </div>
 
-      <section class="panel progress-card">
-        <div class="big-orb"><svg class="ub-i icon-lg" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg></div>
-        <div><span class="muted tiny">Your Progress</span><br><strong id="refProgressCount">3 / 5</strong> Valid Referrals
-          <div class="progress-track"><span id="refProgressBar" style="width:60%"></span></div>
-          <small class="muted tiny" id="refProgressSub">2 more referrals to unlock 20% commission tier</small>
-        </div>
-        <div class="medal"><svg class="ub-i icon-lg" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg></div>
-      </section>
-
-      <h2 class="section-kicker" style="margin-top:12px">Commission Tiers</h2>
-      <section class="tier-row">
-        <div class="panel commission-tier active" data-tier-pct="10%"><strong>10%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>0 - 4<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="20%"><strong>20%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>5 - 9<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="30%"><strong>30%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>10 - 19<br>Users</small></div>
-        <div class="panel commission-tier" data-tier-pct="40%"><strong>40%</strong><svg class="ub-i icon-md" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg><small>20+<br>Users</small></div>
-      </section>
-
       <h2 class="section-kicker" style="margin-top:12px">Your Referral Stats</h2>
-      <section class="referral-stats">
-        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg> Total Referrals<strong class="blue" id="statTotalRefs">3</strong></div>
-        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg> Active Users<strong id="statActiveRefs">3</strong></div>
-        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg> Lifetime Commission<strong class="blue" id="statLifetimeComm">125.50</strong>USDT</div>
-        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg> Available Commission<strong class="blue" id="statAvailComm">32.50</strong>USDT</div>
+      <section class="inv-stats">
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-users"/></svg> Referrals<strong id="statTotalRefs">0</strong></div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chart"/></svg> Their total volume<strong id="statRefVolume">0.00</strong><em>USDT</em></div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-coin"/></svg> You earned<strong class="blue" id="statLifetimeComm">0.00</strong><em>USDT</em></div>
+        <div class="panel ref-stat"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-percent"/></svg> Current rate<strong id="statRefRate">1%</strong></div>
+      </section>
+
+      <section class="panel progress-card inv-progress">
+        <div class="inv-prog-top"><span class="muted tiny">Progress to 2%</span><strong id="refProgressCount">0 / 10</strong></div>
+        <div class="progress-track"><span id="refProgressBar" style="width:0%"></span></div>
+        <small class="muted tiny" id="refProgressSub">0 / 10 to unlock 2%</small>
       </section>
 
       <button class="green-btn withdraw-ref" id="withdrawRefBtn" type="button">
         <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-wallet"/></svg>
-        <span>Withdraw Referral Commission</span>
+        <span>Withdraw Earnings</span>
         <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-arrow"/></svg>
       </button>
-      <aside class="panel" style="padding:10px 12px;font-size:11px;color:#cbd5e1;">
-        <svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg> Referral commissions are directly withdrawable. No fee. Withdraw directly anytime.
-      </aside>
-
-      <section class="panel" style="margin-top:10px;padding:10px">
-        <b class="condensed" style="font-size:15px;">WHY INVITE YOUR FRIENDS?</b>
-        <div class="why-grid">
-          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-chart"/></svg><b class="blue">Lifetime Earning</b>Earn forever from friends’ play</div>
-          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-bolt"/></svg><b class="green">Instant Payout</b>Added instantly</div>
-          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-infinity"/></svg><b style="color:#a34cff">No Limits</b>Unlimited referrals</div>
-          <div class="why"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-shield-check"/></svg><b class="yellow">Secure</b>Real-time tracking</div>
-        </div>
-      </section>
     </div>
   </div>
 
@@ -5370,9 +5436,9 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <button class="modal-close pop-close" aria-label="Close">✕</button>
       <div class="hud-pop-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6.200l5.600-2.200 6.800 2.200L21 4v13.800l-5.600 2.200-6.800-2.200L3 20z" fill="#dff5e8" stroke="#dff5e8" stroke-width="1" stroke-linejoin="round"/><path d="M8.600 4v13.800M15.400 6.200V20" stroke="#0e2a1c" stroke-width="1.400" opacity=".55"/><path d="M10.500 14.500c1.500-2.600 3-1 4.500-3.800" stroke="#2f7bff" stroke-width="1.700" stroke-linecap="round"/></svg></div>
       <div class="hud-pop-title">RACE MAPS</div>
-      <p>A map is the place you race: <b>Highway, City, Mountain, Lake</b> or <b>Desert</b>. It changes the road, the scenery and the bends, never the rules or the payout.</p>
-      <p>In a race with other players, <b>everyone races on the same map</b>.</p>
-      <p class="hud-pop-note">You can change it before you start a race.</p>
+      <p>Maps change the scenery and the road shape.</p>
+      <p>Pick a map before the race starts.</p>
+      <p class="hud-pop-note">Everyone in the same race sees the same map.</p>
     </div>
   </div>
   <div class="modal-backdrop" id="timerInfoBackdrop">
@@ -5380,9 +5446,19 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <button class="modal-close pop-close" aria-label="Close">✕</button>
       <div class="hud-pop-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13.200" r="7.800" stroke="#ffffff" stroke-width="2"/><path d="M9.500 2.800h5M12 2.800v2.600M18.400 6.200l1.500-1.500" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><path d="M12 13.200V8.800" stroke="#ffc83d" stroke-width="2.200" stroke-linecap="round"/><circle cx="12" cy="13.200" r="1.300" fill="#ffc83d"/></svg></div>
       <div class="hud-pop-title">RACE TIME</div>
-      <p>Choose how long the race lasts: <b>30 sec</b>, <b>1 min</b> or <b>2 min</b>. Tap the chip to switch. The bet round and the race use the same time.</p>
-      <p>Cars always drive at the same speed, so a longer race is simply a longer track. The first car over the line wins; if the time ends first, the car in front wins.</p>
-      <p class="hud-pop-note">Races with other players use the time of the room.</p>
+      <p>Choose how long the race lasts: <b>30 sec</b>, <b>1 min</b> or <b>2 min</b>.</p>
+      <p>A longer race is a longer track. Car speed stays the same.</p>
+      <p class="hud-pop-note">Races with other players use the room's time.</p>
+    </div>
+  </div>
+<div class="modal-backdrop" id="climateInfoBackdrop">
+    <div class="hud-pop-card hud-pop-info">
+      <button class="modal-close pop-close" aria-label="Close">✕</button>
+      <div class="hud-pop-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.200" stroke="#ffffff" stroke-width="2"/><path d="M12 2.800v2.400M12 18.800v2.400M2.800 12h2.400M18.800 12h2.400M5.500 5.500l1.700 1.700M16.800 16.800l1.700 1.700M18.500 5.500l-1.700 1.700M7.200 16.800l-1.700 1.700" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="hud-pop-title">CLIMATE</div>
+      <p>Tap the climate chip to change the weather: <b>Sunny, Rain, Night, Snow</b>.</p>
+      <p>Weather changes how the race looks, not who wins.</p>
+      <p class="hud-pop-note">Desert has no snow.</p>
     </div>
   </div>
 
@@ -5883,6 +5959,7 @@ window.dispatchEvent(new Event('tr-three'));
     setTimeout(() => {
       el.classList.remove('ui-anim');
       if (el.classList.contains('open')) return;
+      delete el.dataset.ri;
       if (el.dataset.view) {
         delete el.dataset.view;
         ['modalTitle', 'modalSubtitle'].forEach(id => { const n = document.getElementById(id); if (n) n.style.color = ''; });
@@ -6565,6 +6642,7 @@ window.dispatchEvent(new Event('tr-three'));
     });
     document.getElementById('mapInfoBtn').addEventListener('click', () => openPop('mapInfoBackdrop'));
     document.getElementById('timerInfoBtn').addEventListener('click', () => openPop('timerInfoBackdrop'));
+    window.openClimateInfo = () => openPop('climateInfoBackdrop');
     document.getElementById('timerChipBtn').addEventListener('click', () => {
       if (gameState !== 'IDLE') { chipToast('Race time can only be changed before the race starts'); triggerHaptic(30); return; }
       localTimerChoice = TIMER_CHOICES[(TIMER_CHOICES.indexOf(localTimerChoice) + 1) % TIMER_CHOICES.length];
@@ -6941,9 +7019,10 @@ window.dispatchEvent(new Event('tr-three'));
   let totalInvestmentUsdt = 600.00;
   let totalProfitReceivedUsdt = 156.00;
   let dailyProfitsUsdt = 39.00;
-  let availRefCommUsdt = 32.50;
-  let lifetimeRefCommUsdt = 125.50;
-  let totalReferralsCount = 3;
+  let availRefCommUsdt = 0;
+  let lifetimeRefCommUsdt = 0;
+  let totalReferralsCount = 0;
+  let refVolumeUsdt = 0;
 
   let activeInvestments = [
     {
@@ -7015,6 +7094,18 @@ window.dispatchEvent(new Event('tr-three'));
     });
   }
 
+  // ---- v17 Invite tab: 1% of referrals' bet volume (2% above 10 referrals). Display only; the server pays. ----
+  function renderInviteStats() {
+    const n = Math.max(0, Math.floor(totalReferralsCount || 0));
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('statTotalRefs', String(n));
+    set('statRefVolume', (+refVolumeUsdt || 0).toFixed(2));
+    set('statRefRate', (n > 10 ? 2 : 1) + '%');
+    set('refProgressCount', Math.min(10, n) + ' / 10');
+    set('refProgressSub', n > 10 ? '2% unlocked' : n + ' / 10 to unlock 2%');
+    const bar = document.getElementById('refProgressBar'); if (bar) bar.style.width = Math.min(100, n / 10 * 100) + '%';
+  }
+
   function syncSharedWalletUI() {
     balanceText.textContent = balanceUsdt.toFixed(2);
     const profMain = document.getElementById('profileMainBalance');
@@ -7031,6 +7122,7 @@ window.dispatchEvent(new Event('tr-three'));
     if (stAvail) stAvail.textContent = availRefCommUsdt.toFixed(2);
     const stLife = document.getElementById('statLifetimeComm');
     if (stLife) stLife.textContent = lifetimeRefCommUsdt.toFixed(2);
+    renderInviteStats();
     const myCnt = document.getElementById('myInvestCount');
     if (myCnt) myCnt.textContent = String(activeInvestments.length);
   }
@@ -7445,24 +7537,10 @@ window.dispatchEvent(new Event('tr-three'));
   document.querySelectorAll('[data-share]').forEach(btn => {
     btn.addEventListener('click', () => {
       const platform = btn.dataset.share;
-      totalReferralsCount = Math.min(25, totalReferralsCount + 1);
-      availRefCommUsdt = +(availRefCommUsdt + 3.00).toFixed(2);
-      lifetimeRefCommUsdt = +(lifetimeRefCommUsdt + 3.00).toFixed(2);
-      document.getElementById('statTotalRefs').textContent = String(totalReferralsCount);
-      document.getElementById('statActiveRefs').textContent = String(totalReferralsCount);
-      const progCnt = document.getElementById('refProgressCount');
-      const progBar = document.getElementById('refProgressBar');
-      const progSub = document.getElementById('refProgressSub');
-      if (progCnt) progCnt.textContent = `${Math.min(5, totalReferralsCount)} / 5`;
-      if (progBar) progBar.style.width = `${Math.min(100, (totalReferralsCount / 5) * 100)}%`;
-      if (progSub) {
-        const rem = Math.max(0, 5 - totalReferralsCount);
-        progSub.textContent = rem > 0
-          ? `${rem} more referral${rem === 1 ? '' : 's'} to unlock 20% commission tier`
-          : `20% Commission Tier Unlocked!`;
-      }
-      syncSharedWalletUI();
-      showCrToast(`Shared invite link on ${platform}! (+3.00 USDT Referral Bonus)`);
+      const linkEl = document.querySelector('#screenInvite .ref-link');
+      const link = linkEl ? linkEl.textContent.trim() : '';
+      copyTextToClipboard(link);
+      showCrToast(`Invite link copied. Paste it in ${platform}.`);
     });
   });
 
@@ -7753,36 +7831,49 @@ window.dispatchEvent(new Event('tr-three'));
 
   document.getElementById('howToPlayBtn').addEventListener('click', () => {
     modalSvgHolder.innerHTML = TROPHY_SVG;
-    modalTitle.textContent = 'HOW TO PLAY & WIN';
-    modalSubtitle.textContent = '3D Car Betting & Racing Rules';
+    modalTitle.textContent = 'HOW TO PLAY';
+    modalSubtitle.textContent = 'Simple rules';
     modalSubtitle.style.color = '';
     modalBodyContent.innerHTML = `
       <div class="ui-list">
-        <div class="ui-step" style="--c:#22E07A"><span class="ui-num">1</span><div><b>Pick a car &amp; tap the green circle</b><p>Choose <strong>Red</strong>, <strong>Blue</strong> or <strong>Gold</strong> and set your USDT bet. The race starts only when you tap the center green circle.</p></div></div>
-        <div class="ui-step" style="--c:#38bdf8"><span class="ui-num">2</span><div><b>10s matchmaking &amp; 3D race</b><p>Bots join within 10 seconds, with a tick and haptic every second. In Car Bet mode all cars race on their own down the 3D highway.</p></div></div>
-        <div class="ui-step" style="--c:#FFC83D"><span class="ui-num">3</span><div><b>Collisions, obstacles &amp; boosters</b><p>Obstacles slow a car so trailing cars can overtake. Blue boosters pump up the speed, and side-slams knock rivals sideways.</p></div></div>
+        <div class="ui-step" style="--c:#22E07A"><span class="ui-num">1</span><div><b>Pick a car and set your bet.</b><p>Choose Red, Blue or Gold Ferrari. Tap the green circle to start.</p></div></div>
+        <div class="ui-step" style="--c:#38bdf8"><span class="ui-num">2</span><div><b>Wait for the race to start.</b><p>Players join within 10 seconds. Bots fill empty seats.</p></div></div>
+        <div class="ui-step" style="--c:#FFC83D"><span class="ui-num">3</span><div><b>First car over the finish line wins.</b><p>Obstacles slow cars down. Boost pads speed them up.</p></div></div>
+        <div class="ui-step" style="--c:#a855f7"><span class="ui-num">4</span><div><b>Winnings are added to your balance right away.</b><p>2-car race pays 1.9x. 3-car race pays 2.5x.</p></div></div>
       </div>
     `;
-    modalActionBtn.textContent = 'GOT IT, LET\'S RACE';
+    modalActionBtn.textContent = 'GOT IT';
     resultModalBackdrop.dataset.view = 'info';
     resultModalBackdrop.classList.add('open');
   });
 
   document.getElementById('raceInfoBtn').addEventListener('click', () => {
     modalSvgHolder.innerHTML = TROPHY_SVG;
-    modalTitle.textContent = 'RACE SPECIFICATIONS';
-    modalSubtitle.textContent = `${raceModeCars} Car Mode \u2022 ${getMultiplier()}x Winner Payout`;
+    modalTitle.textContent = 'RACE INFO';
+    modalSubtitle.textContent = 'How matching and payouts work';
     modalSubtitle.style.color = '';
     modalBodyContent.innerHTML = `
-      <div class="ui-tiles">
-        <div class="ui-tile" style="--c:#ffffff"><span class="ui-ic" style="color:#7fb2ff">${UI_IC.gauge}</span><span class="ui-row-lbl">Top speed</span><span class="ui-row-val">258 KM/H</span><span class="ui-row-sub">Equal spec</span></div>
-        <div class="ui-tile" style="--c:#38bdf8"><span class="ui-ic" style="color:#38bdf8">${UI_IC.bolt}</span><span class="ui-row-lbl">Blue booster surge</span><span class="ui-row-val">312 KM/H</span><span class="ui-row-sub">Turbo pump</span></div>
-        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2 car mode payout</span><span class="ui-row-val">1.9x</span><span class="ui-row-sub">90% profit</span></div>
-        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3 car mode payout</span><span class="ui-row-val">2.5x</span><span class="ui-row-sub">150% profit</span></div>
+      <div class="ui-list ri-list">
+        <div class="ui-step" style="--c:#38bdf8"><div><b>Matchmaking</b><p>Players join within 10 seconds. If no one joins, bots fill empty seats.</p></div></div>
+        <div class="ui-step" style="--c:#22E07A"><div><b>Prize pool</b><p>All players' bets are pooled together. The winner is paid based on their own bet amount and the race odds.</p><p style="margin-top:5px">We don't match players by equal bet amount - that would make matching very slow. Each payout depends only on your own bet.</p></div></div>
+      </div>
+      <div class="ui-tiles" style="margin-top:7px">
+        <div class="ui-tile" style="--c:#22E07A"><span class="ui-ic" style="color:#22E07A">${UI_IC.coin}</span><span class="ui-row-lbl">2-car race</span><span class="ui-row-val">1.9x</span><span class="ui-row-sub">Bet 10 USDT, win 19 USDT</span></div>
+        <div class="ui-tile" style="--c:#FFC83D"><span class="ui-ic" style="color:#FFC83D">${UI_IC.coin}</span><span class="ui-row-lbl">3-car race</span><span class="ui-row-val">2.5x</span><span class="ui-row-sub">Bet 10 USDT, win 25 USDT</span></div>
+      </div>
+      <div class="ui-list ri-list" style="margin-top:7px">
+        <div class="ui-step" style="--c:#a855f7"><div><b>FAQ</b>
+          <p><strong>How is the winner decided?</strong><br>First car over the finish line.</p>
+          <p style="margin-top:6px"><strong>Can I change map or climate?</strong><br>Yes, with the top-right chips, before the race starts.</p>
+          <p style="margin-top:6px"><strong>What is Manual Drive?</strong><br>You steer your own car. The payout is the same.</p>
+          <p style="margin-top:6px"><strong>When is money credited?</strong><br>Instantly when you win.</p>
+          <p style="margin-top:6px"><strong>How do referrals pay?</strong><br>1% of your referrals' bet volume, 2% after 10 referrals, lifetime.</p>
+        </div></div>
       </div>
     `;
     modalActionBtn.textContent = 'CLOSE';
     resultModalBackdrop.dataset.view = 'info';
+    resultModalBackdrop.dataset.ri = '1';
     resultModalBackdrop.classList.add('open');
   });
 
@@ -11955,10 +12046,6 @@ window.dispatchEvent(new Event('tr-three'));
     if (balEl) balEl.textContent = fmt(bal);
     if (state) {
       const rc = state.referrals || 0;
-      const pc = $('#refProgressCount'); if (pc) pc.textContent = Math.min(5, rc) + ' / 5';
-      const pbar = $('#refProgressBar'); if (pbar) pbar.style.width = Math.min(100, rc / 5 * 100) + '%';
-      const ps = $('#refProgressSub'); if (ps) ps.textContent = rc >= 5 ? '20% tier unlocked' : (5 - rc) + ' more referrals to unlock the 20% tier';
-      const ar = $('#statActiveRefs'); if (ar) ar.textContent = String(rc);
       const bl = $('#bonusLockedVal'); if (bl) bl.textContent = '0.00';
       $$('.vip-badge, .vip-pill-lg').forEach(el => el.style.display = 'none');
       $$('.refer-box .profile-name-tag').forEach(el => el.textContent = String(state.user.id));
@@ -11985,7 +12072,11 @@ window.dispatchEvent(new Event('tr-three'));
       const pb = $('#profileMainBalance'); if (pb) pb.innerHTML = fmt(state.balance) + ' <small>USDT</small>';
       const pp = $('#profileProfitBalance'); if (pp) pp.innerHTML = fmt(state.profit_balance) + ' <small>USDT</small>';
       const si = $('#statTotalInvest'); if (si) si.textContent = fmt((state.investments || []).reduce((a, x) => a + (x.active ? x.cost : 0), 0));
-      const refs = $('#statTotalRefs'); if (refs) refs.textContent = String(state.referrals || 0);
+      totalReferralsCount = +state.referrals || 0;
+      refVolumeUsdt = +(state.ref_volume != null ? state.ref_volume : state.referral_volume) || 0;
+      lifetimeRefCommUsdt = +(state.ref_earned != null ? state.ref_earned : state.referral_earned) || 0;
+      availRefCommUsdt = +(state.ref_available != null ? state.ref_available : lifetimeRefCommUsdt) || 0;
+      if (typeof updateUIValues === 'function') updateUIValues();
       const name = (state.user && (state.user.first_name || state.user.username)) || 'TRADER';
       $$('.profile-name, #profileTitleText').forEach(el => { if (el) el.textContent = String(name).toUpperCase().slice(0, 14); });
       const idEl = $('.profile-id'); if (idEl) idEl.textContent = 'ID: ' + state.user.id;
