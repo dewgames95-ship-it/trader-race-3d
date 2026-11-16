@@ -4504,8 +4504,115 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 #resultModalBackdrop[data-ri] .modal-close { position: absolute; }
 #resultModalBackdrop[data-ri] .ri-list .ui-step p + p { margin-top: 5px; }
 </style>
+<style id="v17Hud">
+/* v17 hud: icon set + right chip stack (navy glass, one accent per chip) */
+.ic { width: 1em; height: 1em; display: inline-block; vertical-align: middle; flex-shrink: 0; overflow: visible; color: inherit; filter: drop-shadow(0 0 3px currentColor); }
+.ic-gold { --ic-s: url(#icGoldS); --ic-f: url(#icGoldS); --ic-fo: .38; }
+.ic-green { --ic-s: url(#icGreenS); --ic-f: url(#icGreenS); --ic-fo: .38; }
+.ic-blue { --ic-s: url(#icBlueS); --ic-f: url(#icBlueS); --ic-fo: .38; }
+.ic-cyan { --ic-s: url(#icCyanS); --ic-f: url(#icCyanS); --ic-fo: .38; }
+.ic-white { --ic-s: url(#icWhiteS); --ic-f: url(#icWhiteS); --ic-fo: .3; }
+.ic-red { --ic-s: url(#icRedS); --ic-f: url(#icRedS); --ic-fo: .38; }
+/* left HUD buttons */
+.hud-pill > svg.ic { width: 21px; height: 21px; }
+.hud-pill > svg.ic { filter: drop-shadow(0 0 3px rgba(255,255,255,.25)); }
+#leaderboardBtn { color: #ffc83d; } #modeSelectHudBtn { color: #5fb4ff; } #raceInfoBtn { color: #7fb2ff; } #howToPlayBtn { color: #8ec5ff; } .speed-pill { color: #22e07a; }
+.hud-pill .hud-pill-label { color: #fff; }
+/* right chip stack */
+.right-hud-stack { top: 36px; right: 6px; gap: 8px; align-items: stretch; width: 108px; zoom: 1 !important; opacity: 1 !important; }
+.right-hud-stack .icon-toggle-btn { zoom: 1 !important; }
+.right-hud-stack .mini-utility-row { justify-content: flex-end; }
+#weatherCycleBtn, #weatherChip { --acc: #ffc83d; }
+#mapChip { --acc: #22e07a; } #timerChip { --acc: #2f7bff; } #cameraToggleBtn { --acc: #5fe3ff; }
+.right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip {
+  width: 108px; height: 30px; box-sizing: border-box; border-radius: 11px; padding: 0 7px; position: relative; font-size: 9.5px; font-weight: 900; font-style: italic; letter-spacing: .2px; color: #fff;
+  border: 1px solid color-mix(in srgb, var(--acc) 65%, transparent); background: linear-gradient(180deg, rgba(16,28,54,.92), rgba(7,13,28,.94)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 28%, transparent), inset 0 1px 0 rgba(255,255,255,.08); }
+.right-hud-stack #weatherChip { padding: 0; display: block; border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.right-hud-stack #weatherChip > #weatherCycleBtn { width: 100%; padding: 0 26px 0 7px; justify-content: flex-start; }
+.right-hud-stack .hud-chip { padding: 0; }
+.right-hud-stack .hud-chip .chip-main { padding: 0 2px 0 7px; height: 100%; }
+.right-hud-stack .icon-toggle-btn::before { content: ''; position: absolute; left: 0; right: 0; top: -5px; bottom: -5px; }
+.right-hud-stack .hud-chip::before { pointer-events: none; }
+.right-hud-stack .hud-chip .chip-main::before { content: ''; position: absolute; left: 0; right: 30px; top: -5px; bottom: -5px; }
+.right-hud-stack .icon-toggle-btn .ic, .right-hud-stack .hud-chip .ic { width: 15px; height: 15px; color: var(--acc); }
+.right-hud-stack #weatherBtnText, .right-hud-stack #cameraBtnText, .right-hud-stack .chip-main > span { gap: 5px; }
+.right-hud-stack #cameraToggleBtn { justify-content: flex-start; }
+.hud-chip .chip-q, .right-hud-stack .chip-q { width: 18px; height: 18px; margin: 0 5px 0 2px; font-size: 10.5px; font-weight: 900; color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); background: color-mix(in srgb, var(--acc) 14%, transparent); }
+.hud-chip .chip-q::after { inset: -11px; }
+.right-hud-stack #weatherChip > .chip-q { position: absolute; right: 6px; top: 6px; margin: 0; z-index: 2; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; cursor: pointer; transition: transform .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
+.right-hud-stack #weatherChip > .chip-q::after { content: ''; position: absolute; inset: -11px; }
+.right-hud-stack #weatherChip > .chip-q:active, .hud-chip .chip-q:active { transform: scale(.88); }
+/* locked while racing: dimmed, same shape */
+.right-hud-stack .icon-toggle-btn.locked-weather, .right-hud-stack .hud-chip.locked-weather { opacity: .5; border-color: rgba(148,163,184,.35); box-shadow: none; color: #cbd5e1; --acc: #94a3b8; }
+.right-hud-stack #weatherCycleBtn.locked-weather { border-color: rgba(148,163,184,.35); }
+.right-hud-stack #weatherChip:has(#weatherCycleBtn.locked-weather) > .chip-q { opacity: .5; --acc: #94a3b8; }
+/* Mode popup title vs close button at 360 px */
+#modeModalBackdrop .mode-header-title { padding: 0 34px; font-size: clamp(15px, 4.9vw, 19px); }
+</style>
 </head>
 <body>
+<!-- ICON SET v17 (shared sprite). Usage: <svg class="ic"><use href="#ic-name"/></svg>
+     Colour: set `color` on the wrapper (strokes + soft fills use currentColor); optional accent classes .ic-gold .ic-green .ic-blue .ic-cyan .ic-white .ic-red add gradients.
+     Names: leaderboard car info help gauge sun rain moon snow map highway city mountain lake desert timer camera trophy flag coin wallet users gift copy share check close chevron bolt chat shield flame crown lock bell sound music settings deposit-arrow withdraw-arrow chart rocket -->
+<svg id="icSprite" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+<defs>
+<linearGradient id="icGoldS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#ff9f1a"/></linearGradient>
+<linearGradient id="icGreenS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#8dffb8"/><stop offset="1" stop-color="#14c35e"/></linearGradient>
+<linearGradient id="icBlueS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#8ec5ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient>
+<linearGradient id="icCyanS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#b8f4ff"/><stop offset="1" stop-color="#2cc4ee"/></linearGradient>
+<linearGradient id="icWhiteS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9c7de"/></linearGradient>
+<linearGradient id="icRedS" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="24"><stop offset="0" stop-color="#ff9a9a"/><stop offset="1" stop-color="#ef3b4a"/></linearGradient>
+</defs>
+<style>
+.icf{fill:var(--ic-f,currentColor);fill-opacity:var(--ic-fo,.2);stroke:none}
+.ics{fill:none;stroke:var(--ic-s,currentColor);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.icd{fill:var(--ic-s,currentColor);stroke:none}
+</style>
+<symbol id="ic-leaderboard" viewBox="0 0 24 24"><g class="icf"><rect x="3" y="12" width="5.2" height="8"/><rect x="9.4" y="5" width="5.2" height="15"/><rect x="15.8" y="9" width="5.2" height="11"/></g><g class="ics"><rect x="3" y="12" width="5.2" height="8" rx="1"/><rect x="9.4" y="5" width="5.2" height="15" rx="1"/><rect x="15.8" y="9" width="5.2" height="11" rx="1"/></g></symbol>
+<symbol id="ic-car" viewBox="0 0 24 24"><path class="icf" d="M3 15v-3l2-4.5A2 2 0 0 1 6.8 6.300h10.400a2 2 0 0 1 1.800 1.200L21 12v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><g class="ics"><path d="M3 15v-3l2-4.500A2 2 0 0 1 6.800 6.300h10.400a2 2 0 0 1 1.800 1.200L21 12v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3.500 12h17"/><circle cx="7.500" cy="17.500" r="1.800"/><circle cx="16.500" cy="17.500" r="1.800"/></g></symbol>
+<symbol id="ic-info" viewBox="0 0 24 24"><circle class="icf" cx="12" cy="12" r="9"/><g class="ics"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.200"/></g><circle class="icd" cx="12" cy="7.800" r="1.200"/></symbol>
+<symbol id="ic-help" viewBox="0 0 24 24"><circle class="icf" cx="12" cy="12" r="9"/><g class="ics"><circle cx="12" cy="12" r="9"/><path d="M9.300 9.500a2.800 2.800 0 1 1 4.200 2.400c-.9.600-1.500 1.100-1.500 2.100"/></g><circle class="icd" cx="12" cy="17.200" r="1.200"/></symbol>
+<symbol id="ic-gauge" viewBox="0 0 24 24"><g class="ics"><path d="M4.500 18a8.500 8.500 0 1 1 15 0"/><path d="M12 13.500l3.600-4.600"/><path d="M12 5.500v1.500M6.300 8.300l1 1M17.700 8.300l-1 1"/></g><circle class="icd" cx="12" cy="13.500" r="1.800"/></symbol>
+<symbol id="ic-sun" viewBox="0 0 24 24"><circle class="icf" cx="12" cy="12" r="4.200"/><g class="ics"><circle cx="12" cy="12" r="4.200"/><path d="M12 2.500v2.200M12 19.300v2.200M2.500 12h2.200M19.300 12h2.200M5.300 5.300l1.600 1.600M17.100 17.100l1.600 1.600M5.300 18.700l1.600-1.600M17.100 6.900l1.600-1.600"/></g></symbol>
+<symbol id="ic-rain" viewBox="0 0 24 24"><path class="icf" d="M7 15.500a4 4 0 0 1-.5-7.900A5.500 5.500 0 0 1 17 8a3.800 3.800 0 0 1 .5 7.500z"/><g class="ics"><path d="M7 15.500a4 4 0 0 1-.5-7.900A5.500 5.500 0 0 1 17 8a3.800 3.800 0 0 1 .5 7.500z"/><path d="M8.500 18.500l-1 2.300M12.500 18.500l-1 2.300M16.500 18.500l-1 2.300"/></g></symbol>
+<symbol id="ic-moon" viewBox="0 0 24 24"><path class="icf" d="M20 14.500A8 8 0 0 1 9.500 4a8.200 8.200 0 1 0 10.500 10.500z"/><path class="ics" d="M20 14.500A8 8 0 0 1 9.500 4a8.200 8.200 0 1 0 10.500 10.500z"/></symbol>
+<symbol id="ic-snow" viewBox="0 0 24 24"><g class="ics"><path d="M12 3v18M4.200 7.500l15.600 9M4.200 16.500l15.600-9"/><path d="M9.500 4.800L12 6.800l2.500-2M9.500 19.200L12 17.200l2.500 2"/></g></symbol>
+<symbol id="ic-map" viewBox="0 0 24 24"><path class="icf" d="M3 6.500l6-2.500 6 2.500 6-2.500v13.500l-6 2.500-6-2.500-6 2.500z"/><g class="ics"><path d="M3 6.500l6-2.500 6 2.500 6-2.500v13.500l-6 2.500-6-2.500-6 2.500z"/><path d="M9 4v13.500M15 6.500V20"/></g></symbol>
+<symbol id="ic-highway" viewBox="0 0 24 24"><g class="ics"><path d="M9 3.500L3.500 20.500M15 3.500l5.500 17"/><path d="M12 5.500v2M12 10.500v2.500M12 16.500v4"/></g></symbol>
+<symbol id="ic-city" viewBox="0 0 24 24"><g class="icf"><rect x="3.500" y="10" width="5.500" height="10"/><rect x="9" y="4" width="6" height="16"/><rect x="15" y="9" width="5.500" height="11"/></g><g class="ics"><path d="M3.500 20.500V10.500a.5.500 0 0 1 .5-.5h5v10.500M9 20.500V4.500A.5.500 0 0 1 9.500 4h5a.5.500 0 0 1 .5.500v16M15 20.500V9.500a.5.500 0 0 1 .5-.5h4.500V20.500M2.500 20.500h19"/><path d="M11.500 8h1M11.500 12h1M11.500 16h1"/></g></symbol>
+<symbol id="ic-mountain" viewBox="0 0 24 24"><path class="icf" d="M2.500 19.500l6.500-11 4 6.500 2-3 6.500 7.500z"/><g class="ics"><path d="M2.500 19.500l6.500-11 4 6.500 2-3 6.500 7.500z"/><path d="M6.800 11.800l2.200 1.400 1.800-1.400"/></g></symbol>
+<symbol id="ic-lake" viewBox="0 0 24 24"><circle class="icf" cx="16.500" cy="7.500" r="2.800"/><g class="ics"><circle cx="16.500" cy="7.500" r="2.800"/><path d="M2.500 13.500c2 0 2.500-1.300 4.500-1.300s2.500 1.300 4.500 1.300 2.500-1.300 4.500-1.300 2.500 1.300 4.500 1.300M2.500 18c2 0 2.500-1.300 4.500-1.300s2.500 1.300 4.500 1.300 2.500-1.300 4.500-1.300 2.500 1.300 4.500 1.300"/></g></symbol>
+<symbol id="ic-desert" viewBox="0 0 24 24"><circle class="icf" cx="17.500" cy="6.500" r="2.600"/><g class="ics"><circle cx="17.500" cy="6.500" r="2.600"/><path d="M2.500 19.500c3-6.500 6.500-6.500 9.500-2.500 2-3 5-4 9.500 2.500z"/><path d="M6 8v4M6 10h-2v-2M6 10h2v-1.500"/></g></symbol>
+<symbol id="ic-timer" viewBox="0 0 24 24"><circle class="icf" cx="12" cy="13.500" r="7.500"/><g class="ics"><circle cx="12" cy="13.500" r="7.500"/><path d="M12 9.500v4l2.500 1.500M9.500 2.800h5M18.500 6.300l1.300-1.300"/></g></symbol>
+<symbol id="ic-camera" viewBox="0 0 24 24"><g class="icf"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500"/><path d="M15.500 10.500l6-3.200v9.400l-6-3.200z"/></g><g class="ics"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500"/><path d="M15.500 10.500l6-3.200v9.400l-6-3.200z"/></g></symbol>
+<symbol id="ic-trophy" viewBox="0 0 24 24"><path class="icf" d="M7 4h10v5a5 5 0 0 1-10 0z"/><g class="ics"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.500A2.500 2.500 0 0 0 7 10.500M17 6h2.500a2.500 2.500 0 0 1-2.500 4.500M12 14v3.500M8.500 20.500h7M9.500 17.500h5"/></g></symbol>
+<symbol id="ic-flag" viewBox="0 0 24 24"><path class="icf" d="M5 4h14l-2.500 4.500L19 13H5z"/><g class="ics"><path d="M5 21.500V3M5 4h14l-2.500 4.500L19 13H5"/></g></symbol>
+<symbol id="ic-coin" viewBox="0 0 24 24"><circle class="icf" cx="12" cy="12" r="9"/><g class="ics"><circle cx="12" cy="12" r="9"/><path d="M7.800 8h8.400M12 8v9.200"/><path d="M8.500 11.500c1 .8 6.500.8 7 0"/></g></symbol>
+<symbol id="ic-wallet" viewBox="0 0 24 24"><path class="icf" d="M3.500 8h16a1 1 0 0 1 1 1v9.500a1.500 1.500 0 0 1-1.500 1.500H6.500a3 3 0 0 1-3-3z"/><g class="ics"><path d="M3.500 17V7.500A2.500 2.500 0 0 1 6 5h10.500v3"/><path d="M3.500 8h16a1 1 0 0 1 1 1v9.500a1.500 1.500 0 0 1-1.500 1.500H6.500a3 3 0 0 1-3-3"/><circle cx="16.500" cy="14" r=".6"/></g></symbol>
+<symbol id="ic-users" viewBox="0 0 24 24"><circle class="icf" cx="9" cy="8.500" r="3.200"/><g class="ics"><circle cx="9" cy="8.500" r="3.200"/><path d="M3 20c0-3.500 2.700-5.500 6-5.500s6 2 6 5.500"/><circle cx="17.200" cy="9.200" r="2.500"/><path d="M17.500 14.600c2.300.2 3.800 1.800 3.800 4.400"/></g></symbol>
+<symbol id="ic-gift" viewBox="0 0 24 24"><g class="icf"><rect x="3.500" y="9" width="17" height="4"/><rect x="5" y="13" width="14" height="7.500"/></g><g class="ics"><rect x="3.500" y="9" width="17" height="4" rx="1"/><path d="M5 13v7.500h14V13M12 9v11.500M12 9C9 9 7.500 7.500 8.500 6S12 5.500 12 9c3 0 4.500-1.500 3.500-3S12 5.500 12 9"/></g></symbol>
+<symbol id="ic-copy" viewBox="0 0 24 24"><rect class="icf" x="8.500" y="8.500" width="11.500" height="11.500" rx="2.500"/><g class="ics"><rect x="8.500" y="8.500" width="11.500" height="11.500" rx="2.500"/><path d="M15.500 8.500V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.500a2 2 0 0 0 2 2h2.500"/></g></symbol>
+<symbol id="ic-share" viewBox="0 0 24 24"><g class="ics"><circle cx="6" cy="12" r="2.600"/><circle cx="18" cy="6" r="2.600"/><circle cx="18" cy="18" r="2.600"/><path d="M8.300 10.700l7.400-3.400M8.300 13.300l7.400 3.400"/></g></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><path class="ics" d="M4.500 12.500l5 5 10-11"/></symbol>
+<symbol id="ic-close" viewBox="0 0 24 24"><path class="ics" d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="ic-chevron" viewBox="0 0 24 24"><path class="ics" d="M9 5l7 7-7 7"/></symbol>
+<symbol id="ic-bolt" viewBox="0 0 24 24"><path class="icf" d="M13 2.500L5 13.500h6l-1 8 8-11h-6z"/><path class="ics" d="M13 2.500L5 13.500h6l-1 8 8-11h-6z"/></symbol>
+<symbol id="ic-chat" viewBox="0 0 24 24"><path class="icf" d="M4 5.500h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6.500a1 1 0 0 1 1-1z"/><g class="ics"><path d="M4 5.500h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6.500a1 1 0 0 1 1-1z"/><path d="M8 10h8M8 12.800h5"/></g></symbol>
+<symbol id="ic-shield" viewBox="0 0 24 24"><path class="icf" d="M12 3l7.500 3v5.500c0 4.600-3.200 8.200-7.500 9.500-4.300-1.300-7.500-4.900-7.500-9.500V6z"/><g class="ics"><path d="M12 3l7.500 3v5.500c0 4.600-3.200 8.200-7.500 9.500-4.300-1.300-7.500-4.900-7.500-9.500V6z"/><path d="M8.800 12l2.400 2.400 4.200-4.600"/></g></symbol>
+<symbol id="ic-flame" viewBox="0 0 24 24"><path class="icf" d="M12 21c-4 0-6.500-2.800-6.500-6.200 0-3 2-4.800 3.200-7 .8 1.400 1.300 2.200 2.300 2.800C11 7.500 11.800 4.800 13.500 3c.5 3.600 5 6 5 11.600C18.500 18.300 16 21 12 21z"/><g class="ics"><path d="M12 21c-4 0-6.500-2.800-6.500-6.200 0-3 2-4.800 3.200-7 .8 1.400 1.300 2.200 2.300 2.800C11 7.500 11.800 4.800 13.500 3c.5 3.600 5 6 5 11.600C18.500 18.300 16 21 12 21z"/><path d="M12 18c-1.600 0-2.600-1-2.600-2.400 0-1.200.9-2 1.600-3 .8.900 3.600 2 3.600 3.900 0 1-.8 1.500-2.600 1.500z"/></g></symbol>
+<symbol id="ic-crown" viewBox="0 0 24 24"><path class="icf" d="M3.500 8l4.500 4 4-6.500 4 6.500 4.500-4-1.800 10.500H5.300z"/><g class="ics"><path d="M3.500 8l4.500 4 4-6.500 4 6.500 4.500-4-1.800 10.500H5.300zM5.500 21h13"/></g></symbol>
+<symbol id="ic-lock" viewBox="0 0 24 24"><rect class="icf" x="5" y="10.500" width="14" height="10" rx="2.500"/><g class="ics"><rect x="5" y="10.500" width="14" height="10" rx="2.500"/><path d="M8 10.500V8a4 4 0 0 1 8 0v2.500M12 14.500v2.500"/></g></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24"><path class="icf" d="M6 17v-6a6 6 0 0 1 12 0v6l1.500 2h-15z"/><g class="ics"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.500 2h-15zM10 21.500h4"/></g></symbol>
+<symbol id="ic-sound" viewBox="0 0 24 24"><path class="icf" d="M4 9.500h3.500L12 5.500v13l-4.500-4H4z"/><g class="ics"><path d="M4 9.500h3.500L12 5.500v13l-4.500-4H4z"/><path d="M15.500 9a4.200 4.200 0 0 1 0 6M18 6.500a8 8 0 0 1 0 11"/></g></symbol>
+<symbol id="ic-music" viewBox="0 0 24 24"><g class="icf"><circle cx="6.500" cy="18" r="2.500"/><circle cx="17.500" cy="16" r="2.500"/></g><g class="ics"><path d="M9 18V5.500l11-2V16"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="17.500" cy="16" r="2.500"/></g></symbol>
+<symbol id="ic-settings" viewBox="0 0 24 24"><g class="ics"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+<symbol id="ic-deposit-arrow" viewBox="0 0 24 24"><path class="ics" d="M12 3.500v12M7 11l5 5 5-5M4.500 20.500h15"/></symbol>
+<symbol id="ic-withdraw-arrow" viewBox="0 0 24 24"><path class="ics" d="M12 16.500v-13M7 8.500l5-5 5 5M4.500 20.500h15"/></symbol>
+<symbol id="ic-chart" viewBox="0 0 24 24"><g class="ics"><path d="M3.500 3.500v17h17"/><path d="M7 15l4-4.500 3 3 5-6"/><path d="M15.500 7.500h3.500V11"/></g></symbol>
+<symbol id="ic-rocket" viewBox="0 0 24 24"><path class="icf" d="M12 2.500c3.500 2.500 5 6 4.500 10.500l-2.300 2.300H9.800L7.500 13C7 8.500 8.500 5 12 2.500z"/><g class="ics"><path d="M12 2.500c3.500 2.500 5 6 4.500 10.500l-2.300 2.300H9.800L7.500 13C7 8.500 8.500 5 12 2.500z"/><circle cx="12" cy="9.500" r="1.700"/><path d="M7.800 13.500L5 16l.5 3 3-1.500M16.200 13.500L19 16l-.5 3-3-1.500M12 17.500v3.500"/></g></symbol>
+</svg>
+
 
 <script>window.TR_ICONS = {"sndOn": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><g transform=\"rotate(-18 12 12)\"><path d=\"M4 10.4v3.2a1 1 0 0 0 1 1h1.3l1.2 4a1 1 0 0 0 1 .7h.9a.8.8 0 0 0 .8-1l-1-3.700L16 17.600V6.400L7.200 9.400H5a1 1 0 0 0-1 1z\" fill=\"#ffffff\"/><path d=\"M18.6 9.600a3.800 3.800 0 0 1 0 4.800M20.900 7.300a7.300 7.300 0 0 1 0 9.400\" stroke=\"#ffffff\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></g></svg>", "sndOff": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><g transform=\"rotate(-18 12 12)\" opacity=\".7\"><path d=\"M4 10.4v3.2a1 1 0 0 0 1 1h1.3l1.2 4a1 1 0 0 0 1 .7h.9a.8.8 0 0 0 .8-1l-1-3.700L16 17.600V6.400L7.200 9.400H5a1 1 0 0 0-1 1z\" fill=\"#ffffff\"/></g><path d=\"M4 4l16 16\" stroke=\"#ff5a5f\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg>", "sunny": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"4.4\" fill=\"#ffc928\"/><path d=\"M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800\" stroke=\"#ffc928\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>", "rain": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M7 15.500a4 4 0 0 1 .5-8 5.200 5.200 0 0 1 10 1.300 3.400 3.400 0 0 1-.5 6.700z\" fill=\"#dbe7f5\"/><path d=\"M8.500 18l-1 3M12.500 18l-1 3M16.500 18l-1 3\" stroke=\"#5fb4ff\" stroke-width=\"1.9\" stroke-linecap=\"round\"/></svg>", "snow": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M12 2.500v19M3.800 7.200l16.400 9.600M3.800 16.800l16.400-9.600M12 6l-2.200-2M12 6l2.200-2M12 18l-2.200 2M12 18l2.200 2\" stroke=\"#cfe8ff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>", "sunset": "<svg viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M5.500 16a6.500 6.500 0 0 1 13 0z\" fill=\"#ff9d2e\"/><path d=\"M2.500 16h19M6 19.500h12M12 4v2.600M4.600 8.600l1.800 1.600M19.400 8.600l-1.800 1.600\" stroke=\"#ffc928\" stroke-width=\"1.9\" stroke-linecap=\"round\"/></svg>"};</script>
 <div class="app-shell">
@@ -4624,52 +4731,27 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
     <div class="left-hud-stack">
       <div class="hud-pill" id="leaderboardBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <rect x="2.800" y="11" width="5.600" height="9.500" rx="1.100" fill="#ffc928"/>
-          <rect x="9.200" y="4.500" width="5.600" height="16" rx="1.100" fill="#ffd84a"/>
-          <rect x="15.600" y="8.500" width="5.600" height="12" rx="1.100" fill="#ff9d1a"/>
-        </svg>
+        <svg class="ic"><use href="#ic-leaderboard"/></svg>
         <span class="hud-pill-label">LEADERBOARD</span>
       </div>
 
       <div class="hud-pill" id="modeSelectHudBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <rect x="3.600" y="16" width="3.800" height="4" rx="1.200" fill="#dbe4f0"/>
-          <rect x="16.600" y="16" width="3.800" height="4" rx="1.200" fill="#dbe4f0"/>
-          <path d="M5.300 10.800L7 6.300A2 2 0 0 1 8.900 5h6.200a2 2 0 0 1 1.900 1.300l1.700 4.500z" fill="#5fb4ff"/>
-          <path d="M7.600 10.200l1.100-3a.800.800 0 0 1 .750-.500h5.100a.800.800 0 0 1 .750.500l1.100 3z" fill="#dff0ff"/>
-          <rect x="2.600" y="10" width="18.800" height="7.600" rx="2.600" fill="#2f7df0"/>
-          <circle cx="6.600" cy="13.600" r="1.700" fill="#ffffff"/>
-          <circle cx="17.400" cy="13.600" r="1.700" fill="#ffffff"/>
-          <rect x="9.700" y="12.800" width="4.600" height="1.700" rx=".850" fill="#0b2a66"/>
-        </svg>
+        <svg class="ic"><use href="#ic-car"/></svg>
         <span class="hud-pill-label">MODE / CAR</span>
       </div>
 
       <div class="hud-pill" id="raceInfoBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" fill="#1d4ed8" stroke="#60a5fa" stroke-width="1.6"/>
-          <path d="M12 11V16M12 8H12.01" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
+        <svg class="ic"><use href="#ic-info"/></svg>
         <span class="hud-pill-label">RACE INFO</span>
       </div>
 
       <div class="hud-pill" id="howToPlayBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9.200" fill="#2563eb" stroke="#8ec5ff" stroke-width="1.600"/>
-          <path d="M9.200 9.600a2.900 2.900 0 1 1 4.500 2.400c-1 .700-1.700 1.200-1.700 2.300" stroke="#ffffff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="12" cy="17.300" r="1.250" fill="#ffffff"/>
-        </svg>
+        <svg class="ic"><use href="#ic-help"/></svg>
         <span class="hud-pill-label">HOW TO PLAY</span>
       </div>
 
       <div class="hud-pill speed-pill">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M4.300 18a9 9 0 1 1 15.400 0" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 5.800v1.700M5.800 12.500h1.700M16.500 12.500h1.700M7.400 8l1.200 1.200" stroke="#ffffff" stroke-width="1.500" stroke-linecap="round"/>
-          <path d="M12 13.500l4.200-5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="13.500" r="1.700" fill="#ffffff"/>
-        </svg>
+        <svg class="ic"><use href="#ic-gauge"/></svg>
         <span class="hud-pill-label">SPEED</span>
         <div class="speed-value-row">
           <span id="speedNum">0</span> <span class="speed-unit">KM/H</span>
@@ -4702,9 +4784,12 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
           <span>HAPTIC</span>
         </button>
       </div>
-      <button class="icon-toggle-btn active" id="weatherCycleBtn" title="Change Weather/Climate">
-        <span id="weatherBtnText"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.4" fill="#ffc928"/><path d="M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800" stroke="#ffc928" stroke-width="2" stroke-linecap="round"/></svg>SUNNY</span>
+      <div class="hud-chip-wrap" id="weatherChip">
+        <button class="icon-toggle-btn active" id="weatherCycleBtn" title="Change Weather/Climate">
+        <span id="weatherBtnText"><svg class="ic"><use href="#ic-sun"/></svg>SUNNY</span>
       </button>
+        <button type="button" class="chip-q" id="weatherInfoBtn" aria-label="About climate">?</button>
+      </div>
       <div class="icon-toggle-btn active hud-chip" id="mapChip">
         <button type="button" class="chip-main" id="mapChipBtn" title="Choose the race map"><span id="mapBtnText"></span></button>
         <button type="button" class="chip-q" id="mapInfoBtn" aria-label="About maps">?</button>
@@ -4714,7 +4799,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
         <button type="button" class="chip-q" id="timerInfoBtn" aria-label="About race time">?</button>
       </div>
       <button class="icon-toggle-btn active" id="cameraToggleBtn" title="Switch camera: behind the car / driver's seat">
-        <span id="cameraBtnText"><svg viewBox="0 0 24 24" fill="none"><rect x="2.500" y="6.500" width="13" height="11" rx="2.500" fill="#ffffff"/><path d="M15.500 10.500l5.500-3.200v9.400l-5.500-3.200z" fill="#ffffff"/><circle cx="9" cy="12" r="2.300" fill="#0e2a1c"/></svg>CAMERA</span>
+        <span id="cameraBtnText"><svg class="ic"><use href="#ic-camera"/></svg>CAMERA</span>
       </button>
     </div>
 
@@ -5491,7 +5576,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
       <div class="mode-cards-grid">
         <div class="mode-option-card" id="cardMode2">
           <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="vc-mhead"><svg class="vc-mic" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 20.5l2.2-6a3 3 0 0 1 2.8-2h12a3 3 0 0 1 2.8 2l2.2 6v3a1 1 0 0 1-1 1h-2.2a2.6 2.6 0 0 1-5 0h-6.600a2.6 2.6 0 0 1-5 0H6a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 8.5h6M5 5.500h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><div class="mode-card-title">2 CAR RACE</div><div class="mode-card-desc">Head to head</div></div></div>
+          <div class="vc-mhead"><svg class="ic vc-mic"><use href="#ic-car"/></svg><div><div class="mode-card-title">2 CAR RACE</div><div class="mode-card-desc">Head to head</div></div></div>
           <div class="mode-stats-row">
             <div class="mode-stat-box"><div class="mode-stat-lbl">WIN CHANCE</div><div class="mode-stat-val">50%</div></div>
             <div class="mode-stat-box"><div class="mode-stat-lbl">PAYOUT</div><div class="mode-stat-val gold" data-mode-odds="2">1.9x</div></div>
@@ -5502,7 +5587,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 
         <div class="mode-option-card hard selected" id="cardMode3">
           <svg class="vc-chk" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.4l3.2 3.2L17 8.8" fill="none" stroke="#06101f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="vc-mhead"><svg class="vc-mic" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 22l1.700-4.600a2.400 2.400 0 0 1 2.200-1.500h6.200a2.400 2.400 0 0 1 2.200 1.500L18 22v2.200h-14zM15 12.500l1.400-3.700a2 2 0 0 1 1.900-1.300h5.300a2 2 0 0 1 1.900 1.300l1.400 3.700v1.800H15z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/><path d="M20.500 20.500h7M20.500 24h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><div class="mode-card-title">3 CAR RACE</div><div class="mode-card-desc">Bigger payout</div></div></div>
+          <div class="vc-mhead"><svg class="ic vc-mic"><use href="#ic-coin"/></svg><div><div class="mode-card-title">3 CAR RACE</div><div class="mode-card-desc">Bigger payout</div></div></div>
           <div class="mode-stats-row">
             <div class="mode-stat-box"><div class="mode-stat-lbl">WIN CHANCE</div><div class="mode-stat-val">33%</div></div>
             <div class="mode-stat-box"><div class="mode-stat-lbl">PAYOUT</div><div class="mode-stat-val gold" data-mode-odds="3">2.5x</div></div>
@@ -6100,6 +6185,9 @@ window.dispatchEvent(new Event('tr-three'));
   window.TR_ICONS.night = '<svg viewBox="0 0 24 24" fill="none"><path d="M19.500 14.600A8 8 0 0 1 9.400 4.500a8.200 8.200 0 1 0 10.100 10.100z" fill="#cdd9ff"/><path d="M17.200 3.200v3M15.700 4.700h3" stroke="#ffd45a" stroke-width="1.600" stroke-linecap="round"/></svg>';
   window.TR_ICONS.map = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 6.200l5.600-2.200 6.800 2.200L21 4v13.800l-5.600 2.200-6.800-2.200L3 20z" fill="#dff5e8" stroke="#dff5e8" stroke-width="1" stroke-linejoin="round"/><path d="M8.600 4v13.800M15.400 6.200V20" stroke="#0e2a1c" stroke-width="1.400" opacity=".55"/><path d="M10.500 14.500c1.500-2.600 3-1 4.500-3.800" stroke="#2f7bff" stroke-width="1.700" stroke-linecap="round"/></svg>';
   window.TR_ICONS.timer = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13.200" r="7.800" stroke="#ffffff" stroke-width="2"/><path d="M9.500 2.800h5M12 2.800v2.600M18.400 6.200l1.500-1.500" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><path d="M12 13.200V8.800" stroke="#ffc83d" stroke-width="2.200" stroke-linecap="round"/><circle cx="12" cy="13.200" r="1.300" fill="#ffc83d"/></svg>';
+  // v17 hud: icon sprite versions (ids in #icSprite)
+  Object.assign(window.TR_ICONS, { sunny: '<svg class="ic"><use href="#ic-sun"/></svg>', sunset: '<svg class="ic"><use href="#ic-sun"/></svg>', rain: '<svg class="ic"><use href="#ic-rain"/></svg>', snow: '<svg class="ic"><use href="#ic-snow"/></svg>', night: '<svg class="ic"><use href="#ic-moon"/></svg>', map: '<svg class="ic"><use href="#ic-map"/></svg>', timer: '<svg class="ic"><use href="#ic-timer"/></svg>' });
+  document.getElementById('weatherInfoBtn')?.addEventListener('click', (ev) => { ev.stopPropagation(); if (window.openClimateInfo) window.openClimateInfo(); });
 
   function pickRandomDifferentWeather() {
     if (FORCED_WEATHER) { currentWeather = FORCED_WEATHER; updateWeatherButtonLabel(); return; }
@@ -6574,7 +6662,7 @@ window.dispatchEvent(new Event('tr-three'));
   function updateMapTimerChips() {
     const locked = gameState !== 'IDLE';
     const mt = document.getElementById('mapBtnText'), tt = document.getElementById('timerBtnText');
-    if (mt) mt.innerHTML = window.TR_ICONS.map + MAP_DEFS[currentMap].name;
+    if (mt) mt.innerHTML = '<svg class="ic"><use href="#ic-' + currentMap + '"/></svg>' + MAP_DEFS[currentMap].name;
     if (tt) tt.innerHTML = window.TR_ICONS.timer + timerLabel(RACE_DURATION_SEC);
     ['mapChip', 'timerChip'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('locked-weather', locked); });
     document.querySelectorAll('#mapPopupList .map-opt').forEach(el => el.classList.toggle('sel', el.dataset.map === currentMap));
