@@ -7133,6 +7133,49 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
   const stopBrake = () => { btnBrake.classList.remove('pressed'); keys.brake = false; };
   btnBrake.addEventListener('pointerup', stopBrake);
   btnBrake.addEventListener('pointerleave', stopBrake);
+
+  // ---- multi-touch drive pad: every finger is tracked by pointer id and mapped to a zone, so steering works while
+  // ACCELERATE is held, a finger sliding off a pedal never flips to BRAKE, and taps around LEFT / RIGHT still steer.
+  (function drivePad() {
+    const grid = document.getElementById('manualControlsGrid'), steerBox = grid && grid.querySelector('.steer-box');
+    if (!grid || !steerBox) return;
+    { const st = document.createElement('style'); st.textContent = '#manualControlsGrid, #manualControlsGrid * { touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }'; document.head.appendChild(st); } // no browser pan/zoom/long-press can steal a finger
+    const fingers = new Map(); // pointerId -> 'left' | 'right' | 'accel' | 'brake'
+    const zoneAt = (x, y, prev) => {
+      const sb = steerBox.getBoundingClientRect(), pad = 14;
+      if (x >= sb.left - pad && x <= sb.right + pad && y >= sb.top - pad && y <= sb.bottom + pad) return x < sb.left + sb.width / 2 ? 'left' : 'right';
+      const a = btnAccel.getBoundingClientRect(), b = btnBrake.getBoundingClientRect();
+      if (x < Math.min(a.left, b.left) - pad || x > Math.max(a.right, b.right) + pad) return null;
+      const mid = (a.bottom + b.top) / 2;
+      if (prev === 'accel') return y <= b.top + b.height * 0.45 ? 'accel' : 'brake';      // a held pedal needs a clear move to switch
+      if (prev === 'brake') return y >= a.bottom - a.height * 0.45 ? 'brake' : 'accel';
+      if (y < a.top - pad || y > b.bottom + pad) return null;
+      return y < mid ? 'accel' : 'brake';
+    };
+    const apply = () => {
+      const on = new Set(fingers.values());
+      const set = (z, el, fn) => { const v = on.has(z); if (el.classList.contains('pressed') !== v) { el.classList.toggle('pressed', v); fn(v); } };
+      set('left', btnLeft, (v) => setSteer(-1, v));
+      set('right', btnRight, (v) => setSteer(1, v));
+      set('accel', btnAccel, (v) => { keys.accel = v; if (v) { triggerHaptic(25); if (gameState === 'IDLE') showCrToast('Tap the middle green circle to start the race!'); } });
+      set('brake', btnBrake, (v) => { keys.brake = v; if (v) triggerHaptic(25); });
+    };
+    const down = (e) => {
+      const z = zoneAt(e.clientX, e.clientY, null); if (!z) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      fingers.set(e.pointerId, z); try { grid.setPointerCapture(e.pointerId); } catch (err) {}
+      apply();
+    };
+    const move = (e) => { if (!fingers.has(e.pointerId)) return; const z = zoneAt(e.clientX, e.clientY, fingers.get(e.pointerId)); if (z && z !== fingers.get(e.pointerId)) { fingers.set(e.pointerId, z); apply(); } };
+    const up = (e) => { if (fingers.delete(e.pointerId)) apply(); };
+    grid.addEventListener('pointerdown', down, true);
+    grid.addEventListener('pointermove', move, true);
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) grid.addEventListener(ev, up, true);
+    // the old per-button handlers must not fight the pad (they release on pointerleave)
+    for (const el of [btnLeft, btnRight, btnAccel, btnBrake]) for (const ev of ['pointerdown', 'pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(ev, (e) => e.stopImmediatePropagation(), true);
+    window.addEventListener('blur', () => { fingers.clear(); apply(); });
+    window._trDrivePad = { zoneAt, fingers };
+  })();
   btnBrake.addEventListener('pointercancel', stopBrake);
 
   const canvas = document.getElementById('raceCanvas');
