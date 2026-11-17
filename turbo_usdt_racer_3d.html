@@ -4500,7 +4500,7 @@ body{padding-left:var(--sa-left);padding-right:var(--sa-right)}
 }
 /* ---------- Race Info popup: header + close stay put, body scrolls ---------- */
 #resultModalBackdrop[data-ri] .result-modal { max-height: 80vh; display: flex; flex-direction: column; }
-#resultModalBackdrop[data-ri] #modalBodyContent { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto; margin: 0 -4px; padding: 0 4px; }
+#resultModalBackdrop[data-ri] #modalBodyContent { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto; margin: 0 -4px; padding: 0 4px 24px; }
 #resultModalBackdrop[data-ri] .modal-close { position: absolute; }
 #resultModalBackdrop[data-ri] .ri-list .ui-step p + p { margin-top: 5px; }
 </style>
@@ -4613,6 +4613,11 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .result-modal:has(.ui-podium) .ui-pop-sec { margin: 4px 0 4px; font-size: 10px; }
 .result-modal:has(.ui-podium) .ui-lb-row { padding: 5px 8px; } .result-modal:has(.ui-podium) .vl-av { width: 24px; height: 24px; font-size: 9.5px; }
 .result-modal:has(.ui-podium) .ui-lb-list { max-height: none; gap: 4px; } .result-modal:has(.ui-podium) .claim-btn { margin-top: 8px; }
+</style>
+<style id="fixRoundCss">
+.hud-players-card { width: 112px; }
+.hp-uid { font-size: 8px; letter-spacing: -0.3px; }
+.hp-badge { min-width: 26px; }
 </style>
 </head>
 <body>
@@ -5313,12 +5318,12 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 
       <section class="ref-grid">
         <div class="panel ref-box">
-          <div><div class="muted tiny">Referral Code</div><div class="ref-value">83774</div></div>
-          <button class="copy-btn" type="button" data-copy="83774" aria-label="Copy referral code"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
+          <div><div class="muted tiny">Referral Code</div><div class="ref-value">—</div></div>
+          <button class="copy-btn" type="button" data-copy="" disabled aria-label="Copy referral code"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
         </div>
         <div class="panel ref-box">
-          <div style="min-width:0"><div class="muted tiny">Referral Link</div><div class="ref-link">https://t.me/CryptoRacerBot?start=582</div></div>
-          <button class="copy-btn" type="button" data-copy="https://t.me/CryptoRacerBot?start=582" aria-label="Copy referral link"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
+          <div style="min-width:0"><div class="muted tiny">Referral Link</div><div class="ref-link">—</div></div>
+          <button class="copy-btn" type="button" data-copy="" disabled aria-label="Copy referral link"><svg class="ub-i icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#ub-copy"/></svg></button>
         </div>
       </section>
 
@@ -6812,26 +6817,40 @@ window.dispatchEvent(new Event('tr-three'));
   // FINAL 5s: non-blocking overlay for the last five seconds of the race (display only, the simulation is untouched).
   // A race ends when the clock runs out OR the leader crosses the line, whichever comes first, so "5 s left" is the earlier of
   // the clock and the leader's arrival time at the current speed. Once started it counts 5..1 by race time and goes at the finish.
-  let _finalFiveShown = 0, _ffStart = null;
-  function updateFinalFive() {
+  // Driven by its own timer so the sequence is always 5,4,3,2,1 (never skips a digit, even with slow frames or an early finish).
+  let _ffRun = false, _ffTimer = null, _ffN = 0, _ffStep = 1000;
+  function _ffShow(n) {
     const el = document.getElementById('finalFive'); if (!el) return;
-    let n = 0;
-    if (gameState === 'RACING') {
-      const elapsed = RACE_DURATION_SEC - timeRemaining;
-      if (_ffStart === null) {
-        let eta = timeRemaining;
-        let lead = null; for (const c of cars) if (!lead || c.z > lead.z) lead = c;
-        if (lead) eta = Math.min(eta, (FINISH_LINE_Z - lead.z) / (Math.max(lead.speed, 140) * WORLD_SPEED_SCALE));
-        if (eta <= 5) _ffStart = elapsed;
-      }
-      if (_ffStart !== null) n = Math.max(1, 5 - Math.floor(elapsed - _ffStart));
-    } else { _ffStart = null; }
-    if (n === _finalFiveShown) return;
-    _finalFiveShown = n;
     if (!n) { el.classList.remove('show'); return; }
     document.getElementById('finalFiveNum').textContent = String(n);
     el.classList.add('show');
     el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+  }
+  function _ffStop() {
+    if (_ffTimer) { clearTimeout(_ffTimer); _ffTimer = null; }
+    _ffRun = false; _ffN = 0; _ffShow(0);
+  }
+  function _ffTick() {
+    _ffTimer = null;
+    if (!_ffRun) return;
+    if (_ffN > 1) { _ffN--; _ffShow(_ffN); _ffTimer = setTimeout(_ffTick, _ffStep); }
+    else { _ffStop(); }
+  }
+  function updateFinalFive() {
+    if (gameState === 'RACING') {
+      if (_ffRun) return;
+      let eta = timeRemaining;
+      let lead = null; for (const c of cars) if (!lead || c.z > lead.z) lead = c;
+      if (lead) eta = Math.min(eta, (FINISH_LINE_Z - lead.z) / (Math.max(lead.speed, 140) * WORLD_SPEED_SCALE));
+      if (eta > 5) return;
+      _ffRun = true; _ffN = 5;
+      _ffStep = Math.max(450, Math.min(1000, Math.round(eta * 1000 / 5)));
+      _ffShow(5);
+      _ffTimer = setTimeout(_ffTick, _ffStep);
+    } else if (gameState === 'FINISHED' || gameState === 'RESULT') {
+      // race ended early: let the remaining digits finish quickly, then hide after "1"
+      if (_ffRun && _ffStep > 400) _ffStep = 400;
+    } else if (_ffRun || _ffN) { _ffStop(); }
   }
 
   function formatTime(sec) {
@@ -7720,7 +7739,7 @@ window.dispatchEvent(new Event('tr-three'));
   }
 
   document.querySelectorAll('[data-copy]').forEach(btn => {
-    btn.addEventListener('click', () => copyTextToClipboard(btn.dataset.copy));
+    btn.addEventListener('click', () => { if (!btn.dataset.copy) return; copyTextToClipboard(btn.dataset.copy); });
   });
 
   document.querySelectorAll('[data-share]').forEach(btn => {
@@ -7728,6 +7747,7 @@ window.dispatchEvent(new Event('tr-three'));
       const platform = btn.dataset.share;
       const linkEl = document.querySelector('#screenInvite .ref-link');
       const link = linkEl ? linkEl.textContent.trim() : '';
+      if (!/^https?:/.test(link)) { showCrToast('Invite link not available yet'); return; }
       copyTextToClipboard(link);
       showCrToast(`Invite link copied. Paste it in ${platform}.`);
     });
@@ -12455,13 +12475,11 @@ window.dispatchEvent(new Event('tr-three'));
       });
       // invite link
       if (state.ref_link) {
-        const rl = $('.ref-link'); if (rl) rl.textContent = state.ref_link;
         $$('[data-copy]').forEach(b => {
-          if (/t\.me\//.test(b.dataset.copy || '') || /CryptoRacerBot/.test(b.dataset.copy || '')) b.dataset.copy = state.ref_link;
-          if (b.dataset.copy === '83774' || b.dataset.copy === 'TRADER582') b.dataset.copy = String(state.user.id);
+          if (b.dataset.copy === 'TRADER582') b.dataset.copy = String(state.user.id);
         });
-        $$('.ref-value').forEach(el => { el.textContent = String(state.user.id); });
       }
+      applyInviteRef();
     }
     // Photo avatar upgrade if Telegram user has photo_url
     try {
@@ -12542,6 +12560,29 @@ window.dispatchEvent(new Event('tr-three'));
   }
 
   // ---- Masked User ID & Real-Time Left HUD Players + Room Sync ----
+  // Invite tab: live ref_link / user id, never a placeholder.
+  function getRealUidStr() {
+    try {
+      const u = (state && state.user && state.user.id) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id);
+      return u ? String(u) : '';
+    } catch (e) { return ''; }
+  }
+  function applyInviteRef() {
+    const uid = getRealUidStr();
+    let link = '';
+    try { if (state && state.ref_link) link = String(state.ref_link); } catch (e) {}
+    if (!link && uid) link = 'https://t.me/Racer_game65_bot?start=' + uid;
+    const code = uid;
+    const rl = document.querySelector('#screenInvite .ref-link');
+    const rv = document.querySelector('#screenInvite .ref-value');
+    if (rl) rl.textContent = link || '—';
+    if (rv) rv.textContent = code || '—';
+    const bl = rl && rl.closest('.ref-box') && rl.closest('.ref-box').querySelector('[data-copy]');
+    const bc = rv && rv.closest('.ref-box') && rv.closest('.ref-box').querySelector('[data-copy]');
+    [[bl, link], [bc, code]].forEach(([b, v]) => { if (!b) return; b.dataset.copy = v || ''; b.disabled = !v; b.style.opacity = v ? '' : '0.4'; });
+  }
+  window._trApplyInviteRef = applyInviteRef;
+  try { applyInviteRef(); } catch (e) {}
   function getMyUidStr() {
     const u = (state && state.user && state.user.id) || (TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id);
     if (u) return String(u);
@@ -12558,8 +12599,8 @@ window.dispatchEvent(new Event('tr-three'));
 
   function maskUidFour(uid) {
     const digits = String(uid || '').replace(/\D+/g, '');
-    if (digits.length >= 4) return '****' + digits.slice(-4);
-    return '****' + (digits.padStart(4, '0') || '6577');
+    if (digits.length >= 4) return '******' + digits.slice(-4);
+    return '******' + (digits.padStart(4, '0') || '6577');
   }
 
   function getCarBadgeHex(carKey) {
@@ -12620,7 +12661,7 @@ window.dispatchEvent(new Event('tr-three'));
       room.slots.forEach(s => {
         const isMe = (s.car === selectedPlayerTheme) || (s.uid && String(s.uid) === String(myUid));
         const badgeTxt = isMe ? 'YOU' : String(oppNum++);
-        let rightTxt = s.masked_id || 'WAIT…';
+        let rightTxt = s.masked_id ? maskUidFour(s.masked_id) : 'WAIT…';
         if (!isMe && s.is_bot) {
           rightTxt = isWaitPhase ? 'WAIT…' : (s.bot_label || `BOT #${oppNum - 1}`);
         }
