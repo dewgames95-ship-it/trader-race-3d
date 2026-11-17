@@ -4588,7 +4588,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .ub-copied .ub-i { color: var(--ub-green); }
 /* random-on-open toast: one short line at <= 400 px so it stays clear of the start circle */
 @media (max-width: 400px) {
-  #openRandToast { left: 60px !important; right: 120px !important; padding: 5px 8px !important; }
+  #openRandToast { left: 60px !important; right: 140px !important; padding: 5px 8px !important; }
   #openRandToast .ort-l1 { flex-wrap: nowrap !important; white-space: nowrap; font-size: 10.5px !important; gap: 4px !important; letter-spacing: .02em !important; }
   #openRandToast .ic { width: 13px !important; height: 13px !important; }
   #openRandToast .ort-l2 { display: none !important; }
@@ -4618,6 +4618,44 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .hud-players-card { width: 112px; }
 .hp-uid { font-size: 8px; letter-spacing: -0.3px; }
 .hp-badge { min-width: 26px; }
+</style>
+<style id="v17Ui2">
+.vl-av { display: none !important; } /* rows already show the rank badge; the 2-digit id circle was redundant */
+/* right chips: wider (102 px) so the longest label + the "?" fit with an even 5 px inner right gap */
+.right-hud-stack { width: 102px; }
+.right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip { width: 102px; }
+.right-hud-stack .hud-chip .chip-main { min-width: 0; padding: 0 0 0 7px; }
+.right-hud-stack .hud-chip .chip-main > span { min-width: 0; }
+.right-hud-stack .hud-chip .chip-q, .right-hud-stack .chip-q { margin: 0 5px 0 3px; width: 14px; height: 14px; flex: 0 0 14px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+.right-hud-stack #weatherChip > .chip-q { right: 6px; top: 5px; margin: 0; }
+.right-hud-stack #weatherChip > #weatherCycleBtn { padding: 0 24px 0 6px; }
+/* dim the HUD while racing (speed + players cards stay full) */
+#leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn, #weatherChip, #mapChip, #timerChip, #cameraToggleBtn { transition: opacity .2s ease, transform .15s ease; }
+body.v17-racing #leaderboardBtn, body.v17-racing #modeSelectHudBtn, body.v17-racing #raceInfoBtn, body.v17-racing #howToPlayBtn,
+body.v17-racing #weatherChip, body.v17-racing #mapChip, body.v17-racing #timerChip, body.v17-racing #cameraToggleBtn { opacity: .45 !important; }
+body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opacity: 1 !important; }
+/* leaderboard: medal podium + scrollable top-50 list */
+.ui-md-wrap { display: grid; place-items: center; }
+.ui-md { width: 34px; height: 43px; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+.ui-pd.p1 .ui-md { width: 42px; height: 53px; filter: drop-shadow(0 0 10px rgba(255,200,61,.5)) drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+.ui-md-word { margin-top: 1px; font-size: 8.5px; font-weight: 900; font-style: italic; letter-spacing: .14em; color: var(--c); text-shadow: 0 0 8px var(--cg); }
+.ui-pd.p1 .ui-md-word { font-size: 9.5px; }
+.result-modal:has(.ui-podium) .ui-pd-name { margin-top: 2px; }
+.result-modal:has(.ui-podium) .ui-pd-base { height: 30px !important; padding-top: 4px; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px !important; } .result-modal:has(.ui-podium) .ui-pd-base { border-bottom: 1px solid var(--cg); } .result-modal:has(.ui-podium) .ui-podium { margin-bottom: 10px; }
+.result-modal:has(.ui-podium) .ui-pd-base i { font-size: 18px; }
+.ui-lb-sec { display: flex; align-items: center; gap: 6px; }
+.ui-lb-sec em { margin-left: auto; padding: 1px 7px; border-radius: 999px; font-style: normal; font-size: 8.5px; letter-spacing: .08em; color: #FFC83D; background: rgba(255,200,61,.12); border: 1px solid rgba(255,200,61,.35); }
+.result-modal:has(.ui-podium) .ui-lb-list.ui-lb-scroll { max-height: clamp(150px, calc(100dvh - 470px), 340px); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255,200,61,.4) transparent; padding: 2px 2px 2px 0; margin: 0 -2px 0 0; scroll-snap-type: none; }
+.ui-lb-scroll::-webkit-scrollbar { width: 4px; } .ui-lb-scroll::-webkit-scrollbar-thumb { background: rgba(255,200,61,.4); border-radius: 4px; }
+.vl-row { transition: background .15s ease, border-color .15s ease, transform .15s ease; -webkit-tap-highlight-color: transparent; }
+.ui-lb-scroll .vl-row { min-height: 38px; flex: 0 0 auto; }
+.ui-lb-scroll .vl-row:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); }
+.ui-lb-scroll .vl-row:active { transform: scale(.985); background: rgba(47,123,255,.14); border-color: rgba(47,123,255,.5); }
+.vl-row .ui-rk { min-width: 30px; font-variant-numeric: tabular-nums; }
+.vl-row .ui-lb-l { gap: 9px; flex: 1; }
+.vl-row .ui-lb-r { margin-left: auto; }
+.vl-row .ui-lb-amt { letter-spacing: .1px; }
+.vl-pin .ui-lb-name { letter-spacing: .3px; }
 </style>
 </head>
 <body>
@@ -4771,7 +4809,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         <path d="M5 4h3.600v3.330H5zM12.200 4h3.600v3.330h-3.600zM8.600 7.330h3.600v3.340H8.600zM15.800 7.330h2.600l-.800 1.670.800 1.670h-2.600zM5 10.670h3.600V14H5zM12.200 10.670h3.600V14h-3.600z" fill="#0b1220"/>
         </svg>
       <div class="status-text">
-        <span class="status-title" id="raceIdText">RACE ID: #589</span>
+        <span class="status-title" id="raceIdText">RACE ID: #001</span>
         <span class="status-highlight-green" id="joinedText">3 / 3 READY</span>
       </div>
     </div>
@@ -6171,7 +6209,27 @@ window.dispatchEvent(new Event('tr-three'));
       document.querySelectorAll('[data-mode-win="' + n + '"]').forEach(e => { e.textContent = (Math.round(o * 10 * 100) / 100) + ' USDT'; });
     });
   }
+  // v17 ui2: deterministic demo board (top 50, masked ids, decreasing winnings) shown until real API rows exist
+  function uiDemoBoard() {
+    let seed = 20260117; const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+    const used = new Set(), out = [], medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
+    for (let i = 1; i <= 50; i++) {
+      let d; do { d = String(Math.floor(rnd() * 10000)).padStart(4, '0'); } while (used.has(d)); used.add(d);
+      const w = i === 1 ? 4820 : i === 2 ? 3490 : i === 3 ? 2710 : Math.round(2710 * Math.pow(0.935, i - 3) * 100) / 100;
+      out.push({ rank: i, uid: '51200' + d, color: medal[i - 1] || '#2F7BFF', profit: '+' + w.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT', volume: null, demo: true });
+    }
+    return out;
+  }
+  function uiMedalSvg(n) {
+    const M = { 1: ['#FFE9A0', '#F2A81D', '#8A5A00'], 2: ['#F7FAFF', '#9FB0CA', '#4A5B78'], 3: ['#F7BE8A', '#B8692B', '#5E300C'] }[n];
+    return `<svg class="ui-md" viewBox="0 0 44 56" aria-hidden="true"><defs><linearGradient id="uiMd${n}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="${M[0]}"/><stop offset="1" stop-color="${M[1]}"/></linearGradient></defs>`
+      + `<path d="M10 1h9.500l5 18h-9.500z" fill="#2F7BFF"/><path d="M34 1h-9.500l-5 18h9.500z" fill="#1B54C9"/>`
+      + `<circle cx="22" cy="36" r="17.500" fill="url(#uiMd${n})" stroke="${M[2]}" stroke-width="1.500"/><circle cx="22" cy="36" r="13" fill="none" stroke="${M[2]}" stroke-opacity=".45" stroke-width="1.200"/>`
+      + `<path d="M22 28l2.300 4.700 5.100.8-3.700 3.600.9 5.100-4.600-2.400-4.600 2.400.9-5.100-3.700-3.600 5.100-.8z" fill="${M[2]}" fill-opacity=".85"/></svg>`;
+  }
   function uiLeaderboardHtml(racers, sortedCars, finishZ) {
+    if (!racers.some(r => r.real && !r.isMe)) { const m0 = racers.find(r => r.isMe); racers = uiDemoBoard().concat(m0 ? [m0] : []); }
+    const MEDAL_WORD = { 1: 'GOLD', 2: 'SILVER', 3: 'BRONZE' };
     const pod = [1, 2, 3].map(n => racers.find(r => +r.rank === n) || null);
     const idOf = (r) => vcMask(r.uid != null ? r.uid : r.name);
     const volOf = (r) => (r.volume == null || isNaN(+r.volume)) ? '&mdash;' : vcFmt(r.volume);
@@ -6179,7 +6237,7 @@ window.dispatchEvent(new Event('tr-three'));
     const av = (r) => `<span class="vl-av" style="--vc:${uiEsc(r.color || '#94a3b8')}">${uiEsc(idOf(r).slice(-2))}</span>`;
     const col = (r, n) => {
       if (!r) return `<div class="ui-pd p${n} empty"><div class="ui-pd-av">?</div><div class="ui-pd-name">&mdash;</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
-      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av vl-pav">${uiEsc(idOf(r).slice(-2))}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
+      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}"><div class="ui-md-wrap">${uiMedalSvg(n)}</div><div class="ui-md-word">${MEDAL_WORD[n]}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
     };
     let me = racers.find(r => r.isMe);
     if (!me) {
@@ -6201,7 +6259,7 @@ window.dispatchEvent(new Event('tr-three'));
     }
     h += `<div class="ui-pop-sec" style="color:#22E07A;margin-top:2px">${UI_IC.flag}YOUR RANK</div><div class="ui-lb-list vl-mine">${row(me, true)}</div>`;
     if (rest.length) {
-      h += `<div class="ui-pop-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS</div><div class="ui-lb-list">` + rest.map(r => row(r, false)).join('') + '</div>';
+      h += `<div class="ui-pop-sec ui-lb-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS<em>TOP ${racers.filter(r => !r.isMe).length}</em></div><div class="ui-lb-list ui-lb-scroll">` + rest.map(r => row(r, false)).join('') + '</div>';
     }
     return h;
   }
@@ -6226,7 +6284,20 @@ window.dispatchEvent(new Event('tr-three'));
   let balanceUsdt = 100.00;
   const betSteps = [0.1, 0.5, 1, 2, 5, 10];
   let currentBet = 1.0;
-  let raceIdCounter = 589;
+  // v17 ui2: race / bet numbers count up per race / bet on this device (3-digit zero padded)
+  function padNo(n) { return '#' + String(Math.max(0, Math.floor(+n) || 0)).padStart(3, '0'); }
+  function lsNo(k, d) { const v = parseInt(lsGetSafe(k), 10); return v > 0 ? v : d; }
+  let raceIdCounter = lsNo('tr_race_no', 1);   // number of the current / next race
+  let betNoCounter = lsNo('tr_bet_no', 0);     // bets placed so far
+  let lastBetNo = 0;                            // id of the bet in the current race
+  // v17 ui2: masked opponent ids (new per race, stable within the race): ******1234
+  let raceOppIds = [];
+  function rollOppIds() {
+    const out = [];
+    while (out.length < 2) { const id = '******' + String(Math.floor(Math.random() * 10000)).padStart(4, '0'); if (!out.includes(id)) out.push(id); }
+    raceOppIds = out; return out;
+  }
+  function oppIdAt(i) { if (!raceOppIds.length) rollOppIds(); return raceOppIds[i] || raceOppIds[0]; }
   let raceModeCars = 3;
   // v17 money: single source of truth for the total-return multiplier (bet x odds, stake included)
   const RACE_ODDS = { 2: 1.9, 3: 2.5 };
@@ -6407,9 +6478,9 @@ window.dispatchEvent(new Event('tr-three'));
     cars = [
       {
         id: 'bot1',
-        name: ai1,
-        displayName: 'Player 1',
-        floatLabel: 'Player 1',
+        name: oppIdAt(0),
+        displayName: oppIdAt(0),
+        floatLabel: oppIdAt(0),
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6451,9 +6522,9 @@ window.dispatchEvent(new Event('tr-three'));
     if (raceModeCars === 3) {
       cars.push({
         id: 'bot2',
-        name: ai2,
-        displayName: 'Player 2',
-        floatLabel: 'Player 2',
+        name: oppIdAt(1),
+        displayName: oppIdAt(1),
+        floatLabel: oppIdAt(1),
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6981,6 +7052,7 @@ window.dispatchEvent(new Event('tr-three'));
     balanceUsdt = +(balanceUsdt - currentBet).toFixed(2);
     updateUIValues();
 
+    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
     gameState = 'MATCHMAKING';
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
@@ -7161,7 +7233,7 @@ window.dispatchEvent(new Event('tr-three'));
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
     const map = 'highway';
     const wx = 'sunny';   // owner's choice: every fresh open starts Highway + Sunny in 3-car mode
-    const cars3 = 3;
+    const cars3 = Math.random() < 0.5 ? 2 : 3;   // 2-car or 3-car, 50/50
     localMapChoice = map; currentMap = map; currentWeather = wx;
     try { selectRaceMode(cars3); } catch (e) {}
     try { updateWeatherButtonLabel(); updateMapTimerChips(); } catch (e) {}
@@ -7171,11 +7243,23 @@ window.dispatchEvent(new Event('tr-three'));
     const nm = (m) => (MAP_DEFS[m] ? MAP_DEFS[m].name : m.toUpperCase());
     const svg = (id) => '<svg class="ic" viewBox="0 0 24 24"><use href="#ic-' + id + '"/></svg>';
     const st = document.createElement('style'); st.id = 'v17Flow';
-    st.textContent = '#openRandToast{position:fixed;left:68px;right:128px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease;padding:7px 10px;border-radius:12px;background:rgba(10,18,36,.88);border:1px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);color:#fff;font-family:inherit;text-align:center}'
+    st.textContent = '#openRandToast{position:fixed;left:68px;right:148px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease;padding:7px 10px;border-radius:12px;background:rgba(10,18,36,.88);border:1px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);color:#fff;font-family:inherit;text-align:center}'
       + '#openRandToast.show{opacity:1}#openRandToast .ort-l1{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;font-size:12px;font-weight:900;font-style:italic;letter-spacing:.04em;text-transform:uppercase;line-height:1.3}'
       + '#openRandToast .ic{width:15px;height:15px;color:#22E07A}#openRandToast .ort-w .ic{color:#FFC83D}#openRandToast .ort-d{opacity:.6}#openRandToast .ort-l2{margin-top:2px;font-size:9.5px;opacity:.72;line-height:1.25}';
     document.head.appendChild(st);
-    setTimeout(() => {
+    // show the toast only after the loading screen is gone (R3D ready / failed and the loader removed), then ~300 ms
+    const _ortT0 = Date.now();
+    const _ortPoll = setInterval(() => {
+      let done = false;
+      try {
+        if (typeof R3D === 'undefined') done = Date.now() - _ortT0 > 1500;
+        else done = (R3D.status === 'failed') || (R3D.status === 'ready' && !document.getElementById('r3dLoadTxt'));
+      } catch (e) { done = Date.now() - _ortT0 > 1500; }
+      if (!done && Date.now() - _ortT0 < 240000) return;
+      clearInterval(_ortPoll);
+      setTimeout(showOrt, 300);
+    }, 150);
+    function showOrt() {
       const el = document.createElement('div'); el.id = 'openRandToast';
       el.innerHTML = '<div class="ort-l1"><span>' + svg(map) + ' ' + nm(map) + '</span><span class="ort-d">\u2022</span><span class="ort-w">' + svg(ICW[wx]) + ' ' + wx.toUpperCase() + '</span></div><div class="ort-l2">change map &amp; climate from the top-right</div>';
       document.body.appendChild(el);
@@ -7184,8 +7268,11 @@ window.dispatchEvent(new Event('tr-three'));
       requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
       setTimeout(() => el.classList.remove('show'), 2200);
       setTimeout(() => el.remove(), 2600);
-    }, 700);
+    }
   })();
+
+  // v17 ui2: dim the HUD while racing (CSS does the fade, buttons stay tappable)
+  setInterval(() => { try { document.body.classList.toggle('v17-racing', gameState === 'RACING'); } catch (e) {} }, 100);
 
   const resultModalBackdrop = document.getElementById('resultModalBackdrop');
   const modalSvgHolder = document.getElementById('modalSvgHolder');
@@ -7197,8 +7284,8 @@ window.dispatchEvent(new Event('tr-three'));
   function closeResultModal() {
     resultModalBackdrop.classList.remove('open');
     if (gameState === 'FINISHED') {
-      raceIdCounter++;
-      raceIdText.textContent = `RACE ID: #${raceIdCounter}`;
+      raceIdCounter++; lsSetSafe('tr_race_no', String(raceIdCounter));
+      raceIdText.textContent = `RACE ID: ${padNo(raceIdCounter)}`;
       resetToIdleState();
     }
   }
@@ -7904,7 +7991,7 @@ window.dispatchEvent(new Event('tr-three'));
         ${carBetHistory.map(b => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(15,23,42,0.9);border:1px solid ${b.win ? '#28e066' : 'rgba(239,68,68,0.4)'};border-radius:9px;font-size:10.5px;">
             <div>
-              <b style="color:#fff;">#${b.id} • ${b.car} (${b.odds})</b>
+              <b style="color:#fff;">BET ${padNo(b.id)} • ${b.car} (${b.odds})</b>
               <div style="font-size:9px;color:#94a3b8;">Wager: ${b.bet}</div>
             </div>
             <b style="color:${b.win ? '#28e066' : '#ff4d4d'};font-size:10px;">${b.outcome}</b>
@@ -8030,7 +8117,7 @@ window.dispatchEvent(new Event('tr-three'));
     const sorted = [...cars].sort((a, b) => b.z - a.z);
     modalSvgHolder.innerHTML = TROPHY_SVG;
     modalTitle.textContent = 'LEADERBOARD';
-    modalSubtitle.textContent = `Race #${raceIdCounter} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
+    modalSubtitle.textContent = `Race ${padNo(raceIdCounter)} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
     modalSubtitle.style.color = '#fbbf24';
     modalBodyContent.innerHTML = uiLeaderboardHtml(topChampionshipRacers, sorted, FINISH_LINE_Z);
     modalActionBtn.textContent = 'BACK TO TRACK';
@@ -8129,7 +8216,7 @@ window.dispatchEvent(new Event('tr-three'));
     });
 
     carBetHistory.unshift({
-      id: raceIdCounter,
+      id: lastBetNo || raceIdCounter,
       car: userCar.carTitle,
       bet: `${currentBet.toFixed(2)} USDT`,
       odds: `${mult}x`,
@@ -8175,7 +8262,7 @@ window.dispatchEvent(new Event('tr-three'));
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#1<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Payout</span><span class="ui-res-val">+${payout.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>BET <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
+        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>STAKE <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8193,7 +8280,7 @@ window.dispatchEvent(new Event('tr-three'));
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#${rank}<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Loss</span><span class="ui-res-val">-${currentBet.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
+        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8316,6 +8403,7 @@ window.dispatchEvent(new Event('tr-three'));
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
+      lsSetSafe('tr_race_no', String(raceIdCounter + 1));
       updateFinalFive();
       cameraShake = 0;
       debrisParticles = [];
@@ -9350,8 +9438,8 @@ window.dispatchEvent(new Event('tr-three'));
     }
     // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
-    loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;letter-spacing:.14em;';
-    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">MONEY RACER</div><div id="r3dLoadTxt" style="font-size:13px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .2s linear"></i></span><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
+    loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 34%,#1b3f78 0%,#0f2347 42%,#070d1c 100%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;overflow:hidden;';
+    loadPill.innerHTML = '<style>.r3dl-trio{position:relative;width:min(92vw,380px);height:min(33vw,130px);margin-bottom:6px}.r3dl-trio img{position:absolute;bottom:0;width:50%;height:auto;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55))}.r3dl-trio .l{left:-3%;transform:scale(.9);filter:drop-shadow(0 8px 8px rgba(0,0,0,.5)) brightness(.8)}.r3dl-trio .r{right:-3%;transform:scale(.9);filter:drop-shadow(0 8px 8px rgba(0,0,0,.5)) brightness(.8)}.r3dl-trio .c{left:24%;width:52%;z-index:2;animation:r3dlf 2.4s ease-in-out infinite}.r3dl-glow{position:absolute;left:50%;top:60%;width:90%;height:70%;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(47,123,255,.45),rgba(47,123,255,0) 70%);animation:r3dlg 2.4s ease-in-out infinite}.r3dl-shine{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}.r3dl-shine:after{content:\'\';position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.28),rgba(255,255,255,0));transform:skewX(-18deg);animation:r3dls 2.6s ease-in-out infinite}@keyframes r3dlf{50%{transform:translateY(-3px)}}@keyframes r3dlg{50%{opacity:.55}}@keyframes r3dls{0%{left:-40%}60%,100%{left:120%}}#r3dLoadBar i{box-shadow:0 0 10px rgba(34,224,122,.8)}</style><div class="r3dl-trio"><div class="r3dl-glow"></div><img class="l" alt="" src="./assets/ui/car_f8_red.webp"><img class="r" alt="" src="./assets/ui/car_f8_yellow.webp"><img class="c" alt="" src="./assets/ui/car_f8_blue.webp"><div class="r3dl-shine"></div></div><div style="font-size:26px;font-style:italic;font-weight:900;letter-spacing:.08em;text-shadow:0 2px 14px rgba(47,123,255,.6)">MONEY <span style="color:#FFC83D">RACER</span></div><span id="r3dLoadBar" style="display:block;width:68%;max-width:280px;height:10px;border-radius:6px;background:rgba(255,255,255,0.12);overflow:hidden;box-shadow:0 0 0 1px rgba(34,224,122,.35),inset 0 1px 2px rgba(0,0,0,.5);margin-top:8px"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#16a34a,#22E07A,#a7f3c8);border-radius:6px;transition:width .2s linear"></i></span><div id="r3dLoadTxt" style="font-size:14px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><div style="opacity:.6;font-size:11px;font-weight:600;letter-spacing:.08em">Loading track…</div><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
     canvas.parentNode.appendChild(loadPill);
     // Assets are fetched once, stored with the Cache API under a versioned key and served from there on
     // later opens. Bump ASSET_V whenever a file in assets/game3d changes: the cache key follows it and
@@ -10506,10 +10594,10 @@ window.dispatchEvent(new Event('tr-three'));
     const poolC = makeCanvas(128, 128);
     {
       const g = poolC.getContext('2d');
-      for (const cx of [43, 85]) { const gr = g.createRadialGradient(cx, 64, 2, cx, 64, 54); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.save(); g.translate(cx, 64); g.scale(0.55, 1); g.translate(-cx, -64); g.fillRect(0, 0, 128, 128); g.restore(); }
+      for (const cx of [43, 85]) { const gr = g.createRadialGradient(cx, 64, 2, cx, 64, 54); gr.addColorStop(0, 'rgba(255,255,255,0.7)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.3)'); gr.addColorStop(0.65, 'rgba(255,255,255,0.08)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.save(); g.translate(cx, 64); g.scale(0.45, 1); g.translate(-cx, -64); g.fillRect(0, 0, 128, 128); g.restore(); }
     }
     const poolTex = canvasTex(poolC, { wrapT: T.RepeatWrapping });
-    const tnPool = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ map: poolTex, color: 0xffc98a, transparent: true, opacity: 0.42, depthWrite: false, blending: T.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 }));
+    const tnPool = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ map: poolTex, color: 0xffc98a, transparent: true, opacity: 0.21, depthWrite: false, blending: T.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 }));
     tnPool.renderOrder = 9;
     const tnFloorMat = new T.MeshBasicMaterial({ color: 0x4d5258, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
     const tnFloors = [new T.Mesh(new T.BufferGeometry(), tnFloorMat), new T.Mesh(new T.BufferGeometry(), tnFloorMat)];
@@ -10576,7 +10664,7 @@ window.dispatchEvent(new Event('tr-three'));
         const slab = (w, y, rows) => { const g = new T.PlaneGeometry(w, L, 1, rows); g.rotateX(-Math.PI / 2); g.translate(0, y, -L / 2); return g; };
         tnDark.geometry.dispose(); tnDark.geometry = slab(13.4, 0.03, Math.ceil(L / 5));
         tnPool.geometry.dispose(); tnPool.geometry = slab(13.4, 0.034, Math.ceil(L / 5));
-        poolTex.repeat.set(1, L / 6); poolTex.offset.set(0, (1 - ((L / 6) % 1)) % 1);
+        poolTex.repeat.set(1, L / 12); poolTex.offset.set(0, (1 - ((L / 12) % 1)) % 1);
         tnFloors.forEach((m, i) => { m.geometry.dispose(); const g = new T.PlaneGeometry(2.3, L, 1, Math.ceil(L / 6)); g.rotateX(-Math.PI / 2); g.translate((i ? 1 : -1) * 5.6, 0.004, -L / 2); m.geometry = g; });
       }
       // ceiling lights: two rows, one fixture every 6 m
@@ -11278,6 +11366,16 @@ window.dispatchEvent(new Event('tr-three'));
       if (/\d/.test(t)) { console.warn('[race3d] chat line has a digit, skipped: ' + t); return; }
       CHAT[tag].push(t);
     });
+    const CHAT_NEW = {
+      win: ['Eat my dust 😎', 'Too slow, buddy', 'Wave bye bye 👋', "You can't catch me", 'Is that all you got? 😏', 'See you at the finish!', 'Smell that? Victory 🏁', 'Catch up, if you dare 😜'],
+      lose: ['Wait for me 😭', 'Not fair!', 'My car hates me', 'Why me?! 😤', 'Who stole my speed? 😩', 'Come back here!', 'Give me a push 🥺'],
+      hit: ['Ouch! My paint 😱', 'Who taught you to drive?', 'Hey, watch it! 😡', "That's illegal!", 'Was that on purpose? 😤', 'My poor bumper 😢'],
+      close: ['Photo finish! 📸', 'So close 😬', 'Move, move, move!', 'Right behind you 👀', 'Heart is racing 💓'],
+      lose2: ['Unlucky, bro 😅', 'Nice try though', 'Next time maybe 🙏', 'Respect, well driven 🤝', 'Tough luck, friend 🫶']
+    };
+    for (const k in CHAT_NEW) for (const t of CHAT_NEW[k]) { if (/\d/.test(t)) { console.warn('[race3d] chat line has a digit, skipped: ' + t); continue; } CHAT[k === 'lose2' ? 'lose' : k].push(t); }
+    const chatShuffle = () => { for (const k in CHAT) { const a = CHAT[k]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } } };
+    chatShuffle();
     const bubMat = new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false, opacity: 0 });
     const bubSprite = new T.Sprite(bubMat); bubSprite.center.set(0.5, 0); bubSprite.renderOrder = 21; bubSprite.visible = false; scene.add(bubSprite);
     const bubCache = new Map(), bubV = new T.Vector3();
@@ -11297,10 +11395,10 @@ window.dispatchEvent(new Event('tr-three'));
     const bub = { on: false, t: 0, car: -1, e: null, last: 0, start: -99, nextAt: 0, ev: null, fin: 0, finWin: false, finLose: false, used: new Set(), count: [0, 0, 0, 0, 0, 0, 0, 0], init: false, manual: false, say: -99 };
     const bPrevHit = [false, false, false], bPair = new Int8Array(64);
     window._trBubble = ''; window._trBubbleLog = [];
-    const bubReset = () => { bub.used.clear(); bub.count.fill(0); bub.ev = null; bub.fin = 0; bub.finWin = bub.finLose = false; bub.init = false; bub.start = -99; bub.nextAt = performance.now() / 1000 + 4 + Math.random() * 3; window._trBubbleLog = []; };
+    const bubReset = () => { bub.used.clear(); bub.count.fill(0); bub.ev = null; bub.fin = 0; bub.finWin = bub.finLose = false; bub.init = false; bub.start = -99; bub.nextAt = performance.now() / 1000 + 4 + Math.random() * 3; window._trBubbleLog = []; chatShuffle(); };
     const bubOff = () => { if (bub.on) { bub.on = false; bubSprite.visible = false; window._trBubble = ''; } };
     const bubPick = (tag) => {
-      for (const k of [tag, 'neutral', tag === 'win' ? 'lose' : 'win']) { const pool = CHAT[k].filter((s) => !bub.used.has(s)); if (pool.length) return { tag: k, text: pool[Math.floor(Math.random() * pool.length)] }; }
+      for (const k of [tag, 'neutral', tag === 'win' ? 'lose' : 'win']) { const t = CHAT[k].find((s) => !bub.used.has(s)); if (t) return { tag: k, text: t }; }
       return null;
     };
     const bubShow = (i, text, tag, manual) => {
@@ -11321,23 +11419,24 @@ window.dispatchEvent(new Event('tr-three'));
     };
     const bubEligible = (i, camZ) => {
       const car = cars[i], rig = rigs[i];
-      if (!car || !rig || car.isPlayer || bub.count[i] >= BUB_MAXCAR || !rig.group.visible || !rig.tag.visible) return false;
+      if (!car || !rig || (car.isPlayer && bub.fpp) || bub.count[i] >= BUB_MAXCAR || !rig.group.visible || !rig.tag.visible) return false;
       const ahead = camZ - rig.group.position.z; // metres in front of the camera
-      if (!(ahead > 4 && ahead < 90)) return false;
+      if (!(ahead > (car.isPlayer ? 1 : 4) && ahead < 90)) return false;
       bubV.copy(rig.tag.position).project(camera); // keep clear of the HUD (top) and the screen edges
+      if (car.isPlayer) return bubV.z < 1 && Math.abs(bubV.x) < 0.8 && bubV.y < 0.4 && bubV.y > -0.7;
       return bubV.z < 1 && Math.abs(bubV.x) < 0.8 && bubV.y < 0.4 && bubV.y > -0.55;
     };
     const updateBubbles = (frameDt, racing, fppOn, player, camZ) => {
       const nowMs = performance.now(), nowS = nowMs / 1000, dt = Math.min(0.6, (nowMs - (bub.last || nowMs)) / 1000); bub.last = nowMs; // (a slow device still shows the bubble for a few frames)
-      const fin = gameState === 'FINISHED';
+      const fin = gameState === 'FINISHED'; bub.fpp = !!fppOn;
       if (!racing && !fin) { bubOff(); if (gameState !== 'IDLE') bubReset(); else bub.init = false; return; }
       const n = Math.min(cars.length, rigs.length, 8);
       if (racing) { // events: a bot hit something, or somebody overtook somebody
-        for (let i = 0; i < n; i++) { const c = cars[i], hit = c.hitSlowTimer > 0; if (bub.init && hit && !bPrevHit[i] && !c.isPlayer) bub.ev = { car: i, tag: 'hit', at: nowS }; bPrevHit[i] = hit; }
+        for (let i = 0; i < n; i++) { const c = cars[i], hit = c.hitSlowTimer > 0; if (bub.init && hit && !bPrevHit[i]) bub.ev = { car: i, tag: 'hit', at: nowS }; bPrevHit[i] = hit; }
         for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
           if (i === j) continue;
           const d = cars[i].z - cars[j].z, k = i * 8 + j;
-          if (d > 1.5) { if (bPair[k] === -1 && bub.init && (!bub.ev || bub.ev.tag !== 'hit')) { if (!cars[i].isPlayer) bub.ev = { car: i, tag: 'win', at: nowS }; else if (!cars[j].isPlayer) bub.ev = { car: j, tag: 'lose', at: nowS }; } bPair[k] = 1; }
+          if (d > 1.5) { if (bPair[k] === -1 && bub.init && (!bub.ev || bub.ev.tag !== 'hit')) { const pl = cars.findIndex((c) => c.isPlayer), me = Math.random() < 0.4; if (!cars[i].isPlayer) bub.ev = me && cars[j].isPlayer ? { car: j, tag: 'lose', at: nowS } : { car: i, tag: 'win', at: nowS }; else if (!cars[j].isPlayer) bub.ev = me && pl >= 0 ? { car: pl, tag: 'win', at: nowS } : { car: j, tag: 'lose', at: nowS }; } bPair[k] = 1; }
           else if (d < -1.5) bPair[k] = -1;
         }
         bub.init = true;
@@ -12065,7 +12164,12 @@ window.dispatchEvent(new Event('tr-three'));
         rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving + rig.suspY;
         const spin = -(car.speed || 0) * 0.11 * dt * (racing ? 1 : 0);
         for (const w of rig.wheels) w.rotation.x += spin;
-        const hot = racing && (car.boostTimer > 0 || car.speed > 156);
+        const manualOn = () => !!(window._trRaceDbg && window._trRaceDbg.mode === 'manual');
+        const sp = car.speed || 0;
+        rig.spHist = rig.spHist || []; rig.spHist.push({ t: tSec, v: sp }); while (rig.spHist.length > 1 && tSec - rig.spHist[0].t > 0.25) rig.spHist.shift();
+        const spOld = rig.spHist[0].v;
+        const accel = car.isPlayer && manualOn() ? !!keys.accel : (sp - spOld > 3 && tSec - rig.spHist[0].t > 0.08);
+        const hot = racing && (car.boostTimer > 0 || accel);
         for (const f of rig.flames) { f.visible = hot; if (hot) f.scale.set(0.8, 0.8, (car.boostTimer > 0 ? 0.75 : 0.32) * (0.8 + Math.random() * 0.4)); }
         if (hot) rig.flameMat.color.set(car.boostTimer > 0 ? 0x22e5ff : 0xfb923c);
         if (rig.exhMat) rig.exhMat.opacity = hot ? 0.8 : (racing ? 0.22 : 0.06);
@@ -12663,7 +12767,7 @@ window.dispatchEvent(new Event('tr-three'));
         const badgeTxt = isMe ? 'YOU' : String(oppNum++);
         let rightTxt = s.masked_id ? maskUidFour(s.masked_id) : 'WAIT…';
         if (!isMe && s.is_bot) {
-          rightTxt = isWaitPhase ? 'WAIT…' : (s.bot_label || `BOT #${oppNum - 1}`);
+          rightTxt = isWaitPhase ? 'WAIT…' : oppIdAt(oppNum - 2);
         }
         rowsData.push({
           isMe,
@@ -12688,7 +12792,7 @@ window.dispatchEvent(new Event('tr-three'));
           isMe: false,
           badgeTxt: String(idx + 1),
           carColor: getCarBadgeHex(k),
-          rightTxt: isWaitPhase ? 'WAIT…' : `BOT #${idx + 1}`,
+          rightTxt: isWaitPhase ? 'WAIT…' : oppIdAt(idx),
           isHuman: false
         });
       });
@@ -12703,7 +12807,15 @@ window.dispatchEvent(new Event('tr-three'));
     }).join('');
   }
 
+  function syncRaceIdText() {
+    try {
+      const room = window._trActiveRoom;
+      const t = (room && room.room_id && gameState !== 'IDLE') ? `RACE ID: #${room.room_id}` : `RACE ID: ${padNo(raceIdCounter)}`;
+      if (raceIdText.textContent !== t) raceIdText.textContent = t;
+    } catch (e) {}
+  }
   function syncCarsAndLabelsWithRoom() {
+    syncRaceIdText();
     if (!Array.isArray(cars) || !cars.length) return;
     const room = window._trActiveRoom;
 
@@ -12734,7 +12846,7 @@ window.dispatchEvent(new Event('tr-three'));
       const oppSlots = room.slots.filter(s => s.car !== selectedPlayerTheme);
       botCars.forEach((bc, idx) => {
         const s = oppSlots[idx];
-        const pLabel = `Player ${idx + 1}`;
+        const pLabel = (s && !s.is_bot && s.masked_id) ? maskUidFour(s.masked_id) : oppIdAt(idx);
         if (!s) {
           bc.floatLabel = pLabel;
           bc.displayName = pLabel;
@@ -12742,10 +12854,10 @@ window.dispatchEvent(new Event('tr-three'));
         }
         const theme = CAR_THEMES[s.car] || CAR_THEMES.blue;
         Object.assign(bc, theme);
-        // 3D Car Tag on Track: ALWAYS "Player 1" / "Player 2" (never User ID / BOT / WAIT!)
+        // 3D Car Tag on Track: a masked id (never BOT / Player n / WAIT)
         bc.floatLabel = pLabel;
         bc.displayName = pLabel;
-        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.name = pLabel;
         bc.isRemoteHuman = (!s.is_bot && !!s.uid);
         if (s.telemetry && typeof s.telemetry.z === 'number') {
           bc.remoteTelemetry = Object.assign({}, s.telemetry, { recvMs: performance.now() });
@@ -12772,10 +12884,10 @@ window.dispatchEvent(new Event('tr-three'));
         const k = oppKeys[idx] || 'blue';
         const theme = CAR_THEMES[k];
         Object.assign(bc, theme);
-        const pLabel = `Player ${idx + 1}`;
+        const pLabel = oppIdAt(idx);
         bc.floatLabel = pLabel;
         bc.displayName = pLabel;
-        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.name = pLabel;
         bc.isRemoteHuman = false;
         bc.remoteTelemetry = null;
       });
@@ -12820,7 +12932,7 @@ window.dispatchEvent(new Event('tr-three'));
       const others = (room.slots || []).filter(s => !s.is_bot && s.uid && String(s.uid) !== String(getMyUidStr()));
       const latestOther = others[others.length - 1];
       if (latestOther) {
-        toast(`Player ${latestOther.masked_id} joined on ${CAR_THEMES[latestOther.car] ? CAR_THEMES[latestOther.car].nameLabel : latestOther.car.toUpperCase()}!`, 'success');
+        toast(`${maskUidFour(latestOther.masked_id)} joined on ${CAR_THEMES[latestOther.car] ? CAR_THEMES[latestOther.car].nameLabel : latestOther.car.toUpperCase()}!`, 'success');
       }
     }
 
@@ -13055,6 +13167,7 @@ window.dispatchEvent(new Event('tr-three'));
     if (musicOn) startMusic();
     if (pendingBet && pendingBet.demo) savePendingDemoBet(pendingBet);
     lastSimWallMs = Date.now();
+    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
     gameState = 'MATCHMAKING';
     const initRem = (roomObj && typeof roomObj.remaining_sec === 'number') ? Math.max(1.0, +roomObj.remaining_sec) : 10.0;
     matchmakingTimer = initRem;
@@ -13597,7 +13710,7 @@ window.dispatchEvent(new Event('tr-three'));
         : '';
       modalSvgHolder.innerHTML = (typeof TROPHY_SVG !== 'undefined') ? TROPHY_SVG : '🏆';
       modalTitle.textContent = 'CHAMPIONSHIP LEADERBOARD';
-      modalSubtitle.textContent = playMode === 'live' ? `Live standings · Race #${raceIdCounter}` : 'Switch to Live for real rankings';
+      modalSubtitle.textContent = playMode === 'live' ? `Live standings · Race ${padNo(raceIdCounter)}` : 'Switch to Live for real rankings';
       modalSubtitle.style.color = '#fbbf24';
       modalBodyContent.innerHTML = (extraLiveHtml || '') +
         `<div style="text-align:left;font-size:9.5px;font-weight:900;color:#fbbf24;margin-bottom:4px;letter-spacing:0.4px;">🏆 TOP EARNERS (REAL)</div>
@@ -14031,8 +14144,8 @@ window.dispatchEvent(new Event('tr-three'));
     const cols = ['#e61e25', '#f5b000', '#1264f2', '#28e066', '#a855f7'];
     const volOf = (r) => { const v = [r.volume, r.bet_volume, r.total_bet, r.total_wagered, r.wagered].find(x => x != null && !isNaN(+x)); return v == null ? null : +v; };
     const medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
-    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, uid: r.user_id, name: r.name, color: medal[i] || cols[i % cols.length], profit: '+' + fmt(r.profit) + ' USDT', volume: volOf(r), isMe: r.user_id === me }));
-    if (me && !rows.some(r => r.isMe)) rows.push({ rank: '—', uid: me, name: 'YOU', color: '#22E07A', profit: '+0.00 USDT', volume: (data.me && volOf(data.me)) || 0, isMe: true });
+    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, uid: r.user_id, name: r.name, color: medal[i] || cols[i % cols.length], profit: '+' + fmt(r.profit) + ' USDT', volume: volOf(r), isMe: r.user_id === me, real: true }));
+    if (me && !rows.some(r => r.isMe)) rows.push({ rank: '—', uid: me, name: 'YOU', color: '#22E07A', profit: '+0.00 USDT', volume: (data.me && volOf(data.me)) || 0, isMe: true, real: true });
     topChampionshipRacers.length = 0; rows.forEach(r => topChampionshipRacers.push(r));
   }
 
