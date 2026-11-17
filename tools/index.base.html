@@ -4657,6 +4657,40 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
 .vl-row .ui-lb-amt { letter-spacing: .1px; }
 .vl-pin .ui-lb-name { letter-spacing: .3px; }
 </style>
+<style id="histRound">
+.hr-card { max-width: 392px; padding: 16px 12px 12px; text-align: left; }
+.hr-card .ui-pop-head { margin-bottom: 8px; }
+.hr-tabs { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 6px; margin: 4px 0 10px; }
+.hr-tabs button { min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #b9c6dd; font-family: inherit; font-size: 11.5px; font-weight: 900; font-style: italic; letter-spacing: .4px; cursor: pointer; }
+.hr-tabs button.on { background: linear-gradient(180deg, #2F7BFF, #1B54C9); border-color: #6aa0ff; color: #fff; box-shadow: 0 4px 14px rgba(47,123,255,.35); }
+.hr-list { display: flex; flex-direction: column; gap: 8px; max-height: min(56vh, 470px); overflow-y: auto; padding-right: 2px; -webkit-overflow-scrolling: touch; }
+.hr-card-i { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 13px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)); border: 1px solid rgba(255,255,255,.1); }
+.hr-car { flex: 0 0 54px; width: 54px; padding: 8px 4px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 -10px 18px -12px var(--c); }
+.hr-car svg { display: block; width: 100%; height: auto; }
+.hr-main { flex: 1; min-width: 0; }
+.hr-r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.hr-id { font-size: 13px; font-weight: 900; font-style: italic; color: #fff; letter-spacing: .2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-pnl { font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.hr-pnl.up { color: #22E07A; } .hr-pnl.dn { color: #ff5d6c; }
+.hr-dt { font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-top: 1px; }
+.hr-meta { font-size: 10px; font-weight: 800; letter-spacing: .3px; color: #b9c6dd; margin-top: 2px; }
+.hr-r3 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 10.5px; font-weight: 700; color: #94a3b8; }
+.hr-r3 b { color: #fff; }
+.hr-pos { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 900; font-style: italic; color: #101828; background: var(--m); }
+.hr-st { padding: 1px 7px; border-radius: 999px; font-size: 9.5px; font-weight: 900; letter-spacing: .3px; text-transform: uppercase; color: #9fd6ff; background: rgba(56,189,248,.12); border: 1px solid rgba(56,189,248,.3); }
+.hr-tx { align-items: center; }
+.hr-txi { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+.hr-txi svg { width: 18px; height: 18px; }
+.hr-txi.up { color: #22E07A; background: rgba(34,224,122,.12); border: 1px solid rgba(34,224,122,.35); }
+.hr-txi.dn { color: #ff5d6c; background: rgba(255,93,108,.12); border: 1px solid rgba(255,93,108,.35); }
+.hr-empty { padding: 30px 12px; text-align: center; font-size: 11.5px; font-weight: 700; color: #94a3b8; }
+.hr-empty b { display: block; font-size: 14px; font-style: italic; color: #fff; margin-bottom: 4px; }
+.hr-lbsrc { text-align: center; font-size: 10px; font-weight: 800; letter-spacing: .3px; margin: -4px 0 8px; }
+.hr-lbsrc.live { color: #22E07A; } .hr-lbsrc.demo { color: #94a3b8; }
+.hr-tip { position: absolute; z-index: 58; left: 50%; top: calc(74px + var(--sa-top, 0px)); transform: translate(-50%, -6px); display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; background: rgba(6,15,28,.92); border: 1px solid rgba(34,224,122,.55); color: #fff; font-size: 12px; font-weight: 900; font-style: italic; white-space: nowrap; box-shadow: 0 8px 22px rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
+.hr-tip.show { opacity: 1; transform: translate(-50%, 0); }
+.hr-tip svg { width: 16px; height: 16px; color: #22E07A; }
+</style>
 </head>
 <body>
 <!-- ICON SET v17 (shared sprite). Usage: <svg class="ic"><use href="#ic-name"/></svg>
@@ -5727,6 +5761,15 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       <button class="claim-btn" id="modalActionBtn">CLAIM REWARD</button>
     </div>
   </div>
+  <div class="ui-pop" id="hrHistPop">
+    <div class="ui-pop-card hr-card">
+      <button class="ui-pop-close" id="hrHistClose" type="button" aria-label="Close"></button>
+      <div class="ui-pop-head"><div class="ui-pop-title">HISTORY</div><div class="ui-pop-sub">Your latest activity</div></div>
+      <div class="hr-tabs" role="tablist"><button type="button" data-t="bets" class="on">BETS</button><button type="button" data-t="races">RACES</button><button type="button" data-t="tx">TRANSACTIONS</button></div>
+      <div class="hr-list" id="hrHistList"></div>
+    </div>
+  </div>
+  <div class="hr-tip" id="hrAccelTip" aria-hidden="true"></div>
   <div class="cr-toast" id="crToast">Copied to clipboard</div>
 </div>
 
@@ -6172,10 +6215,11 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
   // v17 ui2: deterministic demo board (top 50, masked ids, decreasing winnings) shown until real API rows exist
   function uiDemoBoard() {
     let seed = 20260117; const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
-    const used = new Set(), out = [], medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
+    let wv = 0; const used = new Set(), out = [], medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
     for (let i = 1; i <= 50; i++) {
       let d; do { d = String(Math.floor(rnd() * 10000)).padStart(4, '0'); } while (used.has(d)); used.add(d);
-      const w = i === 1 ? 4820 : i === 2 ? 3490 : i === 3 ? 2710 : Math.round(2710 * Math.pow(0.935, i - 3) * 100) / 100;
+      if (i === 1) wv = 4820 + Math.round(rnd() * 90000) / 100; else wv = wv * (0.82 + rnd() * 0.15) - rnd() * 6;
+      const w = Math.round(wv * 100) / 100;
       out.push({ rank: i, uid: '51200' + d, color: medal[i - 1] || '#2F7BFF', profit: '+' + w.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT', volume: null, demo: true });
     }
     return out;
@@ -6188,7 +6232,8 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       + `<path d="M22 28l2.300 4.700 5.100.8-3.700 3.600.9 5.100-4.600-2.400-4.600 2.400.9-5.100-3.700-3.600 5.100-.8z" fill="${M[2]}" fill-opacity=".85"/></svg>`;
   }
   function uiLeaderboardHtml(racers, sortedCars, finishZ) {
-    if (!racers.some(r => r.real && !r.isMe)) { const m0 = racers.find(r => r.isMe); racers = uiDemoBoard().concat(m0 ? [m0] : []); }
+    const _isReal = racers.some(r => r.real && !r.isMe);
+    if (!_isReal) { const m0 = racers.find(r => r.isMe); racers = uiDemoBoard().concat(m0 ? [m0] : []); }
     const MEDAL_WORD = { 1: 'GOLD', 2: 'SILVER', 3: 'BRONZE' };
     const pod = [1, 2, 3].map(n => racers.find(r => +r.rank === n) || null);
     const idOf = (r) => vcMask(r.uid != null ? r.uid : r.name);
@@ -6211,7 +6256,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
             <div class="ui-lb-l">${uiRk(r.rank)}${av(r)}<div style="min-width:0"><div class="ui-lb-name">${uiEsc(idOf(r))}${r.isMe ? '<span class="ui-you">YOU</span>' : ''}</div></div></div>
             <div class="ui-lb-r"><span class="ui-lb-amt">${winOf(r)}</span></div>
           </div>`;
-    let h = '';
+    let h = `<div class="hr-lbsrc ${_isReal ? 'live' : 'demo'}">${_isReal ? 'Live data from real accounts' : 'Sample data (demo)'}</div>`;
     if (!racers.length) {
       h += `<div class="ui-lb-empty">${UI_IC.trophy}<b>Be the first on the leaderboard!</b>Win a Live race to claim the top spot.</div>`;
     } else {
@@ -6248,7 +6293,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
   function padNo(n) { return '#' + String(Math.max(0, Math.floor(+n) || 0)).padStart(3, '0'); }
   function lsNo(k, d) { const v = parseInt(lsGetSafe(k), 10); return v > 0 ? v : d; }
   let raceIdCounter = lsNo('tr_race_no', 1);   // number of the current / next race
-  let betNoCounter = lsNo('tr_bet_no', 0);     // bets placed so far
+  let betNoCounter = lsNo('tr_betid_no', 0);   // Car Bet (auto) bets placed so far; Manual Drive races use raceIdCounter
   let lastBetNo = 0;                            // id of the bet in the current race
   // v17 ui2: masked opponent ids (new per race, stable within the race): ******1234
   let raceOppIds = [];
@@ -6440,7 +6485,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
         id: 'bot1',
         name: oppIdAt(0),
         displayName: oppIdAt(0),
-        floatLabel: oppIdAt(0),
+        floatLabel: 'Player 1',
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6484,7 +6529,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
         id: 'bot2',
         name: oppIdAt(1),
         displayName: oppIdAt(1),
-        floatLabel: oppIdAt(1),
+        floatLabel: 'Player 2',
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6952,6 +6997,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       : '🕹️ MANUAL DRIVE • TAP GREEN CIRCLE TO START';
     document.getElementById('circleTopTxt').innerHTML = autoBet ? 'TAP TO<br/>START BET' : 'TAP TO<br/>FIND RACE';
     setupCarsForRace();
+    (window._trSyncRaceId || Function.prototype)();
   }
 
   modePillAutoBet.addEventListener('click', () => setPlayStyleMode(true));
@@ -7012,8 +7058,8 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     balanceUsdt = +(balanceUsdt - currentBet).toFixed(2);
     updateUIValues();
 
-    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
-    gameState = 'MATCHMAKING';
+    rollOppIds(); lastBetNo = 0; if (isAutoBetMode) { betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_betid_no', String(betNoCounter)); }
+    gameState = 'MATCHMAKING'; (window._trSyncRaceId || Function.prototype)();
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
     updateWeatherButtonLabel();
@@ -7237,9 +7283,9 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
   function closeResultModal() {
     resultModalBackdrop.classList.remove('open');
     if (gameState === 'FINISHED') {
-      raceIdCounter++; lsSetSafe('tr_race_no', String(raceIdCounter));
-      raceIdText.textContent = `RACE ID: ${padNo(raceIdCounter)}`;
+      if (!isAutoBetMode) { raceIdCounter++; lsSetSafe('tr_race_no', String(raceIdCounter)); }
       resetToIdleState();
+      (window._trSyncRaceId || Function.prototype)();
     }
   }
   document.getElementById('closeModalBtn').addEventListener('click', closeResultModal);
@@ -7292,11 +7338,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     }
   ];
 
-  let carBetHistory = [
-    { id: 586, car: 'RED FERRARI', bet: '2.00 USDT', odds: '2.5x', outcome: 'LOST (-2.00 USDT • +0.68s gap)', win: false },
-    { id: 587, car: 'BLUE FERRARI', bet: '1.00 USDT', odds: '2.5x', outcome: 'WON (+2.50 USDT • 1st Place)', win: true },
-    { id: 588, car: 'GOLD FERRARI', bet: '5.00 USDT', odds: '2.5x', outcome: 'WON (+12.50 USDT • 1st Place)', win: true }
-  ];
+  let carBetHistory = [];
 
   let walletTransactions = [
     { id: 'TX-9041', type: 'Deposit (USDT BEP20)', amount: '+100.00 USDT', status: 'Completed', positive: true },
@@ -7815,6 +7857,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       status: 'Completed',
       positive: true
     });
+    try { uiHistRecordTx({ type: 'Referral credit', amt: +amt.toFixed(2), status: 'Credited' }); } catch (e) {}
     sfxWin();
     updateUIValues();
     showCrToast(`Withdrew +${amt.toFixed(2)} USDT to Main Balance!`);
@@ -7935,51 +7978,9 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     showCrToast('+10.00 USDT Bonus unlocked to your Main Balance!');
   });
 
-  document.getElementById('menuBetHistoryBtn').addEventListener('click', () => {
-    modalSvgHolder.innerHTML = TROPHY_SVG;
-    modalTitle.textContent = 'BET HISTORY';
-    modalSubtitle.textContent = 'Your 3D Car Betting Records';
-    modalBodyContent.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:12px;text-align:left;">
-        ${carBetHistory.map(b => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(15,23,42,0.9);border:1px solid ${b.win ? '#28e066' : 'rgba(239,68,68,0.4)'};border-radius:9px;font-size:10.5px;">
-            <div>
-              <b style="color:#fff;">BET ${padNo(b.id)} • ${b.car} (${b.odds})</b>
-              <div style="font-size:9px;color:#94a3b8;">Wager: ${b.bet}</div>
-            </div>
-            <b style="color:${b.win ? '#28e066' : '#ff4d4d'};font-size:10px;">${b.outcome}</b>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    modalActionBtn.textContent = 'CLOSE';
-    resultModalBackdrop.classList.add('open');
-  });
-
-  document.getElementById('menuRaceHistoryBtn').addEventListener('click', () => {
-    document.getElementById('leaderboardBtn').click();
-  });
-
-  document.getElementById('menuTxHistoryBtn').addEventListener('click', () => {
-    modalSvgHolder.innerHTML = TROPHY_SVG;
-    modalTitle.textContent = 'TRANSACTION HISTORY';
-    modalSubtitle.textContent = 'Deposits, Withdrawals & VIP Profits';
-    modalBodyContent.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:12px;text-align:left;">
-        ${walletTransactions.map(tx => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(15,23,42,0.9);border:1px solid rgba(255,255,255,0.12);border-radius:9px;font-size:11px;">
-            <div>
-              <b style="color:#fff;">${tx.type}</b>
-              <div style="font-size:9.5px;color:#94a3b8;">${tx.id} • ${tx.status}</div>
-            </div>
-            <b style="color:${tx.positive ? '#28e066' : '#38bdf8'};">${tx.amount}</b>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    modalActionBtn.textContent = 'CLOSE';
-    resultModalBackdrop.classList.add('open');
-  });
+  document.getElementById('menuBetHistoryBtn').addEventListener('click', () => uiHistOpen('bets'));
+  document.getElementById('menuRaceHistoryBtn').addEventListener('click', () => uiHistOpen('races'));
+  document.getElementById('menuTxHistoryBtn').addEventListener('click', () => uiHistOpen('tx'));
 
   document.getElementById('menuReferEarnBtn').addEventListener('click', () => switchAppTab('invite'));
 
@@ -8057,6 +8058,104 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     setTimeout(() => switchAppTab('bet'), 400);
   });
 
+
+  // =========================================================================
+  // v17 history round: local History popup (bets / races / transactions) + manual-drive start tip
+  // =========================================================================
+  const HIST_KEY = 'tr_hist_v1', HIST_CAP = 200;
+  function histLoad() {
+    try { const o = JSON.parse(lsGetSafe(HIST_KEY) || '{}') || {}; return { bets: o.bets || [], races: o.races || [], tx: o.tx || [] }; }
+    catch (e) { return { bets: [], races: [], tx: [] }; }
+  }
+  function histAdd(tab, entry) {
+    const h = histLoad();
+    if (entry.key && h[tab].some(x => x.key === entry.key)) return;
+    entry.ts = entry.ts || Date.now();
+    h[tab].unshift(entry);
+    if (h[tab].length > HIST_CAP) h[tab].length = HIST_CAP;
+    lsSetSafe(HIST_KEY, JSON.stringify(h));
+  }
+  function uiHistRecordTx(e) { histAdd('tx', e); }
+  function uiHistRecordRace(e) {
+    histAdd(e.kind === 'bet' ? 'bets' : 'races', e);
+    const tag = (e.kind === 'bet' ? 'Bet ' : 'Race ') + padNo(e.no);
+    histAdd('tx', { type: 'Bet stake • ' + tag, amt: -Math.abs(e.stake), status: 'Completed' });
+    if (e.pnl > 0) histAdd('tx', { type: 'Win • ' + tag, amt: +(e.stake + e.pnl).toFixed(2), status: 'Credited' });
+  }
+  const HIST_CAR = { red: '#E61E25', blue: '#2F7BFF', yellow: '#FFC83D' };
+  const HIST_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function histDT(ts) { const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return d.getDate() + ' ' + HIST_MON[d.getMonth()] + ', ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+  function histDur(s) { s = Math.max(0, Math.round(+s || 0)); return s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60) + 's' : s + 's'; }
+  function histOrd(n) { n = +n || 0; return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); }
+  function histCarSvg(c) {
+    return `<svg viewBox="0 0 64 30" aria-hidden="true"><path d="M2.5 21c0-2.2 1.2-3.4 3.4-3.9l8.6-1.7 9.2-5.4c2.2-1.2 4.3-1.8 7.4-1.8h8.8c3.2 0 5.8 1.1 8.4 3.1l7.2 3.8c3.2.6 5.4 1.2 6.4 2.8l.6 2.8c.1 1.1-.5 1.7-1.6 1.7H4.8c-1.4 0-2.3-.6-2.3-1.4z" fill="${c}"/>`
+      + `<path d="M25.5 11.5c2-.9 3.8-1.3 6.5-1.3h7.5l5.2 5.2H20.5z" fill="#0b1426" fill-opacity=".55"/><path d="M4 20.5h56" stroke="#fff" stroke-opacity=".35" stroke-width=".9"/>`
+      + `<circle cx="17" cy="23" r="4.8" fill="#0b1426" stroke="#e8f0ff" stroke-width="1.2"/><circle cx="48" cy="23" r="4.8" fill="#0b1426" stroke="#e8f0ff" stroke-width="1.2"/><circle cx="17" cy="23" r="1.8" fill="#9fb1cf"/><circle cx="48" cy="23" r="1.8" fill="#9fb1cf"/></svg>`;
+  }
+  const HIST_MEDAL = { 1: '#FFC83D', 2: '#C9D4E6', 3: '#E0904F' };
+  function histRaceCard(e, kind) {
+    const pos = +e.pos || 0, pnl = +e.pnl || 0;
+    const tag = (kind === 'bets' ? 'BET ' : 'RACE ') + padNo(e.no);
+    const col = HIST_CAR[e.car] || '#94a3b8';
+    return `<div class="hr-card-i"><div class="hr-car" style="--c:${col}">${histCarSvg(col)}</div>
+      <div class="hr-main"><div class="hr-r1"><b class="hr-id">${uiEsc(tag)}</b><b class="hr-pnl ${pnl >= 0 ? 'up' : 'dn'}">${pnl >= 0 ? '+' : '-'}${Math.abs(pnl).toFixed(2)}</b></div>
+        <div class="hr-dt">${uiEsc(histDT(e.ts))}</div>
+        <div class="hr-meta">${uiEsc([e.map, e.climate].filter(Boolean).join(' • '))} • ${uiEsc(histDur(e.dur))}</div>
+        <div class="hr-r3"><span class="hr-pos" style="--m:${HIST_MEDAL[pos] || '#94a3b8'}">${histOrd(pos)}</span><span>Bet <b>${(+e.stake || 0).toFixed(2)}</b> USDT</span><span>Odds <b>${String(+(+e.odds || 0).toFixed(2))}x</b></span></div></div></div>`;
+  }
+  function histTxList() {
+    const h = histLoad(), out = h.tx.slice(), keys = new Set(out.map(x => x.key).filter(Boolean));
+    try {
+      const st = (typeof state !== 'undefined' && state) || null;
+      const t = (v) => { v = +v || 0; return v ? (v < 1e12 ? v * 1000 : v) : Date.now(); };
+      ((st && st.deposits) || []).forEach(d => { const k = 'dep:' + (d.tx_hash || d.id || ''); if (keys.has(k)) return; keys.add(k); out.push({ key: k, type: 'Deposit', amt: +d.amount || 0, status: d.status === 'confirming' ? 'Confirming' : 'Completed', ts: t(d.created_at) }); });
+      ((st && st.withdrawals) || []).forEach(w => { const k = 'wd:' + w.id; if (keys.has(k)) return; keys.add(k); out.push({ key: k, type: 'Withdrawal', amt: -Math.abs(+w.amount || 0), status: /^paid/.test(w.status || '') ? 'Paid' : w.status === 'rejected' ? 'Cancelled' : 'Pending', ts: t(w.created_at) }); });
+    } catch (e) {}
+    return out.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, HIST_CAP);
+  }
+  function histTxCard(e) {
+    const a = +e.amt || 0, up = a >= 0;
+    const ico = up ? '<path d="M12 19V6m0 0l-5 5m5-5l5 5" />' : '<path d="M12 5v13m0 0l-5-5m5 5l5-5" />';
+    return `<div class="hr-card-i hr-tx"><div class="hr-txi ${up ? 'up' : 'dn'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ico}</svg></div>
+      <div class="hr-main"><div class="hr-r1"><b class="hr-id">${uiEsc(e.type)}</b><b class="hr-pnl ${up ? 'up' : 'dn'}">${up ? '+' : '-'}${Math.abs(a).toFixed(2)}</b></div>
+        <div class="hr-r3"><span>${uiEsc(histDT(e.ts))}</span><span class="hr-st">${uiEsc(e.status || '')}</span></div></div></div>`;
+  }
+  let histTab = 'bets';
+  const HIST_EMPTY = { bets: ['No bets yet', 'Place a Car Bet and it shows up here.'], races: ['No races yet', 'Finish a Manual Drive race and it shows up here.'], tx: ['No transactions yet', 'Deposits, withdrawals, stakes and wins show up here.'] };
+  function histRender() {
+    const pop = document.getElementById('hrHistPop'); if (!pop) return;
+    pop.querySelectorAll('.hr-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === histTab));
+    const list = document.getElementById('hrHistList');
+    const items = histTab === 'tx' ? histTxList() : histLoad()[histTab];
+    list.innerHTML = items.length
+      ? items.map(e => histTab === 'tx' ? histTxCard(e) : histRaceCard(e, histTab)).join('')
+      : `<div class="hr-empty"><b>${HIST_EMPTY[histTab][0]}</b>${HIST_EMPTY[histTab][1]}</div>`;
+    list.scrollTop = 0;
+  }
+  function uiHistOpen(tab) {
+    histTab = tab || histTab;
+    const pop = document.getElementById('hrHistPop'); if (!pop) return;
+    histRender();
+    window.uiPop.open(pop);
+  }
+  (function wireHist() {
+    const pop = document.getElementById('hrHistPop'); if (!pop) return;
+    pop.querySelectorAll('.hr-tabs button').forEach(b => b.addEventListener('click', () => { histTab = b.dataset.t; histRender(); }));
+    document.getElementById('hrHistClose').addEventListener('click', () => window.uiPop.close(pop));
+    pop.addEventListener('click', (ev) => { if (ev.target === pop) window.uiPop.close(pop); });
+  })();
+  window._trHist = { open: uiHistOpen, race: uiHistRecordRace, tx: uiHistRecordTx };
+
+  // Manual Drive start tip (Accelerate really gives +10% over cruise: ACCEL_BONUS = 1.10)
+  let accelTipTimer = 0;
+  function uiAccelTip() {
+    const el = document.getElementById('hrAccelTip'); if (!el) return;
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12l6-6 6 6M6 19l6-6 6 6"/></svg><span>Hold ACCELERATE: +10% speed</span>';
+    el.classList.add('show');
+    clearTimeout(accelTipTimer);
+    accelTipTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
   // --- E. UPGRADED CHAMPIONSHIP LEADERBOARD MODAL (LIVE TELEMETRY + TOP RACERS + HISTORY) ---
   const topChampionshipRacers = [
     { rank: 1, uid: '5120018688', color: '#FFC83D', profit: '+4,820.00 USDT', volume: 48200 },
@@ -8070,7 +8169,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     const sorted = [...cars].sort((a, b) => b.z - a.z);
     modalSvgHolder.innerHTML = TROPHY_SVG;
     modalTitle.textContent = 'LEADERBOARD';
-    modalSubtitle.textContent = `Race ${padNo(raceIdCounter)} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
+    modalSubtitle.textContent = `${isAutoBetMode ? 'Bet' : 'Race'} ${isAutoBetMode ? padNo((gameState !== 'IDLE' && lastBetNo) ? lastBetNo : betNoCounter + 1) : padNo(raceIdCounter)} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
     modalSubtitle.style.color = '#fbbf24';
     modalBodyContent.innerHTML = uiLeaderboardHtml(topChampionshipRacers, sorted, FINISH_LINE_Z);
     modalActionBtn.textContent = 'BACK TO TRACK';
@@ -8179,6 +8278,13 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       win: playerWon
     });
 
+    try {
+      const _fin = userStanding ? userStanding.timeSec : winnerTimeNum;
+      uiHistRecordRace({ kind: isAutoBetMode ? 'bet' : 'race', no: isAutoBetMode ? (lastBetNo || betNoCounter) : raceIdCounter, car: userCar.themeKey,
+        map: (MAP_DEFS[currentMap] && MAP_DEFS[currentMap].name) || '', climate: String(WEATHER_LABELS[currentWeather] || '').replace(/^[^A-Za-z0-9]+/, ''),
+        dur: Math.round(_fin), pos: rank, stake: currentBet, pnl: playerWon ? netProfit : -currentBet, odds: mult });
+    } catch (e) {}
+
     const total = standings.length;
     const stRow = (st) => `
       <div class="ui-lb-row ui-st-row vc-t vc-t-${uiEsc(st.car.themeKey)}${st.car.isPlayer ? ' me' : ''}">
@@ -8215,7 +8321,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#1<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Payout</span><span class="ui-res-val">+${payout.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>STAKE <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
+        <div class="ui-res-sum"><span>${isAutoBetMode ? 'BET' : 'RACE'} <b>${isAutoBetMode ? padNo(lastBetNo || betNoCounter) : padNo(raceIdCounter)}</b></span><span>STAKE <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8233,7 +8339,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#${rank}<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Loss</span><span class="ui-res-val">-${currentBet.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
+        <div class="ui-res-sum"><span>${isAutoBetMode ? 'BET' : 'RACE'} <b>${isAutoBetMode ? padNo(lastBetNo || betNoCounter) : padNo(raceIdCounter)}</b></span><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8328,6 +8434,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       if (countdownTimer <= -0.40) {
         standaloneCountdown.classList.remove('show');
         gameState = 'RACING';
+        if (!isAutoBetMode) uiAccelTip();
         timeRemaining = RACE_DURATION_SEC;
         raceFavId = pickRaceFavourite();
         window._trRaceDbg = { fav: raceFavId, mode: isAutoBetMode ? 'auto' : 'manual' }; // read-only, for checking fairness
@@ -8356,7 +8463,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
-      lsSetSafe('tr_race_no', String(raceIdCounter + 1));
+      if (!isAutoBetMode) lsSetSafe('tr_race_no', String(raceIdCounter + 1));
       updateFinalFive();
       cameraShake = 0;
       debrisParticles = [];
@@ -9573,10 +9680,13 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
   function syncRaceIdText() {
     try {
       const room = window._trActiveRoom;
-      const t = (room && room.room_id && gameState !== 'IDLE') ? `RACE ID: #${room.room_id}` : `RACE ID: ${padNo(raceIdCounter)}`;
+      const t = isAutoBetMode
+        ? `BET ID: ${padNo((gameState !== 'IDLE' && lastBetNo) ? lastBetNo : betNoCounter + 1)}`
+        : `RACE ID: ${padNo(raceIdCounter)}`;
       if (raceIdText.textContent !== t) raceIdText.textContent = t;
     } catch (e) {}
   }
+  window._trSyncRaceId = syncRaceIdText;
   function syncCarsAndLabelsWithRoom() {
     syncRaceIdText();
     if (!Array.isArray(cars) || !cars.length) return;
@@ -9611,14 +9721,14 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
         const s = oppSlots[idx];
         const pLabel = (s && !s.is_bot && s.masked_id) ? maskUidFour(s.masked_id) : oppIdAt(idx);
         if (!s) {
-          bc.floatLabel = pLabel;
+          bc.floatLabel = 'Player ' + (idx + 1);
           bc.displayName = pLabel;
           return;
         }
         const theme = CAR_THEMES[s.car] || CAR_THEMES.blue;
         Object.assign(bc, theme);
-        // 3D Car Tag on Track: a masked id (never BOT / Player n / WAIT)
-        bc.floatLabel = pLabel;
+        // 3D Car Tag on Track: "Player n" (masked ids stay in the players card / result / leaderboard)
+        bc.floatLabel = 'Player ' + (idx + 1);
         bc.displayName = pLabel;
         bc.name = pLabel;
         bc.isRemoteHuman = (!s.is_bot && !!s.uid);
@@ -9648,7 +9758,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
         const theme = CAR_THEMES[k];
         Object.assign(bc, theme);
         const pLabel = oppIdAt(idx);
-        bc.floatLabel = pLabel;
+        bc.floatLabel = 'Player ' + (idx + 1);
         bc.displayName = pLabel;
         bc.name = pLabel;
         bc.isRemoteHuman = false;
@@ -9930,8 +10040,8 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
     if (musicOn) startMusic();
     if (pendingBet && pendingBet.demo) savePendingDemoBet(pendingBet);
     lastSimWallMs = Date.now();
-    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
-    gameState = 'MATCHMAKING';
+    rollOppIds(); lastBetNo = 0; if (isAutoBetMode) { betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_betid_no', String(betNoCounter)); }
+    gameState = 'MATCHMAKING'; (window._trSyncRaceId || Function.prototype)();
     const initRem = (roomObj && typeof roomObj.remaining_sec === 'number') ? Math.max(1.0, +roomObj.remaining_sec) : 10.0;
     matchmakingTimer = initRem;
     lastMatchmakingSecInt = Math.ceil(initRem) + 1;
@@ -10187,6 +10297,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       const res = j.result || {};
       const deps = j.deposits || [];
       const latest = deps[0];
+      try { if (res.status === 'completed' || (latest && latest.status === 'completed')) uiHistRecordTx({ key: 'dep:' + ((latest || res).tx_hash || (latest || res).id || ''), type: 'Deposit', amt: +((latest || res).amount || 0), status: 'Completed' }); } catch (e) {}
       if (statusBox) {
         if (res.status === 'completed' || (latest && latest.status === 'completed' && (Date.now()/1000 - latest.created_at) < 120)) {
           const d = latest || res;
@@ -10393,6 +10504,7 @@ body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opaci
       try {
         const j = await api('/api/withdraw', { amount: amt, address: a });
         state = j; applyBalanceUI();
+        try { uiHistRecordTx({ key: 'wd:' + j.result.withdrawal_id, type: 'Withdrawal', amt: -amt, status: 'Pending' }); } catch (e) {}
         toast('Withdrawal #' + j.result.withdrawal_id + ' submitted!', 'success');
         closeResultModal();
       } catch (e) {
