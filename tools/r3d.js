@@ -285,8 +285,8 @@
     }
     // Full loading screen over the race view: the game cannot be started until every asset is in.
     const loadPill = document.createElement('div');
-    loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at 50% 40%,#12305a 0%,#0b1528 70%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;letter-spacing:.14em;';
-    loadPill.innerHTML = '<div style="font-size:19px;font-style:italic;letter-spacing:.06em">MONEY RACER</div><div id="r3dLoadTxt" style="font-size:13px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><span style="display:block;width:62%;max-width:260px;height:8px;border-radius:5px;background:rgba(255,255,255,0.14);overflow:hidden;box-shadow:0 0 0 1px rgba(40,224,102,.35)"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:5px;transition:width .2s linear"></i></span><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
+    loadPill.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 34%,#1b3f78 0%,#0f2347 42%,#070d1c 100%);color:#e2f3ff;font:800 13px/1 system-ui,sans-serif;overflow:hidden;';
+    loadPill.innerHTML = '<style>.r3dl-trio{position:relative;width:min(92vw,380px);height:min(33vw,130px);margin-bottom:6px}.r3dl-trio img{position:absolute;bottom:0;width:50%;height:auto;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55))}.r3dl-trio .l{left:-3%;transform:scale(.9);filter:drop-shadow(0 8px 8px rgba(0,0,0,.5)) brightness(.8)}.r3dl-trio .r{right:-3%;transform:scale(.9);filter:drop-shadow(0 8px 8px rgba(0,0,0,.5)) brightness(.8)}.r3dl-trio .c{left:24%;width:52%;z-index:2;animation:r3dlf 2.4s ease-in-out infinite}.r3dl-glow{position:absolute;left:50%;top:60%;width:90%;height:70%;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(47,123,255,.45),rgba(47,123,255,0) 70%);animation:r3dlg 2.4s ease-in-out infinite}.r3dl-shine{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}.r3dl-shine:after{content:\'\';position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.28),rgba(255,255,255,0));transform:skewX(-18deg);animation:r3dls 2.6s ease-in-out infinite}@keyframes r3dlf{50%{transform:translateY(-3px)}}@keyframes r3dlg{50%{opacity:.55}}@keyframes r3dls{0%{left:-40%}60%,100%{left:120%}}#r3dLoadBar i{box-shadow:0 0 10px rgba(34,224,122,.8)}</style><div class="r3dl-trio"><div class="r3dl-glow"></div><img class="l" alt="" src="./assets/ui/car_f8_red.webp"><img class="r" alt="" src="./assets/ui/car_f8_yellow.webp"><img class="c" alt="" src="./assets/ui/car_f8_blue.webp"><div class="r3dl-shine"></div></div><div style="font-size:26px;font-style:italic;font-weight:900;letter-spacing:.08em;text-shadow:0 2px 14px rgba(47,123,255,.6)">MONEY <span style="color:#FFC83D">RACER</span></div><span id="r3dLoadBar" style="display:block;width:68%;max-width:280px;height:10px;border-radius:6px;background:rgba(255,255,255,0.12);overflow:hidden;box-shadow:0 0 0 1px rgba(34,224,122,.35),inset 0 1px 2px rgba(0,0,0,.5);margin-top:8px"><i style="display:block;height:100%;width:2%;background:linear-gradient(90deg,#16a34a,#22E07A,#a7f3c8);border-radius:6px;transition:width .2s linear"></i></span><div id="r3dLoadTxt" style="font-size:14px;letter-spacing:.04em;font-variant-numeric:tabular-nums">Loading…</div><div style="opacity:.6;font-size:11px;font-weight:600;letter-spacing:.08em">Loading track…</div><div id="r3dLoadPct" style="opacity:.7;font-size:10px">0%</div>';
     canvas.parentNode.appendChild(loadPill);
     // Assets are fetched once, stored with the Cache API under a versioned key and served from there on
     // later opens. Bump ASSET_V whenever a file in assets/game3d changes: the cache key follows it and
@@ -1441,10 +1441,10 @@
     const poolC = makeCanvas(128, 128);
     {
       const g = poolC.getContext('2d');
-      for (const cx of [43, 85]) { const gr = g.createRadialGradient(cx, 64, 2, cx, 64, 54); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.save(); g.translate(cx, 64); g.scale(0.55, 1); g.translate(-cx, -64); g.fillRect(0, 0, 128, 128); g.restore(); }
+      for (const cx of [43, 85]) { const gr = g.createRadialGradient(cx, 64, 2, cx, 64, 54); gr.addColorStop(0, 'rgba(255,255,255,0.7)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.3)'); gr.addColorStop(0.65, 'rgba(255,255,255,0.08)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.save(); g.translate(cx, 64); g.scale(0.45, 1); g.translate(-cx, -64); g.fillRect(0, 0, 128, 128); g.restore(); }
     }
     const poolTex = canvasTex(poolC, { wrapT: T.RepeatWrapping });
-    const tnPool = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ map: poolTex, color: 0xffc98a, transparent: true, opacity: 0.42, depthWrite: false, blending: T.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 }));
+    const tnPool = new T.Mesh(new T.BufferGeometry(), new T.MeshBasicMaterial({ map: poolTex, color: 0xffc98a, transparent: true, opacity: 0.21, depthWrite: false, blending: T.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 }));
     tnPool.renderOrder = 9;
     const tnFloorMat = new T.MeshBasicMaterial({ color: 0x4d5258, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
     const tnFloors = [new T.Mesh(new T.BufferGeometry(), tnFloorMat), new T.Mesh(new T.BufferGeometry(), tnFloorMat)];
@@ -1511,7 +1511,7 @@
         const slab = (w, y, rows) => { const g = new T.PlaneGeometry(w, L, 1, rows); g.rotateX(-Math.PI / 2); g.translate(0, y, -L / 2); return g; };
         tnDark.geometry.dispose(); tnDark.geometry = slab(13.4, 0.03, Math.ceil(L / 5));
         tnPool.geometry.dispose(); tnPool.geometry = slab(13.4, 0.034, Math.ceil(L / 5));
-        poolTex.repeat.set(1, L / 6); poolTex.offset.set(0, (1 - ((L / 6) % 1)) % 1);
+        poolTex.repeat.set(1, L / 12); poolTex.offset.set(0, (1 - ((L / 12) % 1)) % 1);
         tnFloors.forEach((m, i) => { m.geometry.dispose(); const g = new T.PlaneGeometry(2.3, L, 1, Math.ceil(L / 6)); g.rotateX(-Math.PI / 2); g.translate((i ? 1 : -1) * 5.6, 0.004, -L / 2); m.geometry = g; });
       }
       // ceiling lights: two rows, one fixture every 6 m
@@ -2213,6 +2213,16 @@
       if (/\d/.test(t)) { console.warn('[race3d] chat line has a digit, skipped: ' + t); return; }
       CHAT[tag].push(t);
     });
+    const CHAT_NEW = {
+      win: ['Eat my dust 😎', 'Too slow, buddy', 'Wave bye bye 👋', "You can't catch me", 'Is that all you got? 😏', 'See you at the finish!', 'Smell that? Victory 🏁', 'Catch up, if you dare 😜'],
+      lose: ['Wait for me 😭', 'Not fair!', 'My car hates me', 'Why me?! 😤', 'Who stole my speed? 😩', 'Come back here!', 'Give me a push 🥺'],
+      hit: ['Ouch! My paint 😱', 'Who taught you to drive?', 'Hey, watch it! 😡', "That's illegal!", 'Was that on purpose? 😤', 'My poor bumper 😢'],
+      close: ['Photo finish! 📸', 'So close 😬', 'Move, move, move!', 'Right behind you 👀', 'Heart is racing 💓'],
+      lose2: ['Unlucky, bro 😅', 'Nice try though', 'Next time maybe 🙏', 'Respect, well driven 🤝', 'Tough luck, friend 🫶']
+    };
+    for (const k in CHAT_NEW) for (const t of CHAT_NEW[k]) { if (/\d/.test(t)) { console.warn('[race3d] chat line has a digit, skipped: ' + t); continue; } CHAT[k === 'lose2' ? 'lose' : k].push(t); }
+    const chatShuffle = () => { for (const k in CHAT) { const a = CHAT[k]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } } };
+    chatShuffle();
     const bubMat = new T.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false, opacity: 0 });
     const bubSprite = new T.Sprite(bubMat); bubSprite.center.set(0.5, 0); bubSprite.renderOrder = 21; bubSprite.visible = false; scene.add(bubSprite);
     const bubCache = new Map(), bubV = new T.Vector3();
@@ -2232,10 +2242,10 @@
     const bub = { on: false, t: 0, car: -1, e: null, last: 0, start: -99, nextAt: 0, ev: null, fin: 0, finWin: false, finLose: false, used: new Set(), count: [0, 0, 0, 0, 0, 0, 0, 0], init: false, manual: false, say: -99 };
     const bPrevHit = [false, false, false], bPair = new Int8Array(64);
     window._trBubble = ''; window._trBubbleLog = [];
-    const bubReset = () => { bub.used.clear(); bub.count.fill(0); bub.ev = null; bub.fin = 0; bub.finWin = bub.finLose = false; bub.init = false; bub.start = -99; bub.nextAt = performance.now() / 1000 + 4 + Math.random() * 3; window._trBubbleLog = []; };
+    const bubReset = () => { bub.used.clear(); bub.count.fill(0); bub.ev = null; bub.fin = 0; bub.finWin = bub.finLose = false; bub.init = false; bub.start = -99; bub.nextAt = performance.now() / 1000 + 4 + Math.random() * 3; window._trBubbleLog = []; chatShuffle(); };
     const bubOff = () => { if (bub.on) { bub.on = false; bubSprite.visible = false; window._trBubble = ''; } };
     const bubPick = (tag) => {
-      for (const k of [tag, 'neutral', tag === 'win' ? 'lose' : 'win']) { const pool = CHAT[k].filter((s) => !bub.used.has(s)); if (pool.length) return { tag: k, text: pool[Math.floor(Math.random() * pool.length)] }; }
+      for (const k of [tag, 'neutral', tag === 'win' ? 'lose' : 'win']) { const t = CHAT[k].find((s) => !bub.used.has(s)); if (t) return { tag: k, text: t }; }
       return null;
     };
     const bubShow = (i, text, tag, manual) => {
@@ -2256,23 +2266,24 @@
     };
     const bubEligible = (i, camZ) => {
       const car = cars[i], rig = rigs[i];
-      if (!car || !rig || car.isPlayer || bub.count[i] >= BUB_MAXCAR || !rig.group.visible || !rig.tag.visible) return false;
+      if (!car || !rig || (car.isPlayer && bub.fpp) || bub.count[i] >= BUB_MAXCAR || !rig.group.visible || !rig.tag.visible) return false;
       const ahead = camZ - rig.group.position.z; // metres in front of the camera
-      if (!(ahead > 4 && ahead < 90)) return false;
+      if (!(ahead > (car.isPlayer ? 1 : 4) && ahead < 90)) return false;
       bubV.copy(rig.tag.position).project(camera); // keep clear of the HUD (top) and the screen edges
+      if (car.isPlayer) return bubV.z < 1 && Math.abs(bubV.x) < 0.8 && bubV.y < 0.4 && bubV.y > -0.7;
       return bubV.z < 1 && Math.abs(bubV.x) < 0.8 && bubV.y < 0.4 && bubV.y > -0.55;
     };
     const updateBubbles = (frameDt, racing, fppOn, player, camZ) => {
       const nowMs = performance.now(), nowS = nowMs / 1000, dt = Math.min(0.6, (nowMs - (bub.last || nowMs)) / 1000); bub.last = nowMs; // (a slow device still shows the bubble for a few frames)
-      const fin = gameState === 'FINISHED';
+      const fin = gameState === 'FINISHED'; bub.fpp = !!fppOn;
       if (!racing && !fin) { bubOff(); if (gameState !== 'IDLE') bubReset(); else bub.init = false; return; }
       const n = Math.min(cars.length, rigs.length, 8);
       if (racing) { // events: a bot hit something, or somebody overtook somebody
-        for (let i = 0; i < n; i++) { const c = cars[i], hit = c.hitSlowTimer > 0; if (bub.init && hit && !bPrevHit[i] && !c.isPlayer) bub.ev = { car: i, tag: 'hit', at: nowS }; bPrevHit[i] = hit; }
+        for (let i = 0; i < n; i++) { const c = cars[i], hit = c.hitSlowTimer > 0; if (bub.init && hit && !bPrevHit[i]) bub.ev = { car: i, tag: 'hit', at: nowS }; bPrevHit[i] = hit; }
         for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
           if (i === j) continue;
           const d = cars[i].z - cars[j].z, k = i * 8 + j;
-          if (d > 1.5) { if (bPair[k] === -1 && bub.init && (!bub.ev || bub.ev.tag !== 'hit')) { if (!cars[i].isPlayer) bub.ev = { car: i, tag: 'win', at: nowS }; else if (!cars[j].isPlayer) bub.ev = { car: j, tag: 'lose', at: nowS }; } bPair[k] = 1; }
+          if (d > 1.5) { if (bPair[k] === -1 && bub.init && (!bub.ev || bub.ev.tag !== 'hit')) { const pl = cars.findIndex((c) => c.isPlayer), me = Math.random() < 0.4; if (!cars[i].isPlayer) bub.ev = me && cars[j].isPlayer ? { car: j, tag: 'lose', at: nowS } : { car: i, tag: 'win', at: nowS }; else if (!cars[j].isPlayer) bub.ev = me && pl >= 0 ? { car: pl, tag: 'win', at: nowS } : { car: j, tag: 'lose', at: nowS }; } bPair[k] = 1; }
           else if (d < -1.5) bPair[k] = -1;
         }
         bub.init = true;
@@ -3000,7 +3011,12 @@
         rig.tilt.position.y = Math.sin(tSec * 31 + i * 2.1) * 0.006 * moving + rig.suspY;
         const spin = -(car.speed || 0) * 0.11 * dt * (racing ? 1 : 0);
         for (const w of rig.wheels) w.rotation.x += spin;
-        const hot = racing && (car.boostTimer > 0 || car.speed > 156);
+        const manualOn = () => !!(window._trRaceDbg && window._trRaceDbg.mode === 'manual');
+        const sp = car.speed || 0;
+        rig.spHist = rig.spHist || []; rig.spHist.push({ t: tSec, v: sp }); while (rig.spHist.length > 1 && tSec - rig.spHist[0].t > 0.25) rig.spHist.shift();
+        const spOld = rig.spHist[0].v;
+        const accel = car.isPlayer && manualOn() ? !!keys.accel : (sp - spOld > 3 && tSec - rig.spHist[0].t > 0.08);
+        const hot = racing && (car.boostTimer > 0 || accel);
         for (const f of rig.flames) { f.visible = hot; if (hot) f.scale.set(0.8, 0.8, (car.boostTimer > 0 ? 0.75 : 0.32) * (0.8 + Math.random() * 0.4)); }
         if (hot) rig.flameMat.color.set(car.boostTimer > 0 ? 0x22e5ff : 0xfb923c);
         if (rig.exhMat) rig.exhMat.opacity = hot ? 0.8 : (racing ? 0.22 : 0.06);
