@@ -4588,7 +4588,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .ub-copied .ub-i { color: var(--ub-green); }
 /* random-on-open toast: one short line at <= 400 px so it stays clear of the start circle */
 @media (max-width: 400px) {
-  #openRandToast { left: 60px !important; right: 120px !important; padding: 5px 8px !important; }
+  #openRandToast { left: 60px !important; right: 140px !important; padding: 5px 8px !important; }
   #openRandToast .ort-l1 { flex-wrap: nowrap !important; white-space: nowrap; font-size: 10.5px !important; gap: 4px !important; letter-spacing: .02em !important; }
   #openRandToast .ic { width: 13px !important; height: 13px !important; }
   #openRandToast .ort-l2 { display: none !important; }
@@ -4618,6 +4618,43 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
 .hud-players-card { width: 112px; }
 .hp-uid { font-size: 8px; letter-spacing: -0.3px; }
 .hp-badge { min-width: 26px; }
+</style>
+<style id="v17Ui2">
+/* right chips: wider (102 px) so the longest label + the "?" fit with an even 5 px inner right gap */
+.right-hud-stack { width: 102px; }
+.right-hud-stack #weatherCycleBtn, .right-hud-stack #cameraToggleBtn, .right-hud-stack .hud-chip, .right-hud-stack #weatherChip { width: 102px; }
+.right-hud-stack .hud-chip .chip-main { min-width: 0; padding: 0 0 0 7px; }
+.right-hud-stack .hud-chip .chip-main > span { min-width: 0; }
+.right-hud-stack .hud-chip .chip-q, .right-hud-stack .chip-q { margin: 0 5px 0 3px; width: 14px; height: 14px; flex: 0 0 14px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+.right-hud-stack #weatherChip > .chip-q { right: 6px; top: 5px; margin: 0; }
+.right-hud-stack #weatherChip > #weatherCycleBtn { padding: 0 24px 0 6px; }
+/* dim the HUD while racing (speed + players cards stay full) */
+#leaderboardBtn, #modeSelectHudBtn, #raceInfoBtn, #howToPlayBtn, #weatherChip, #mapChip, #timerChip, #cameraToggleBtn { transition: opacity .2s ease, transform .15s ease; }
+body.v17-racing #leaderboardBtn, body.v17-racing #modeSelectHudBtn, body.v17-racing #raceInfoBtn, body.v17-racing #howToPlayBtn,
+body.v17-racing #weatherChip, body.v17-racing #mapChip, body.v17-racing #timerChip, body.v17-racing #cameraToggleBtn { opacity: .45 !important; }
+body.v17-racing #weatherCycleBtn, body.v17-racing #weatherChip > .chip-q { opacity: 1 !important; }
+/* leaderboard: medal podium + scrollable top-50 list */
+.ui-md-wrap { display: grid; place-items: center; }
+.ui-md { width: 34px; height: 43px; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+.ui-pd.p1 .ui-md { width: 42px; height: 53px; filter: drop-shadow(0 0 10px rgba(255,200,61,.5)) drop-shadow(0 3px 6px rgba(0,0,0,.45)); }
+.ui-md-word { margin-top: 1px; font-size: 8.5px; font-weight: 900; font-style: italic; letter-spacing: .14em; color: var(--c); text-shadow: 0 0 8px var(--cg); }
+.ui-pd.p1 .ui-md-word { font-size: 9.5px; }
+.result-modal:has(.ui-podium) .ui-pd-name { margin-top: 2px; }
+.result-modal:has(.ui-podium) .ui-pd-base { height: 30px !important; padding-top: 4px; } .result-modal:has(.ui-podium) .ui-pd.p1 .ui-pd-base { height: 40px !important; } .result-modal:has(.ui-podium) .ui-pd-base { border-bottom: 1px solid var(--cg); } .result-modal:has(.ui-podium) .ui-podium { margin-bottom: 10px; }
+.result-modal:has(.ui-podium) .ui-pd-base i { font-size: 18px; }
+.ui-lb-sec { display: flex; align-items: center; gap: 6px; }
+.ui-lb-sec em { margin-left: auto; padding: 1px 7px; border-radius: 999px; font-style: normal; font-size: 8.5px; letter-spacing: .08em; color: #FFC83D; background: rgba(255,200,61,.12); border: 1px solid rgba(255,200,61,.35); }
+.result-modal:has(.ui-podium) .ui-lb-list.ui-lb-scroll { max-height: clamp(150px, calc(100dvh - 470px), 340px); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255,200,61,.4) transparent; padding: 2px 2px 2px 0; margin: 0 -2px 0 0; scroll-snap-type: none; }
+.ui-lb-scroll::-webkit-scrollbar { width: 4px; } .ui-lb-scroll::-webkit-scrollbar-thumb { background: rgba(255,200,61,.4); border-radius: 4px; }
+.vl-row { transition: background .15s ease, border-color .15s ease, transform .15s ease; -webkit-tap-highlight-color: transparent; }
+.ui-lb-scroll .vl-row { min-height: 38px; flex: 0 0 auto; }
+.ui-lb-scroll .vl-row:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); }
+.ui-lb-scroll .vl-row:active { transform: scale(.985); background: rgba(47,123,255,.14); border-color: rgba(47,123,255,.5); }
+.vl-row .ui-rk { min-width: 30px; font-variant-numeric: tabular-nums; }
+.vl-row .ui-lb-l { gap: 9px; flex: 1; }
+.vl-row .ui-lb-r { margin-left: auto; }
+.vl-row .ui-lb-amt { letter-spacing: .1px; }
+.vl-pin .ui-lb-name { letter-spacing: .3px; }
 </style>
 </head>
 <body>
@@ -4771,7 +4808,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         <path d="M5 4h3.600v3.330H5zM12.200 4h3.600v3.330h-3.600zM8.600 7.330h3.600v3.340H8.600zM15.800 7.330h2.600l-.800 1.670.800 1.670h-2.600zM5 10.670h3.600V14H5zM12.200 10.670h3.600V14h-3.600z" fill="#0b1220"/>
         </svg>
       <div class="status-text">
-        <span class="status-title" id="raceIdText">RACE ID: #589</span>
+        <span class="status-title" id="raceIdText">RACE ID: #001</span>
         <span class="status-highlight-green" id="joinedText">3 / 3 READY</span>
       </div>
     </div>
@@ -6131,7 +6168,27 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
       document.querySelectorAll('[data-mode-win="' + n + '"]').forEach(e => { e.textContent = (Math.round(o * 10 * 100) / 100) + ' USDT'; });
     });
   }
+  // v17 ui2: deterministic demo board (top 50, masked ids, decreasing winnings) shown until real API rows exist
+  function uiDemoBoard() {
+    let seed = 20260117; const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+    const used = new Set(), out = [], medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
+    for (let i = 1; i <= 50; i++) {
+      let d; do { d = String(Math.floor(rnd() * 10000)).padStart(4, '0'); } while (used.has(d)); used.add(d);
+      const w = i === 1 ? 4820 : i === 2 ? 3490 : i === 3 ? 2710 : Math.round(2710 * Math.pow(0.935, i - 3) * 100) / 100;
+      out.push({ rank: i, uid: '51200' + d, color: medal[i - 1] || '#2F7BFF', profit: '+' + w.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT', volume: null, demo: true });
+    }
+    return out;
+  }
+  function uiMedalSvg(n) {
+    const M = { 1: ['#FFE9A0', '#F2A81D', '#8A5A00'], 2: ['#F7FAFF', '#9FB0CA', '#4A5B78'], 3: ['#F7BE8A', '#B8692B', '#5E300C'] }[n];
+    return `<svg class="ui-md" viewBox="0 0 44 56" aria-hidden="true"><defs><linearGradient id="uiMd${n}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="${M[0]}"/><stop offset="1" stop-color="${M[1]}"/></linearGradient></defs>`
+      + `<path d="M10 1h9.500l5 18h-9.500z" fill="#2F7BFF"/><path d="M34 1h-9.500l-5 18h9.500z" fill="#1B54C9"/>`
+      + `<circle cx="22" cy="36" r="17.500" fill="url(#uiMd${n})" stroke="${M[2]}" stroke-width="1.500"/><circle cx="22" cy="36" r="13" fill="none" stroke="${M[2]}" stroke-opacity=".45" stroke-width="1.200"/>`
+      + `<path d="M22 28l2.300 4.700 5.100.8-3.700 3.600.9 5.100-4.600-2.400-4.600 2.400.9-5.100-3.700-3.600 5.100-.8z" fill="${M[2]}" fill-opacity=".85"/></svg>`;
+  }
   function uiLeaderboardHtml(racers, sortedCars, finishZ) {
+    if (!racers.some(r => r.real && !r.isMe)) { const m0 = racers.find(r => r.isMe); racers = uiDemoBoard().concat(m0 ? [m0] : []); }
+    const MEDAL_WORD = { 1: 'GOLD', 2: 'SILVER', 3: 'BRONZE' };
     const pod = [1, 2, 3].map(n => racers.find(r => +r.rank === n) || null);
     const idOf = (r) => vcMask(r.uid != null ? r.uid : r.name);
     const volOf = (r) => (r.volume == null || isNaN(+r.volume)) ? '&mdash;' : vcFmt(r.volume);
@@ -6139,7 +6196,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const av = (r) => `<span class="vl-av" style="--vc:${uiEsc(r.color || '#94a3b8')}">${uiEsc(idOf(r).slice(-2))}</span>`;
     const col = (r, n) => {
       if (!r) return `<div class="ui-pd p${n} empty"><div class="ui-pd-av">?</div><div class="ui-pd-name">&mdash;</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
-      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}">${n === 1 ? `<span class="ui-crown">${UI_IC.crown}</span>` : ''}<div class="ui-pd-av vl-pav">${uiEsc(idOf(r).slice(-2))}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
+      return `<div class="ui-pd p${n}${r.isMe ? ' me' : ''}"><div class="ui-md-wrap">${uiMedalSvg(n)}</div><div class="ui-md-word">${MEDAL_WORD[n]}</div><div class="ui-pd-name">${uiEsc(idOf(r))}</div><div class="ui-pd-profit">${winOf(r)}</div><div class="ui-pd-base"><i>${n}</i></div></div>`;
     };
     let me = racers.find(r => r.isMe);
     if (!me) {
@@ -6161,7 +6218,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     }
     h += `<div class="ui-pop-sec" style="color:#22E07A;margin-top:2px">${UI_IC.flag}YOUR RANK</div><div class="ui-lb-list vl-mine">${row(me, true)}</div>`;
     if (rest.length) {
-      h += `<div class="ui-pop-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS</div><div class="ui-lb-list">` + rest.map(r => row(r, false)).join('') + '</div>';
+      h += `<div class="ui-pop-sec ui-lb-sec" style="color:#FFC83D;margin-top:8px">${UI_IC.list}RANKINGS<em>TOP ${racers.filter(r => !r.isMe).length}</em></div><div class="ui-lb-list ui-lb-scroll">` + rest.map(r => row(r, false)).join('') + '</div>';
     }
     return h;
   }
@@ -6186,7 +6243,20 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
   let balanceUsdt = 100.00;
   const betSteps = [0.1, 0.5, 1, 2, 5, 10];
   let currentBet = 1.0;
-  let raceIdCounter = 589;
+  // v17 ui2: race / bet numbers count up per race / bet on this device (3-digit zero padded)
+  function padNo(n) { return '#' + String(Math.max(0, Math.floor(+n) || 0)).padStart(3, '0'); }
+  function lsNo(k, d) { const v = parseInt(lsGetSafe(k), 10); return v > 0 ? v : d; }
+  let raceIdCounter = lsNo('tr_race_no', 1);   // number of the current / next race
+  let betNoCounter = lsNo('tr_bet_no', 0);     // bets placed so far
+  let lastBetNo = 0;                            // id of the bet in the current race
+  // v17 ui2: masked opponent ids (new per race, stable within the race): ******1234
+  let raceOppIds = [];
+  function rollOppIds() {
+    const out = [];
+    while (out.length < 2) { const id = '******' + String(Math.floor(Math.random() * 10000)).padStart(4, '0'); if (!out.includes(id)) out.push(id); }
+    raceOppIds = out; return out;
+  }
+  function oppIdAt(i) { if (!raceOppIds.length) rollOppIds(); return raceOppIds[i] || raceOppIds[0]; }
   let raceModeCars = 3;
   // v17 money: single source of truth for the total-return multiplier (bet x odds, stake included)
   const RACE_ODDS = { 2: 1.9, 3: 2.5 };
@@ -6367,9 +6437,9 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     cars = [
       {
         id: 'bot1',
-        name: ai1,
-        displayName: 'Player 1',
-        floatLabel: 'Player 1',
+        name: oppIdAt(0),
+        displayName: oppIdAt(0),
+        floatLabel: oppIdAt(0),
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6411,9 +6481,9 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     if (raceModeCars === 3) {
       cars.push({
         id: 'bot2',
-        name: ai2,
-        displayName: 'Player 2',
-        floatLabel: 'Player 2',
+        name: oppIdAt(1),
+        displayName: oppIdAt(1),
+        floatLabel: oppIdAt(1),
         isPlayer: false,
         isAI: true,
         aiTag: 'AI',
@@ -6941,6 +7011,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     balanceUsdt = +(balanceUsdt - currentBet).toFixed(2);
     updateUIValues();
 
+    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
     gameState = 'MATCHMAKING';
     matchmakingTimer = 10.0;
     lastMatchmakingSecInt = 11;
@@ -7114,7 +7185,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
     const map = 'highway';
     const wx = 'sunny';   // owner's choice: every fresh open starts Highway + Sunny in 3-car mode
-    const cars3 = 3;
+    const cars3 = Math.random() < 0.5 ? 2 : 3;   // 2-car or 3-car, 50/50
     localMapChoice = map; currentMap = map; currentWeather = wx;
     try { selectRaceMode(cars3); } catch (e) {}
     try { updateWeatherButtonLabel(); updateMapTimerChips(); } catch (e) {}
@@ -7124,11 +7195,23 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const nm = (m) => (MAP_DEFS[m] ? MAP_DEFS[m].name : m.toUpperCase());
     const svg = (id) => '<svg class="ic" viewBox="0 0 24 24"><use href="#ic-' + id + '"/></svg>';
     const st = document.createElement('style'); st.id = 'v17Flow';
-    st.textContent = '#openRandToast{position:fixed;left:68px;right:128px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease;padding:7px 10px;border-radius:12px;background:rgba(10,18,36,.88);border:1px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);color:#fff;font-family:inherit;text-align:center}'
+    st.textContent = '#openRandToast{position:fixed;left:68px;right:148px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease;padding:7px 10px;border-radius:12px;background:rgba(10,18,36,.88);border:1px solid rgba(255,255,255,.16);box-shadow:0 6px 18px rgba(0,0,0,.4);color:#fff;font-family:inherit;text-align:center}'
       + '#openRandToast.show{opacity:1}#openRandToast .ort-l1{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;font-size:12px;font-weight:900;font-style:italic;letter-spacing:.04em;text-transform:uppercase;line-height:1.3}'
       + '#openRandToast .ic{width:15px;height:15px;color:#22E07A}#openRandToast .ort-w .ic{color:#FFC83D}#openRandToast .ort-d{opacity:.6}#openRandToast .ort-l2{margin-top:2px;font-size:9.5px;opacity:.72;line-height:1.25}';
     document.head.appendChild(st);
-    setTimeout(() => {
+    // show the toast only after the loading screen is gone (R3D ready / failed and the loader removed), then ~300 ms
+    const _ortT0 = Date.now();
+    const _ortPoll = setInterval(() => {
+      let done = false;
+      try {
+        if (typeof R3D === 'undefined') done = Date.now() - _ortT0 > 1500;
+        else done = (R3D.status === 'failed') || (R3D.status === 'ready' && !document.getElementById('r3dLoadTxt'));
+      } catch (e) { done = Date.now() - _ortT0 > 1500; }
+      if (!done && Date.now() - _ortT0 < 240000) return;
+      clearInterval(_ortPoll);
+      setTimeout(showOrt, 300);
+    }, 150);
+    function showOrt() {
       const el = document.createElement('div'); el.id = 'openRandToast';
       el.innerHTML = '<div class="ort-l1"><span>' + svg(map) + ' ' + nm(map) + '</span><span class="ort-d">\u2022</span><span class="ort-w">' + svg(ICW[wx]) + ' ' + wx.toUpperCase() + '</span></div><div class="ort-l2">change map &amp; climate from the top-right</div>';
       document.body.appendChild(el);
@@ -7137,8 +7220,11 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
       requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
       setTimeout(() => el.classList.remove('show'), 2200);
       setTimeout(() => el.remove(), 2600);
-    }, 700);
+    }
   })();
+
+  // v17 ui2: dim the HUD while racing (CSS does the fade, buttons stay tappable)
+  setInterval(() => { try { document.body.classList.toggle('v17-racing', gameState === 'RACING'); } catch (e) {} }, 100);
 
   const resultModalBackdrop = document.getElementById('resultModalBackdrop');
   const modalSvgHolder = document.getElementById('modalSvgHolder');
@@ -7150,8 +7236,8 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
   function closeResultModal() {
     resultModalBackdrop.classList.remove('open');
     if (gameState === 'FINISHED') {
-      raceIdCounter++;
-      raceIdText.textContent = `RACE ID: #${raceIdCounter}`;
+      raceIdCounter++; lsSetSafe('tr_race_no', String(raceIdCounter));
+      raceIdText.textContent = `RACE ID: ${padNo(raceIdCounter)}`;
       resetToIdleState();
     }
   }
@@ -7857,7 +7943,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         ${carBetHistory.map(b => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(15,23,42,0.9);border:1px solid ${b.win ? '#28e066' : 'rgba(239,68,68,0.4)'};border-radius:9px;font-size:10.5px;">
             <div>
-              <b style="color:#fff;">#${b.id} • ${b.car} (${b.odds})</b>
+              <b style="color:#fff;">BET ${padNo(b.id)} • ${b.car} (${b.odds})</b>
               <div style="font-size:9px;color:#94a3b8;">Wager: ${b.bet}</div>
             </div>
             <b style="color:${b.win ? '#28e066' : '#ff4d4d'};font-size:10px;">${b.outcome}</b>
@@ -7983,7 +8069,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const sorted = [...cars].sort((a, b) => b.z - a.z);
     modalSvgHolder.innerHTML = TROPHY_SVG;
     modalTitle.textContent = 'LEADERBOARD';
-    modalSubtitle.textContent = `Race #${raceIdCounter} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
+    modalSubtitle.textContent = `Race ${padNo(raceIdCounter)} \u2022 ${String(WEATHER_LABELS[currentWeather]).replace(/^[^A-Za-z0-9]+/, '')} \u2022 ${isAutoBetMode ? 'Auto-Bet Mode' : 'Manual Mode'}`;
     modalSubtitle.style.color = '#fbbf24';
     modalBodyContent.innerHTML = uiLeaderboardHtml(topChampionshipRacers, sorted, FINISH_LINE_Z);
     modalActionBtn.textContent = 'BACK TO TRACK';
@@ -8082,7 +8168,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     });
 
     carBetHistory.unshift({
-      id: raceIdCounter,
+      id: lastBetNo || raceIdCounter,
       car: userCar.carTitle,
       bet: `${currentBet.toFixed(2)} USDT`,
       odds: `${mult}x`,
@@ -8128,7 +8214,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#1<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Payout</span><span class="ui-res-val">+${payout.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>BET <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
+        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>STAKE <b>${currentBet.toFixed(2)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>NET <b style="color:#22E07A">+${netProfit.toFixed(2)}</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8146,7 +8232,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
           <div class="ui-res-cell"><span class="ui-res-lbl">Position</span><span class="ui-res-val">#${rank}<small>/${total}</small></span></div>
           <div class="ui-res-cell main"><span class="ui-res-lbl">Loss</span><span class="ui-res-val">-${currentBet.toFixed(2)}<small>USDT</small></span></div>
         </div>
-        <div class="ui-res-sum"><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
+        <div class="ui-res-sum"><span>BET <b>${padNo(lastBetNo || betNoCounter)}</b></span><span>CAR <b>${uiEsc(userCar.carTitle)}</b></span><span>ODDS <b>${vcOdds()}x</b></span><span>GAP <b style="color:#ff9aa5">+${userStanding.gapSec.toFixed(2)}s</b></span></div>
         ${winnerCardHtml}
         ${standingsHtml}
       `;
@@ -8269,6 +8355,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     if (timeRemaining <= 0 || leaderZ >= FINISH_LINE_Z) {
       timeRemaining = Math.max(0, timeRemaining);
       gameState = 'FINISHED';
+      lsSetSafe('tr_race_no', String(raceIdCounter + 1));
       updateFinalFive();
       cameraShake = 0;
       debrisParticles = [];
@@ -9442,7 +9529,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         const badgeTxt = isMe ? 'YOU' : String(oppNum++);
         let rightTxt = s.masked_id ? maskUidFour(s.masked_id) : 'WAIT…';
         if (!isMe && s.is_bot) {
-          rightTxt = isWaitPhase ? 'WAIT…' : (s.bot_label || `BOT #${oppNum - 1}`);
+          rightTxt = isWaitPhase ? 'WAIT…' : oppIdAt(oppNum - 2);
         }
         rowsData.push({
           isMe,
@@ -9467,7 +9554,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
           isMe: false,
           badgeTxt: String(idx + 1),
           carColor: getCarBadgeHex(k),
-          rightTxt: isWaitPhase ? 'WAIT…' : `BOT #${idx + 1}`,
+          rightTxt: isWaitPhase ? 'WAIT…' : oppIdAt(idx),
           isHuman: false
         });
       });
@@ -9482,7 +9569,15 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     }).join('');
   }
 
+  function syncRaceIdText() {
+    try {
+      const room = window._trActiveRoom;
+      const t = (room && room.room_id && gameState !== 'IDLE') ? `RACE ID: #${room.room_id}` : `RACE ID: ${padNo(raceIdCounter)}`;
+      if (raceIdText.textContent !== t) raceIdText.textContent = t;
+    } catch (e) {}
+  }
   function syncCarsAndLabelsWithRoom() {
+    syncRaceIdText();
     if (!Array.isArray(cars) || !cars.length) return;
     const room = window._trActiveRoom;
 
@@ -9513,7 +9608,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
       const oppSlots = room.slots.filter(s => s.car !== selectedPlayerTheme);
       botCars.forEach((bc, idx) => {
         const s = oppSlots[idx];
-        const pLabel = `Player ${idx + 1}`;
+        const pLabel = (s && !s.is_bot && s.masked_id) ? maskUidFour(s.masked_id) : oppIdAt(idx);
         if (!s) {
           bc.floatLabel = pLabel;
           bc.displayName = pLabel;
@@ -9521,10 +9616,10 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         }
         const theme = CAR_THEMES[s.car] || CAR_THEMES.blue;
         Object.assign(bc, theme);
-        // 3D Car Tag on Track: ALWAYS "Player 1" / "Player 2" (never User ID / BOT / WAIT!)
+        // 3D Car Tag on Track: a masked id (never BOT / Player n / WAIT)
         bc.floatLabel = pLabel;
         bc.displayName = pLabel;
-        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.name = pLabel;
         bc.isRemoteHuman = (!s.is_bot && !!s.uid);
         if (s.telemetry && typeof s.telemetry.z === 'number') {
           bc.remoteTelemetry = Object.assign({}, s.telemetry, { recvMs: performance.now() });
@@ -9551,10 +9646,10 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         const k = oppKeys[idx] || 'blue';
         const theme = CAR_THEMES[k];
         Object.assign(bc, theme);
-        const pLabel = `Player ${idx + 1}`;
+        const pLabel = oppIdAt(idx);
         bc.floatLabel = pLabel;
         bc.displayName = pLabel;
-        bc.name = `${theme.nameLabel} (${pLabel})`;
+        bc.name = pLabel;
         bc.isRemoteHuman = false;
         bc.remoteTelemetry = null;
       });
@@ -9599,7 +9694,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
       const others = (room.slots || []).filter(s => !s.is_bot && s.uid && String(s.uid) !== String(getMyUidStr()));
       const latestOther = others[others.length - 1];
       if (latestOther) {
-        toast(`Player ${latestOther.masked_id} joined on ${CAR_THEMES[latestOther.car] ? CAR_THEMES[latestOther.car].nameLabel : latestOther.car.toUpperCase()}!`, 'success');
+        toast(`${maskUidFour(latestOther.masked_id)} joined on ${CAR_THEMES[latestOther.car] ? CAR_THEMES[latestOther.car].nameLabel : latestOther.car.toUpperCase()}!`, 'success');
       }
     }
 
@@ -9834,6 +9929,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     if (musicOn) startMusic();
     if (pendingBet && pendingBet.demo) savePendingDemoBet(pendingBet);
     lastSimWallMs = Date.now();
+    rollOppIds(); betNoCounter++; lastBetNo = betNoCounter; lsSetSafe('tr_bet_no', String(betNoCounter));
     gameState = 'MATCHMAKING';
     const initRem = (roomObj && typeof roomObj.remaining_sec === 'number') ? Math.max(1.0, +roomObj.remaining_sec) : 10.0;
     matchmakingTimer = initRem;
@@ -10376,7 +10472,7 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
         : '';
       modalSvgHolder.innerHTML = (typeof TROPHY_SVG !== 'undefined') ? TROPHY_SVG : '🏆';
       modalTitle.textContent = 'CHAMPIONSHIP LEADERBOARD';
-      modalSubtitle.textContent = playMode === 'live' ? `Live standings · Race #${raceIdCounter}` : 'Switch to Live for real rankings';
+      modalSubtitle.textContent = playMode === 'live' ? `Live standings · Race ${padNo(raceIdCounter)}` : 'Switch to Live for real rankings';
       modalSubtitle.style.color = '#fbbf24';
       modalBodyContent.innerHTML = (extraLiveHtml || '') +
         `<div style="text-align:left;font-size:9.5px;font-weight:900;color:#fbbf24;margin-bottom:4px;letter-spacing:0.4px;">🏆 TOP EARNERS (REAL)</div>
@@ -10810,8 +10906,8 @@ body.v17-st-load #screenInvite .ref-stat strong::after { content: ''; position: 
     const cols = ['#e61e25', '#f5b000', '#1264f2', '#28e066', '#a855f7'];
     const volOf = (r) => { const v = [r.volume, r.bet_volume, r.total_bet, r.total_wagered, r.wagered].find(x => x != null && !isNaN(+x)); return v == null ? null : +v; };
     const medal = ['#FFC83D', '#C9D4E6', '#E0904F'];
-    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, uid: r.user_id, name: r.name, color: medal[i] || cols[i % cols.length], profit: '+' + fmt(r.profit) + ' USDT', volume: volOf(r), isMe: r.user_id === me }));
-    if (me && !rows.some(r => r.isMe)) rows.push({ rank: '—', uid: me, name: 'YOU', color: '#22E07A', profit: '+0.00 USDT', volume: (data.me && volOf(data.me)) || 0, isMe: true });
+    const rows = (data.board || []).map((r, i) => ({ rank: r.rank, uid: r.user_id, name: r.name, color: medal[i] || cols[i % cols.length], profit: '+' + fmt(r.profit) + ' USDT', volume: volOf(r), isMe: r.user_id === me, real: true }));
+    if (me && !rows.some(r => r.isMe)) rows.push({ rank: '—', uid: me, name: 'YOU', color: '#22E07A', profit: '+0.00 USDT', volume: (data.me && volOf(data.me)) || 0, isMe: true, real: true });
     topChampionshipRacers.length = 0; rows.forEach(r => topChampionshipRacers.push(r));
   }
 
